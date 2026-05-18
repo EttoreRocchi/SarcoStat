@@ -1,0 +1,50 @@
+# Single Sarcomere Simulation Configuration
+# Configuration for Monte Carlo validation of single sarcomere morphometry.
+# Reference: Cisterna et al. (2021) CMPB 211:106437
+
+n_simulations: 1000        # Sarcomeres per condition
+seed: 42                   # Random seed for reproducibility
+n_processes: 4             # Parallel workers (currently single-threaded)
+
+# Choose: 'euploid', 'trisomic', or 'custom'
+target_condition: 'euploid'
+
+# Cisterna et al. (2021) reference values (mean, std in nm)
+cisterna_parameters:
+  euploid:
+    z_length: [414, 109]           # Z-line length: 414 +/- 109 nm
+    sarcomere_length: [1638, 114]  # MN distance: 1638 +/- 114 nm
+    m_line_length: [469, 77]       # M-line length (derived from Cur ~3.49)
+  trisomic:
+    z_length: [350, 108]           # Z-line length: 350 +/- 108 nm
+    sarcomere_length: [1281, 89]   # MN distance: 1281 +/- 89 nm
+    m_line_length: [366, 60]       # M-line length (derived from Cur ~3.50)
+
+# Custom targets (only used if target_condition='custom')
+custom_asr_range: [3.0, 5.0]      # Aspect Ratio range
+custom_cur_range: [2.8, 4.5]      # Curviness range
+
+noise_sensitivity:
+  enabled: true
+  # Noise levels to test (standard deviation in nm)
+  # Typical annotation precision: 5-20 nm for manual clicking
+  noise_levels: [0, 5, 10, 15, 20, 30, 50, 75, 100]
+  noise_model: 'isotropic'  # 'isotropic' or 'anisotropic'
+  n_replicates: 100         # Noise samples per sarcomere
+
+  # Anisotropic noise parameters (if noise_model='anisotropic')
+  anisotropic:
+    sigma_along_line: 10       # Along Z/M line direction (nm)
+    sigma_perpendicular: 20    # Perpendicular to line (nm)
+
+# Tests classification robustness when Cur ~ AsR (boundary region)
+boundary_analysis:
+  enabled: true
+  tolerance: 0.05              # Cur within 5% of AsR = "boundary"
+  n_boundary_samples: 500      # Samples per (offset, noise) combination
+  offset_range: [-0.3, 0.3]    # Cur - AsR range to test
+
+output_dir: 'outputs/sarcomere_simulation'
+save_raw_data: true            # Save detailed error arrays (.npz)
+save_figures: true             # Generate and save figures
+figure_dpi: 300                # Figure resolution for publication

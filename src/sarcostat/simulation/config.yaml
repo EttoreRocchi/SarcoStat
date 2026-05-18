@@ -1,0 +1,27 @@
+n_simulations: 1000
+seed: 42
+n_processes: 1  # Set > 1 for parallel processing
+
+n_sarcomeres: [5, 10, 15, 25, 50, 75, 100]
+kappa_values: [0, 1, 5, 10, 50]
+
+length_distribution: 'truncnorm'  # Options: truncnorm, gamma, lognorm, uniform
+length_mean: 1.0
+length_std: 0.25
+length_min: 0.1
+length_max: 2.0
+
+angular_distribution: 'vonmises'  # Options: vonmises, wrapped_normal, uniform
+angular_mean: 0.0  # Mean direction in radians
+angular_correlation: 0.0  # Correlation between consecutive angles (0-1)
+
+enable_persistence: false  # Enable angular memory/persistence
+persistence_decay: 0.9  # Decay factor for persistence (0-1)
+enable_curvature_bias: false  # Enable systematic curvature
+curvature_strength: 0.1  # Strength of curvature bias
+
+# Paths are relative to the project root when running from the repo root.
+output_dir: 'outputs/simulation'
+save_raw_data: false  # Save all raw simulation data (large files!)
+save_figures: true
+figure_dpi: 300

@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sarcostat"
+description = "Sarcomeric sequence analysis with circular statistics and morphometry"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = [
+    "sarcomere",
+    "myofibril",
+    "circular statistics",
+    "morphometry",
+    "image analysis",
+    "biomedicine",
+    "muscle analysis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[project.scripts]
+sarcostat = "sarcostat.cli.app:app"
+
+[project.urls]
+Homepage = "https://github.com/EttoreRocchi/SarcoStat"
+Repository = "https://github.com/EttoreRocchi/SarcoStat"
+Issues = "https://github.com/EttoreRocchi/SarcoStat/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "sarcostat.__version__"}
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {dev = {file = ["requirements-dev.txt"]}}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["sarcostat*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.png", "py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src"]
+extend-exclude = [
+    "outputs",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+]
+ignore = [
+    "E501",
+    "B008",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

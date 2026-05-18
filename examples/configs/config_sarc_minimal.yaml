@@ -1,0 +1,35 @@
+# Sarcomere Simulation - Minimal Test Run
+# Quick validation run (not included in 'all')
+
+n_simulations: 50
+seed: 42
+n_processes: 1
+
+target_condition: 'euploid'
+
+cisterna_parameters:
+  euploid:
+    z_length: [414, 109]
+    sarcomere_length: [1638, 114]
+    m_line_length: [469, 77]
+  trisomic:
+    z_length: [350, 108]
+    sarcomere_length: [1281, 89]
+    m_line_length: [366, 60]
+
+noise_sensitivity:
+  enabled: true
+  noise_levels: [0, 20, 50]
+  noise_model: 'isotropic'
+  n_replicates: 10
+
+boundary_analysis:
+  enabled: true
+  tolerance: 0.05
+  n_boundary_samples: 20
+  offset_range: [-0.3, 0.3]
+
+output_dir: 'paper/results/sarc_minimal'
+save_raw_data: false
+save_figures: true
+figure_dpi: 150

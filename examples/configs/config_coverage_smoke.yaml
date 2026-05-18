@@ -1,0 +1,13 @@
+# Smoke-test config for CI coverage validation
+# Use to verify the pipeline runs end-to-end before kicking off the full analysis.
+
+n_iterations: 50
+n_bootstrap: 200
+confidence: 0.95
+kappa_values: [1.0, 5.0]
+n_values: [25, 100]
+seed: 42
+
+output_dir: paper/results/coverage_smoke
+save_figures: true
+figure_dpi: 150

@@ -1,0 +1,18 @@
+# Smoke-test config for minimum-detectable-effect analysis
+n_replicates_for_sd: 500
+
+kappa_values: [2.0, 10.0]
+chain_lengths: [25, 50]
+group_sizes: [10, 25, 50]
+
+sarcomere_conditions: [euploid]
+annotation_noise_nm: [0.0, 5.0]
+sarcomere_group_sizes: [10, 25, 50]
+
+alpha: 0.05
+power: 0.80
+seed: 42
+
+output_dir: paper/results/mde_smoke
+save_figures: true
+figure_dpi: 150
