@@ -20,7 +20,7 @@ angular_correlation: 0.0
 enable_persistence: false
 enable_curvature_bias: false
 
-output_dir: 'paper/results/minimal'
+output_dir: 'outputs/minimal'
 save_raw_data: true
 save_figures: true
 figure_dpi: 300

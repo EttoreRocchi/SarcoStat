@@ -52,6 +52,19 @@ def chain_metrics() -> SarcomereChainMetrics:
     return analyze_sarcomere_chain(sarcomeres)
 
 
+class TestStrictJson:
+    """Output is standard JSON: NaN/inf become null instead of bare tokens."""
+
+    def test_empty_report_has_no_nan_tokens(self) -> None:
+        text = to_json_string(compute_circular_statistics_report(np.array([])))
+        assert "NaN" not in text
+        assert json.loads(text)["mean_vector_length"] is None
+
+    def test_infinity_becomes_null(self) -> None:
+        text = to_json_string({"a": float("inf"), "b": [1.0, float("-inf")], "c": {"d": 2}})
+        assert json.loads(text) == {"a": None, "b": [1.0, None], "c": {"d": 2}}
+
+
 class TestToJsonString:
     """Tests for :func:`to_json_string`."""
 

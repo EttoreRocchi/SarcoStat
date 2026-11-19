@@ -55,7 +55,7 @@ class TrialOutcome:
     rayleigh_z, rayleigh_p : float
         Rayleigh-test outputs.
     v_statistic, v_p_value : float
-        V-test outputs.
+        V-test outputs against the simulator's ``expected_direction``.
     """
 
     angles: np.ndarray
@@ -76,8 +76,8 @@ def _displacement_summary(steps: np.ndarray, lengths: np.ndarray) -> tuple[float
     """Return ``(head_to_tail, total_length)`` from steps and lengths.
 
     The ``steps`` are interpreted as the absolute heading angles of the
-    sarcomere unit vectors (consistent with the iid-heading model that
-    underlies eq. (4) of the manuscript: ``E[LR^2] = rho^2 + (1 - rho^2)/N``).
+    sarcomere unit vectors (consistent with the iid-heading model behind
+    the finite-sample bias ``E[LR^2] = rho^2 + (1 - rho^2)/N``).
     """
     dx = lengths * np.cos(steps)
     dy = lengths * np.sin(steps)
@@ -95,6 +95,9 @@ class ChainSimulator:
         Angle-sampling strategy.
     dynamics : AngularDynamics
         Step-angle adjuster (correlation, persistence, curvature).
+    expected_direction : float, optional
+        Direction (radians) the V-test is run against; :meth:`from_config`
+        sets it to the configured ``angular_mean``. Default 0.0.
 
     Notes
     -----
@@ -108,10 +111,12 @@ class ChainSimulator:
         length_sampler: LengthSampler,
         angle_sampler: AngleSampler,
         dynamics: AngularDynamics,
+        expected_direction: float = 0.0,
     ) -> None:
         self.length_sampler = length_sampler
         self.angle_sampler = angle_sampler
         self.dynamics = dynamics
+        self.expected_direction = expected_direction
 
     @classmethod
     def from_config(cls, cfg: Config) -> ChainSimulator:
@@ -131,8 +136,9 @@ class ChainSimulator:
             persistence_decay=cfg.persistence_decay,
             enable_curvature=cfg.enable_curvature_bias,
             curvature_strength=cfg.curvature_strength,
+            curvature_mode=cfg.curvature_mode,
         )
-        return cls(length_sampler, angle_sampler, dynamics)
+        return cls(length_sampler, angle_sampler, dynamics, expected_direction=cfg.angular_mean)
 
     def simulate_trial(self, n: int, kappa: float, rng: np.random.Generator) -> TrialOutcome:
         """Simulate a single trial and return the reduced :class:`TrialOutcome`."""
@@ -142,7 +148,7 @@ class ChainSimulator:
         head_to_tail, total_length = _displacement_summary(steps, lengths)
 
         rayleigh_z, rayleigh_p = perform_rayleigh_test(steps)
-        v_stat, v_p = perform_v_test(steps)
+        v_stat, v_p = perform_v_test(steps, self.expected_direction)
         return TrialOutcome(
             angles=steps,
             linearity_ratio=_linearity_ratio(head_to_tail, total_length),

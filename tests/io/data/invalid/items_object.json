@@ -1,0 +1,43 @@
+{
+  "annotator_id": "demo-annotator",
+  "created_utc": "2026-11-02T09:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem1",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "scale_bar"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "study": {
+        "animal": "H1",
+        "group": "demo"
+      },
+      "width_px": 2200
+    },
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "scale_bar"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": {},
+  "sarcostat_version": "0.2.0rc1.dev0",
+  "session_id": "demo-session-1",
+  "source_digest": "18e04bc67ce2067310d4bc33ddd428b691eec5d403374262e28cd5b685035877",
+  "study_id": "demo-study"
+}

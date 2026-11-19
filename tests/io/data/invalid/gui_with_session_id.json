@@ -1,0 +1,368 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-02T10:05:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "gui": {
+    "click_perp_ratio": 1.0,
+    "click_sigma_m": null,
+    "click_sigma_z": 2.5,
+    "expected_direction_deg": 0.0,
+    "mode": "Single Sarcomere",
+    "open_myofibril": false,
+    "pixel_size": 4.39,
+    "unit": "nm"
+  },
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "user"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "gui-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            120.5,
+            535.0
+          ],
+          [
+            121.0,
+            646.5
+          ]
+        ],
+        "z1": [
+          [
+            40.25,
+            530.5
+          ],
+          [
+            40.75,
+            650.25
+          ]
+        ],
+        "z2": [
+          [
+            200.25,
+            532.75
+          ],
+          [
+            199.5,
+            648.0
+          ]
+        ]
+      },
+      "raw_clicks": [
+        {
+          "order": 1,
+          "seconds": 2.5,
+          "undo_count": 0,
+          "x": 40.25,
+          "y": 530.5
+        },
+        {
+          "order": 2,
+          "seconds": 5.75,
+          "undo_count": 0,
+          "x": 40.75,
+          "y": 650.25
+        },
+        {
+          "order": 3,
+          "seconds": 9.0,
+          "undo_count": 0,
+          "x": 120.5,
+          "y": 535.0
+        },
+        {
+          "order": 4,
+          "seconds": 12.25,
+          "undo_count": 0,
+          "x": 121.0,
+          "y": 646.5
+        },
+        {
+          "order": 5,
+          "seconds": 15.5,
+          "undo_count": 0,
+          "x": 200.25,
+          "y": 532.75
+        },
+        {
+          "order": 6,
+          "seconds": 18.75,
+          "undo_count": 0,
+          "x": 199.5,
+          "y": 648.0
+        }
+      ],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "gui-2",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "z1": [
+          [
+            340.25,
+            530.5
+          ],
+          [
+            340.75,
+            650.25
+          ]
+        ],
+        "z2": [
+          [
+            500.25,
+            532.75
+          ],
+          [
+            499.5,
+            648.0
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": "M-line not identifiable",
+      "skipped": false,
+      "skipped_parts": [
+        "m_line"
+      ],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "gui-3",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              620.5,
+              540.25
+            ],
+            [
+              622.0,
+              710.75
+            ]
+          ],
+          [
+            [
+              700.5,
+              540.25
+            ],
+            [
+              702.0,
+              710.75
+            ]
+          ],
+          [
+            [
+              780.5,
+              540.25
+            ],
+            [
+              782.0,
+              710.75
+            ]
+          ],
+          [
+            [
+              860.5,
+              540.25
+            ],
+            [
+              862.0,
+              710.75
+            ]
+          ],
+          [
+            [
+              940.5,
+              540.25
+            ],
+            [
+              942.0,
+              710.75
+            ]
+          ],
+          [
+            [
+              1020.5,
+              540.25
+            ],
+            [
+              1022.0,
+              710.75
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "gui-4",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "myofibrils": [
+          [
+            [
+              [
+                930.25,
+                520.5
+              ],
+              [
+                931.5,
+                610.0
+              ]
+            ],
+            [
+              [
+                1020.25,
+                520.5
+              ],
+              [
+                1021.5,
+                610.0
+              ]
+            ],
+            [
+              [
+                1110.25,
+                520.5
+              ],
+              [
+                1111.5,
+                610.0
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                952.75,
+                630.25
+              ],
+              [
+                953.0,
+                730.5
+              ]
+            ],
+            [
+              [
+                1042.75,
+                630.25
+              ],
+              [
+                1043.0,
+                730.5
+              ]
+            ],
+            [
+              [
+                1132.75,
+                630.25
+              ],
+              [
+                1133.0,
+                730.5
+              ]
+            ],
+            [
+              [
+                1222.75,
+                630.25
+              ],
+              [
+                1223.0,
+                730.5
+              ]
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "pair"
+    }
+  ],
+  "sarcostat_version": "0.2.0rc1.dev0",
+  "session_id": "S1",
+  "source_digest": "18e04bc67ce2067310d4bc33ddd428b691eec5d403374262e28cd5b685035877",
+  "study_id": null
+}

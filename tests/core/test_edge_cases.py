@@ -13,11 +13,15 @@ from sarcostat.core.circular_stats import (
     KAPPA_MAX,
     bootstrap_circular_mean_ci,
     bootstrap_mvl_ci,
+    calculate_circular_mean,
     calculate_circular_std,
     calculate_circular_variance,
     calculate_concentration_parameter,
+    calculate_linearity_ratio,
     calculate_mean_vector_length,
     compute_circular_statistics_report,
+    perform_rayleigh_test,
+    perform_v_test,
 )
 
 
@@ -64,25 +68,31 @@ class TestLargeArrays:
 class TestNaNInfPropagation:
     """Tests for NaN and Inf handling."""
 
-    def test_mvl_with_nan_in_input(self):
-        """Test MVL behavior with NaN in input."""
-        angles = np.array([0.1, 0.2, np.nan, 0.3])
+    @pytest.mark.parametrize(
+        "func",
+        [
+            calculate_mean_vector_length,
+            calculate_circular_std,
+            calculate_circular_mean,
+            calculate_circular_variance,
+            calculate_concentration_parameter,
+            perform_rayleigh_test,
+            perform_v_test,
+            bootstrap_circular_mean_ci,
+            bootstrap_mvl_ci,
+            compute_circular_statistics_report,
+        ],
+    )
+    @pytest.mark.parametrize("bad", [np.nan, np.inf, -np.inf])
+    def test_non_finite_angles_rejected(self, func, bad):
+        """Every public angle function rejects NaN/inf instead of guessing."""
+        angles = np.array([0.1, 0.2, bad, 0.3])
+        with pytest.raises(ValueError, match="finite"):
+            func(angles)
 
-        # pingouin should handle NaN - behavior may vary
-        R = calculate_mean_vector_length(angles)
-        # Either returns NaN or filters it
-        assert np.isnan(R) or 0.0 <= R <= 1.0
-
-    def test_circular_std_with_nan_in_input(self):
-        """Test circular std with NaN in input."""
-        angles = np.array([0.1, 0.2, np.nan, 0.3])
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            std = calculate_circular_std(angles)
-
-        # Should propagate NaN or handle gracefully
-        assert np.isnan(std) or std >= 0
+    def test_linearity_ratio_rejects_nan(self):
+        with pytest.raises(ValueError, match="finite"):
+            calculate_linearity_ratio(float("nan"), float("nan"))
 
     def test_empty_array_returns_nan(self):
         """Test empty array returns NaN for all functions."""
@@ -280,6 +290,34 @@ class TestNumericalStability:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             mean, ci_low, ci_high = bootstrap_circular_mean_ci(angles, n_bootstrap=100, seed=42)
+
+        # The point estimate sits at +/-pi and the CI must stay on that side
+        # of the circle instead of jumping across 0.
+        assert abs(abs(mean) - np.pi) < 0.1
+        for bound in (ci_low, ci_high):
+            assert abs(abs(bound) - np.pi) < 0.2
+            assert -np.pi < bound < np.pi
+
+    @pytest.mark.parametrize(
+        ("kwargs", "match"),
+        [
+            ({"n_bootstrap": 0}, "n_bootstrap"),
+            ({"n_bootstrap": 2.5}, "n_bootstrap"),
+            ({"confidence": 0.0}, "confidence"),
+            ({"confidence": 1.5}, "confidence"),
+            ({"confidence": 95}, "confidence"),
+        ],
+    )
+    def test_bootstrap_rejects_invalid_arguments(self, kwargs, match):
+        angles = np.array([0.1, 0.2, 0.3, 0.4])
+        for func in (bootstrap_circular_mean_ci, bootstrap_mvl_ci):
+            with pytest.raises(ValueError, match=match):
+                func(angles, **kwargs)
+
+    def test_circular_std_of_identical_angles_is_positive_zero(self):
+        std = calculate_circular_std(np.zeros(5))
+        assert std == 0.0
+        assert np.copysign(1.0, std) == 1.0
 
 
 if __name__ == "__main__":

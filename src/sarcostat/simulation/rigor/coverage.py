@@ -1,41 +1,49 @@
-#!/usr/bin/env python3
 """Bootstrap CI coverage validation for circular statistics.
 
 For each (kappa, N) condition we draw `n_iterations` von Mises samples with
-known population parameters, compute percentile-bootstrap 95% CIs for the
+known population parameters, compute percentile-bootstrap CIs for the
 circular mean and the mean vector length (MVL), and check how often the
 true population value falls inside the CI. Empirical coverage close to the
-nominal 0.95 level indicates the bootstrap procedure is well-calibrated;
+nominal level indicates the bootstrap procedure is well-calibrated;
 systematic under-coverage flags a methodological caveat that should be
 reported alongside the inferred CIs.
 
 The population mean direction is fixed at 0; the population MVL is
-rho(kappa) = I1(kappa) / I0(kappa).
+rho(kappa) = I1(kappa) / I0(kappa). Each (kappa, N) cell draws from its
+own seed stream, so a cell's result does not depend on the rest of the
+grid.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
 import logging
 import warnings
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import yaml
-from scipy.special import i0, i1
+from scipy.special import i0e, i1e
 from scipy.stats import vonmises
 
+from sarcostat.core.chain_statistics import mvl_confidence_interval
 from sarcostat.core.circular_stats import to_minuspi_pi
 
-warnings.filterwarnings("ignore")
-plt.style.use("seaborn-v0_8-darkgrid")
-sns.set_palette("husl")
+from .._artifacts import RunArtifacts, run_metadata
+from .._config_io import (
+    as_bool,
+    as_float,
+    as_int,
+    as_list,
+    as_number,
+    as_str,
+    load_flat_dataclass,
+    require_unique,
+)
+from .._plotting import simulation_style
+from .._seeding import per_cell_seed
 
 
 @dataclass
@@ -55,7 +63,7 @@ class CoverageConfig:
     n_values : list of int
         Sample-size axis swept during the validation.
     seed : int
-        Master RNG seed; per-iteration seeds are derived deterministically.
+        Master RNG seed; per-cell seed streams are derived from it.
     output_dir : str
         Base directory where the run-stamped output folder is created.
     save_figures : bool
@@ -74,21 +82,47 @@ class CoverageConfig:
     save_figures: bool = True
     figure_dpi: int = 300
 
+    def __post_init__(self) -> None:
+        """Reject out-of-range parameters."""
+        if self.n_iterations < 1:
+            raise ValueError(f"n_iterations must be positive, got {self.n_iterations}")
+        if self.n_bootstrap < 1:
+            raise ValueError(f"n_bootstrap must be positive, got {self.n_bootstrap}")
+        if not (0.0 < self.confidence < 1.0):
+            raise ValueError(f"confidence must be in (0, 1), got {self.confidence}")
+        if not self.kappa_values or not self.n_values:
+            raise ValueError("kappa_values and n_values must not be empty")
+        if any(k < 0 for k in self.kappa_values):
+            raise ValueError(f"kappa_values must be non-negative, got {self.kappa_values}")
+        if any(n < 2 for n in self.n_values):
+            raise ValueError(f"n_values must be at least 2, got {self.n_values}")
+        require_unique(list(self.kappa_values), "kappa_values")
+        require_unique(list(self.n_values), "n_values")
 
-def load_coverage_config(path: Path) -> CoverageConfig:
-    """Load a :class:`CoverageConfig` from a YAML file; unknown keys are ignored."""
-    with open(path) as f:
-        raw = yaml.safe_load(f) or {}
-    valid = set(CoverageConfig.__dataclass_fields__.keys())
-    filtered = {k: v for k, v in raw.items() if k in valid}
-    return CoverageConfig(**filtered)
+
+_COVERAGE_CONVERTERS = {
+    "n_iterations": as_int,
+    "n_bootstrap": as_int,
+    "confidence": as_float,
+    "kappa_values": lambda v, name: as_list(v, name, as_number),
+    "n_values": lambda v, name: as_list(v, name, as_int),
+    "seed": as_int,
+    "output_dir": as_str,
+    "save_figures": as_bool,
+    "figure_dpi": as_int,
+}
+
+
+def load_coverage_config(path: str | Path) -> CoverageConfig:
+    """Load a :class:`CoverageConfig` from a YAML file; unknown keys raise ``ValueError``."""
+    return load_flat_dataclass(path, CoverageConfig, _COVERAGE_CONVERTERS)
 
 
 def population_mvl(kappa: float) -> float:
     """Return the population mean resultant length for a von Mises distribution."""
     if kappa <= 0:
         return 0.0
-    return float(i1(kappa) / i0(kappa))
+    return float(i1e(kappa) / i0e(kappa))
 
 
 def circular_distance(a: float, b: float) -> float:
@@ -164,90 +198,94 @@ def _vectorized_bootstrap_cis(
     return mean_pt, mean_lo, mean_hi, mvl_pt, mvl_lo, mvl_hi
 
 
-def run_coverage_analysis(cfg: CoverageConfig, logger: logging.Logger) -> pd.DataFrame:
+def _coverage_cell(cfg: CoverageConfig, kappa: float, n: int) -> dict[str, float]:
+    """Coverage statistics for one (kappa, N) cell, from that cell's own seed stream."""
+    rng = np.random.default_rng(per_cell_seed(cfg.seed, kappa, n))
+    rho_true = population_mvl(kappa)
+    mean_hits = 0
+    mvl_hits = 0
+    mvl_below = 0
+    mean_widths: list[float] = []
+    mvl_widths: list[float] = []
+    vm_hits = 0
+    vm_below = 0
+    vm_widths: list[float] = []
+
+    for _ in range(cfg.n_iterations):
+        if kappa <= 0:
+            angles = rng.uniform(-np.pi, np.pi, n)
+        else:
+            angles = vonmises.rvs(kappa, loc=0.0, size=n, random_state=rng)
+        angles = to_minuspi_pi(angles)
+
+        _, mean_lo, mean_hi, _, mvl_lo, mvl_hi = _vectorized_bootstrap_cis(
+            angles, n_bootstrap=cfg.n_bootstrap, confidence=cfg.confidence, rng=rng
+        )
+        if kappa > 0 and is_in_circular_ci(0.0, mean_lo, mean_hi):
+            mean_hits += 1
+        mean_widths.append(circular_arc_length(mean_lo, mean_hi))
+
+        if mvl_lo <= rho_true <= mvl_hi:
+            mvl_hits += 1
+        elif rho_true < mvl_lo:
+            mvl_below += 1
+        mvl_widths.append(mvl_hi - mvl_lo)
+
+        r_obs = float(np.abs(np.mean(np.exp(1j * angles))))
+        vm_lo, vm_hi = mvl_confidence_interval(r_obs, n, cfg.confidence)
+        if vm_lo <= rho_true <= vm_hi:
+            vm_hits += 1
+        elif rho_true < vm_lo:
+            vm_below += 1
+        vm_widths.append(vm_hi - vm_lo)
+
+    iters = cfg.n_iterations
+    return {
+        "kappa": kappa,
+        "n": n,
+        "rho_true": rho_true,
+        "n_iterations": iters,
+        "n_bootstrap": cfg.n_bootstrap,
+        "mean_coverage": mean_hits / iters if kappa > 0 else float("nan"),
+        "mvl_coverage": mvl_hits / iters,
+        "mvl_miss_below": mvl_below / iters,
+        "mvl_miss_above": (iters - mvl_hits - mvl_below) / iters,
+        "mean_ci_width_rad": float(np.mean(mean_widths)),
+        "mean_ci_width_deg": float(np.degrees(np.mean(mean_widths))),
+        "mvl_ci_width": float(np.mean(mvl_widths)),
+        "mvl_vonmises_coverage": vm_hits / iters,
+        "mvl_vonmises_miss_below": vm_below / iters,
+        "mvl_vonmises_ci_width": float(np.mean(vm_widths)),
+    }
+
+
+def compute_coverage_grid(cfg: CoverageConfig, logger: logging.Logger) -> pd.DataFrame:
     """Run the (kappa, N) coverage sweep and return the tidy result frame.
 
     For every cell the routine draws ``cfg.n_iterations`` von Mises samples,
     builds percentile-bootstrap CIs for the circular mean and MVL, and
     records empirical coverage plus mean CI width.
     """
-    parent_rng = np.random.default_rng(cfg.seed)
-    rows: list[dict] = []
+    rows: list[dict[str, float]] = []
     total = len(cfg.kappa_values) * len(cfg.n_values)
-    done = 0
-
-    for kappa in cfg.kappa_values:
-        rho_true = population_mvl(kappa)
-        for n in cfg.n_values:
-            done += 1
-            logger.info(f"[{done}/{total}] kappa={kappa}, N={n}, rho_true={rho_true:.4f}")
-            mean_hits = 0
-            mvl_hits = 0
-            mean_widths: list[float] = []
-            mvl_widths: list[float] = []
-            mvl_below = 0
-            mvl_above = 0
-
-            for _ in range(cfg.n_iterations):
-                sample_seed = int(parent_rng.integers(0, 2**31 - 1))
-                rng = np.random.default_rng(sample_seed)
-                if kappa <= 0:
-                    angles = rng.uniform(-np.pi, np.pi, n)
-                else:
-                    angles = vonmises.rvs(kappa, loc=0.0, size=n, random_state=rng)
-                angles = to_minuspi_pi(angles)
-
-                boot_rng = np.random.default_rng(int(parent_rng.integers(0, 2**31 - 1)))
-                _, mean_lo, mean_hi, _, mvl_lo, mvl_hi = _vectorized_bootstrap_cis(
-                    angles,
-                    n_bootstrap=cfg.n_bootstrap,
-                    confidence=cfg.confidence,
-                    rng=boot_rng,
-                )
-
-                if kappa > 0 and is_in_circular_ci(0.0, mean_lo, mean_hi):
-                    mean_hits += 1
-                mean_widths.append(circular_arc_length(mean_lo, mean_hi))
-
-                if mvl_lo <= rho_true <= mvl_hi:
-                    mvl_hits += 1
-                else:
-                    if rho_true < mvl_lo:
-                        mvl_below += 1
-                    else:
-                        mvl_above += 1
-                mvl_widths.append(mvl_hi - mvl_lo)
-
-            mean_cov = mean_hits / cfg.n_iterations if kappa > 0 else float("nan")
-            mvl_cov = mvl_hits / cfg.n_iterations
-            rows.append(
-                {
-                    "kappa": kappa,
-                    "n": n,
-                    "rho_true": rho_true,
-                    "n_iterations": cfg.n_iterations,
-                    "n_bootstrap": cfg.n_bootstrap,
-                    "mean_coverage": mean_cov,
-                    "mvl_coverage": mvl_cov,
-                    "mvl_miss_below": mvl_below / cfg.n_iterations,
-                    "mvl_miss_above": mvl_above / cfg.n_iterations,
-                    "mean_ci_width_rad": float(np.mean(mean_widths)),
-                    "mean_ci_width_deg": float(np.degrees(np.mean(mean_widths))),
-                    "mvl_ci_width": float(np.mean(mvl_widths)),
-                }
-            )
+    for done, (kappa, n) in enumerate(
+        ((k, n) for k in cfg.kappa_values for n in cfg.n_values), start=1
+    ):
+        logger.info(f"[{done}/{total}] kappa={kappa}, N={n}, rho_true={population_mvl(kappa):.4f}")
+        rows.append(_coverage_cell(cfg, kappa, n))
     return pd.DataFrame(rows)
 
 
-def plot_coverage(df: pd.DataFrame, cfg: CoverageConfig, output_dir: Path) -> Path:
-    """Render the two-panel coverage summary figure to PDF and PNG."""
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+def plot_coverage(df: pd.DataFrame, cfg: CoverageConfig) -> plt.Figure:
+    """Build the two-panel coverage summary figure (call inside :func:`simulation_style`)."""
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
     nominal = cfg.confidence
 
     palette = sns.color_palette("viridis", n_colors=len(cfg.kappa_values))
     for ax, metric, ylabel, title in [
-        (axes[0], "mean_coverage", "Coverage of circular mean", "Circular mean CI"),
-        (axes[1], "mvl_coverage", "Coverage of MVL", "MVL CI"),
+        (axes[0], "mean_coverage", "Coverage of circular mean", "Circular mean, bootstrap CI"),
+        (axes[1], "mvl_coverage", "Coverage of MVL", "MVL, percentile bootstrap CI"),
+        (axes[2], "mvl_vonmises_coverage", "Coverage of MVL", "MVL, von Mises CI"),
     ]:
         for color, kappa in zip(palette, cfg.kappa_values, strict=False):
             sub = df[df["kappa"] == kappa].sort_values("n")
@@ -264,82 +302,78 @@ def plot_coverage(df: pd.DataFrame, cfg: CoverageConfig, output_dir: Path) -> Pa
         ax.set_xlabel("Chain length N")
         ax.set_ylabel(ylabel)
         ax.set_title(title)
-        ax.set_ylim(0.5, 1.02)
+        ax.set_ylim(0.4, 1.02)
         ax.legend(fontsize=8, loc="lower right")
     fig.suptitle(
-        f"Bootstrap CI coverage ({cfg.n_iterations} iterations x {cfg.n_bootstrap} resamples)"
+        f"CI coverage ({cfg.n_iterations} iterations; bootstrap: {cfg.n_bootstrap} resamples)"
     )
     fig.tight_layout()
-    out = output_dir / "fig_coverage.pdf"
-    fig.savefig(out, dpi=cfg.figure_dpi, bbox_inches="tight")
-    fig.savefig(out.with_suffix(".png"), dpi=cfg.figure_dpi, bbox_inches="tight")
-    plt.close(fig)
-    return out
+    return fig
 
 
-def setup_logging(output_dir: Path) -> logging.Logger:
-    """Configure a console + file logger writing under ``output_dir``."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger("coverage_analysis")
-    logger.setLevel(logging.INFO)
-    logger.handlers.clear()
-    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S")
-    fh = logging.FileHandler(output_dir / "coverage_analysis.log", mode="w")
-    fh.setFormatter(fmt)
-    sh = logging.StreamHandler()
-    sh.setFormatter(fmt)
-    logger.addHandler(fh)
-    logger.addHandler(sh)
-    return logger
+def run(
+    cfg: CoverageConfig,
+    *,
+    config_path: str | Path | None = None,
+    console_handler: logging.Handler | None = None,
+) -> Path:
+    """Execute the coverage validation and return the run directory.
 
+    Output follows the :class:`~sarcostat.simulation._artifacts.RunArtifacts`
+    layout: ``data/coverage_results.csv`` and
+    ``data/simulation_parameters.json``, ``plots/fig_coverage.{pdf,png}``,
+    and ``logs/``.
+    """
+    artifacts = RunArtifacts(
+        cfg.output_dir,
+        timestamped=True,
+        logger_name="sarcostat.simulation.coverage",
+        console_handler=console_handler,
+    )
+    logger = artifacts.logger
+    artifacts.save_parameters({**asdict(cfg), **run_metadata(config_path)})
+    logger.info("CI coverage validation: kappa=%s, N=%s", cfg.kappa_values, cfg.n_values)
+    logger.info(
+        "n_iterations=%d, n_bootstrap=%d, confidence=%s, seed=%d",
+        cfg.n_iterations,
+        cfg.n_bootstrap,
+        cfg.confidence,
+        cfg.seed,
+    )
 
-def run(cfg: CoverageConfig) -> Path:
-    """Execute the coverage validation and return the run directory."""
-    output_dir = Path(cfg.output_dir) / datetime.now().strftime("run_%Y%m%d_%H%M%S")
-    logger = setup_logging(output_dir)
-    logger.info("=" * 60)
-    logger.info("CI COVERAGE VALIDATION")
-    logger.info("=" * 60)
-    logger.info(f"kappa_values: {cfg.kappa_values}")
-    logger.info(f"n_values:     {cfg.n_values}")
-    logger.info(f"n_iterations: {cfg.n_iterations}")
-    logger.info(f"n_bootstrap:  {cfg.n_bootstrap}")
-    logger.info(f"confidence:   {cfg.confidence}")
-    logger.info(f"seed:         {cfg.seed}")
-
-    df = run_coverage_analysis(cfg, logger)
-    csv = output_dir / "coverage_results.csv"
-    df.to_csv(csv, index=False)
-    logger.info(f"Results table -> {csv}")
-
-    cfg_dump = output_dir / "config.json"
-    with open(cfg_dump, "w") as f:
-        json.dump(asdict(cfg), f, indent=2)
+    with warnings.catch_warnings():
+        # scipy/numpy numerical warnings from extreme cells are expected noise here.
+        warnings.simplefilter("ignore", RuntimeWarning)
+        df = compute_coverage_grid(cfg, logger)
+    artifacts.save_csv("coverage_results.csv", df)
 
     if cfg.save_figures:
-        fig_path = plot_coverage(df, cfg, output_dir)
-        logger.info(f"Figure -> {fig_path}")
+        with simulation_style():
+            fig = plot_coverage(df, cfg)
+            artifacts.save_figure(fig, "fig_coverage", dpi=cfg.figure_dpi)
+            plt.close(fig)
 
     nominal = cfg.confidence
-    logger.info(f"\nSummary (coverage relative to nominal {nominal:.2f}):")
     summary = df.assign(
         mean_dev=df["mean_coverage"] - nominal,
         mvl_dev=df["mvl_coverage"] - nominal,
     )[["kappa", "n", "rho_true", "mean_coverage", "mean_dev", "mvl_coverage", "mvl_dev"]]
-    logger.info("\n" + summary.to_string(index=False, float_format="%.4f"))
-
-    return output_dir
-
-
-def main() -> None:
-    """CLI entry point for ``python -m sarcostat.simulation.rigor.coverage``."""
-    parser = argparse.ArgumentParser(description="CI coverage validation")
-    parser.add_argument("--config", "-c", type=Path, default=None)
-    args = parser.parse_args()
-    cfg = load_coverage_config(args.config) if args.config else CoverageConfig()
-    out = run(cfg)
-    print(f"\nCoverage analysis complete. Output: {out}")
+    logger.info(
+        "Coverage relative to nominal %.2f:\n%s",
+        nominal,
+        summary.to_string(index=False, float_format="%.4f"),
+    )
+    return artifacts.output_dir
 
 
-if __name__ == "__main__":
-    main()
+__all__ = [
+    "CoverageConfig",
+    "load_coverage_config",
+    "population_mvl",
+    "circular_distance",
+    "is_in_circular_ci",
+    "circular_arc_length",
+    "compute_coverage_grid",
+    "plot_coverage",
+    "run",
+]

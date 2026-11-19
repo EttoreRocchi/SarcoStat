@@ -27,6 +27,8 @@ from typing import Any
 import numpy as np
 import yaml
 
+from sarcostat import __version__
+
 _DETAILED_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
 _SIMPLE_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 _DETAILED_DATEFMT = "%Y-%m-%d %H:%M:%S"
@@ -54,6 +56,10 @@ class RunArtifacts:
         Logger name. Defaults to ``"sarcostat.simulation"``. Pass a
         unique name per run if you want to keep handlers distinct
         across multiple :class:`RunArtifacts` instances.
+    console_handler : logging.Handler, optional
+        Handler used for console output instead of the default
+        ``INFO``-level stdout stream handler; the CLI passes a rich
+        handler so log lines do not break its progress display.
     """
 
     def __init__(
@@ -62,6 +68,7 @@ class RunArtifacts:
         *,
         timestamped: bool = False,
         logger_name: str = "sarcostat.simulation",
+        console_handler: logging.Handler | None = None,
     ) -> None:
         base = Path(base_dir)
         if timestamped:
@@ -78,6 +85,7 @@ class RunArtifacts:
             d.mkdir(exist_ok=True)
 
         self._logger_name = logger_name
+        self._console_handler = console_handler
         self.logger = self._setup_logging()
         self.logger.info("Output directory: %s", self.output_dir)
 
@@ -95,9 +103,11 @@ class RunArtifacts:
         file_handler.setFormatter(detailed)
         logger.addHandler(file_handler)
 
-        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler = self._console_handler
+        if console_handler is None:
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setFormatter(simple)
         console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(simple)
         logger.addHandler(console_handler)
 
         err_handler = logging.FileHandler(self.logs_dir / "errors.log")
@@ -258,4 +268,26 @@ class RunArtifacts:
         return target
 
 
-__all__ = ["RunArtifacts"]
+def run_metadata(config_path: str | Path | None = None) -> dict[str, Any]:
+    """Provenance stored next to a run's parameters.
+
+    Parameters
+    ----------
+    config_path : str or pathlib.Path, optional
+        YAML file the run was configured from; ``None`` for runs built
+        from in-code defaults.
+
+    Returns
+    -------
+    dict
+        ``sarcostat_version``, ``config_file`` (absolute path or None) and
+        ``created`` (ISO-8601 timestamp).
+    """
+    return {
+        "sarcostat_version": __version__,
+        "config_file": None if config_path is None else str(Path(config_path).resolve()),
+        "created": datetime.now().isoformat(timespec="seconds"),
+    }
+
+
+__all__ = ["RunArtifacts", "run_metadata"]

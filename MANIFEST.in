@@ -1,0 +1,26 @@
+# Contents of the source distribution. The wheel takes the package and its package data from
+# pyproject.toml; this file adds the tests, the documentation and the examples to the sdist only,
+# and keeps tool state, caches and the local paper folder out of both artefacts.
+
+include LICENSE README.md CHANGELOG.md CITATION.cff
+include requirements.txt requirements-dev.txt
+
+graft src
+graft tests
+graft docs
+# the tests read the example images, the configs and examples/study_demo
+graft examples
+
+prune paper
+prune .claude
+prune .omc
+prune src/sarcostat/.omc
+prune src/sarcostat/core/.omc
+prune src/sarcostat/gui/.omc
+prune src/sarcostat/simulation/.omc
+prune src/sarcostat/simulation/chain/.omc
+prune src/sarcostat/simulation/rigor/.omc
+prune docs/_build
+# global patterns need ** to reach nested folders (tests/.omc, tests/simulation/.omc, ...)
+global-exclude **/.omc/**
+global-exclude **/__pycache__/** *.py[cod]

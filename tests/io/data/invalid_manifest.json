@@ -1,0 +1,390 @@
+{
+  "annotator_id_space": {
+    "error": "annotator_id",
+    "schema_rejects": true
+  },
+  "branch_end_not_bool": {
+    "error": "items[3].branch_end",
+    "schema_rejects": true
+  },
+  "branch_end_on_shape": {
+    "error": "items[0].branch_end",
+    "schema_rejects": true
+  },
+  "chain_one_z_line": {
+    "error": "items[3].points.z_lines",
+    "schema_rejects": true
+  },
+  "click_count_mismatch": {
+    "error": "6 points but 5 raw_clicks",
+    "schema_rejects": false
+  },
+  "click_missing_x": {
+    "error": "raw_clicks[0].x",
+    "schema_rejects": true
+  },
+  "click_order_gap": {
+    "error": "raw_clicks[2].order",
+    "schema_rejects": false
+  },
+  "click_order_zero": {
+    "error": "raw_clicks[0].order",
+    "schema_rejects": true
+  },
+  "click_outside_display": {
+    "error": "outside the display",
+    "schema_rejects": false
+  },
+  "click_seconds_decreasing": {
+    "error": "raw_clicks[3].seconds",
+    "schema_rejects": false
+  },
+  "click_seconds_negative": {
+    "error": "raw_clicks[0].seconds",
+    "schema_rejects": true
+  },
+  "click_undo_bool": {
+    "error": "undo_count",
+    "schema_rejects": true
+  },
+  "click_undo_decreasing": {
+    "error": "raw_clicks[5].undo_count",
+    "schema_rejects": false
+  },
+  "created_utc_bad_date": {
+    "error": "created_utc",
+    "schema_rejects": false
+  },
+  "created_utc_offset": {
+    "error": "created_utc",
+    "schema_rejects": true
+  },
+  "created_utc_space": {
+    "error": "created_utc",
+    "schema_rejects": true
+  },
+  "duplicate_key": {
+    "error": "duplicate key",
+    "schema_rejects": false
+  },
+  "gui_direction_string": {
+    "error": "gui.expected_direction_deg",
+    "schema_rejects": true
+  },
+  "gui_in_study_file": {
+    "error": "annotator_id: must be null",
+    "schema_rejects": true
+  },
+  "gui_missing_mode": {
+    "error": "gui.mode",
+    "schema_rejects": true
+  },
+  "gui_mode_unknown": {
+    "error": "gui.mode",
+    "schema_rejects": true
+  },
+  "gui_not_object": {
+    "error": "gui: must be a JSON object",
+    "schema_rejects": true
+  },
+  "gui_open_myofibril_int": {
+    "error": "gui.open_myofibril",
+    "schema_rejects": true
+  },
+  "gui_perp_ratio_null": {
+    "error": "gui.click_perp_ratio",
+    "schema_rejects": true
+  },
+  "gui_perp_ratio_zero": {
+    "error": "gui.click_perp_ratio",
+    "schema_rejects": true
+  },
+  "gui_pixel_size_null": {
+    "error": "gui.pixel_size",
+    "schema_rejects": true
+  },
+  "gui_pixel_size_zero": {
+    "error": "gui.pixel_size",
+    "schema_rejects": true
+  },
+  "gui_sigma_m_bool": {
+    "error": "gui.click_sigma_m",
+    "schema_rejects": true
+  },
+  "gui_sigma_negative": {
+    "error": "gui.click_sigma_z",
+    "schema_rejects": true
+  },
+  "gui_unit_blank": {
+    "error": "gui.unit",
+    "schema_rejects": true
+  },
+  "gui_unit_null": {
+    "error": "gui.unit",
+    "schema_rejects": true
+  },
+  "gui_with_session_id": {
+    "error": "session_id",
+    "schema_rejects": true
+  },
+  "image_duplicate_file_name": {
+    "error": "duplicate file_name",
+    "schema_rejects": false
+  },
+  "image_duplicate_id": {
+    "error": "duplicate image_id",
+    "schema_rejects": false
+  },
+  "image_file_name_backslash": {
+    "error": "images[0].file_name",
+    "schema_rejects": true
+  },
+  "image_file_name_dotdot": {
+    "error": "images[0].file_name",
+    "schema_rejects": true
+  },
+  "image_file_name_path": {
+    "error": "images[0].file_name",
+    "schema_rejects": true
+  },
+  "image_height_bool": {
+    "error": "images[1].height_px",
+    "schema_rejects": true
+  },
+  "image_missing_study": {
+    "error": "images[1].study",
+    "schema_rejects": true
+  },
+  "image_scale_missing_source": {
+    "error": "images[0].scale.source",
+    "schema_rejects": true
+  },
+  "image_scale_zero": {
+    "error": "images[0].scale.nm_per_px",
+    "schema_rejects": true
+  },
+  "image_sha256_bad": {
+    "error": "images[0].sha256",
+    "schema_rejects": true
+  },
+  "image_study_group_number": {
+    "error": "images[0].study.group",
+    "schema_rejects": true
+  },
+  "image_width_float_integral": {
+    "error": "images[0].width_px",
+    "schema_rejects": false
+  },
+  "image_width_fraction": {
+    "error": "images[0].width_px",
+    "schema_rejects": true
+  },
+  "image_width_zero": {
+    "error": "images[0].width_px",
+    "schema_rejects": true
+  },
+  "images_empty": {
+    "error": "images",
+    "schema_rejects": true
+  },
+  "infinity_token": {
+    "error": "Infinity",
+    "schema_rejects": false
+  },
+  "item_active_negative": {
+    "error": "items[0].active_seconds",
+    "schema_rejects": true
+  },
+  "item_crop_offset_negative": {
+    "error": "items[0].kit_crop_offset",
+    "schema_rejects": true
+  },
+  "item_crop_outside_image": {
+    "error": "outside image",
+    "schema_rejects": false
+  },
+  "item_crop_size_three": {
+    "error": "items[0].kit_crop_size",
+    "schema_rejects": true
+  },
+  "item_crop_size_zero": {
+    "error": "items[0].kit_crop_size",
+    "schema_rejects": true
+  },
+  "item_duplicate_id": {
+    "error": "duplicate item_id",
+    "schema_rejects": false
+  },
+  "item_id_space": {
+    "error": "items[0].item_id",
+    "schema_rejects": true
+  },
+  "item_missing_raw_clicks": {
+    "error": "items[0].raw_clicks",
+    "schema_rejects": true
+  },
+  "item_started_bad": {
+    "error": "items[0].started_utc",
+    "schema_rejects": true
+  },
+  "item_transform_unknown": {
+    "error": "items[0].display_transform",
+    "schema_rejects": true
+  },
+  "item_type_unknown": {
+    "error": "items[0].type",
+    "schema_rejects": true
+  },
+  "item_unknown_image": {
+    "error": "unknown image_id",
+    "schema_rejects": false
+  },
+  "items_object": {
+    "error": "items",
+    "schema_rejects": true
+  },
+  "missing_annotator_id": {
+    "error": "annotator_id",
+    "schema_rejects": true
+  },
+  "missing_format": {
+    "error": "format",
+    "schema_rejects": true
+  },
+  "missing_images": {
+    "error": "images",
+    "schema_rejects": true
+  },
+  "missing_source_digest": {
+    "error": "source_digest",
+    "schema_rejects": true
+  },
+  "nan_token": {
+    "error": "NaN",
+    "schema_rejects": false
+  },
+  "overflow_float": {
+    "error": "non-finite",
+    "schema_rejects": false
+  },
+  "pair_myofibril_one_z_line": {
+    "error": "items[4].points.myofibrils[0]",
+    "schema_rejects": true
+  },
+  "pair_three_myofibrils": {
+    "error": "items[4].points.myofibrils",
+    "schema_rejects": true
+  },
+  "partial_skip_keeps_m": {
+    "error": "items[1].points.m",
+    "schema_rejects": true
+  },
+  "partial_skip_on_chain": {
+    "error": "items[3].skipped_parts",
+    "schema_rejects": true
+  },
+  "partial_skip_unknown_part": {
+    "error": "items[1].skipped_parts",
+    "schema_rejects": true
+  },
+  "partial_skip_without_reason": {
+    "error": "items[1].skip_reason",
+    "schema_rejects": true
+  },
+  "point_string": {
+    "error": "items[0].points.m[0][1]",
+    "schema_rejects": true
+  },
+  "points_missing_for_annotated": {
+    "error": "items[0].points",
+    "schema_rejects": true
+  },
+  "points_outside_crop": {
+    "error": "outside the crop",
+    "schema_rejects": false
+  },
+  "reason_without_skip": {
+    "error": "items[0].skip_reason",
+    "schema_rejects": true
+  },
+  "sarcostat_version_blank": {
+    "error": "sarcostat_version",
+    "schema_rejects": true
+  },
+  "shape_line_three_points": {
+    "error": "items[0].points.z1",
+    "schema_rejects": true
+  },
+  "shape_missing_m": {
+    "error": "items[0].points.m",
+    "schema_rejects": true
+  },
+  "shape_missing_z2": {
+    "error": "items[0].points.z2",
+    "schema_rejects": true
+  },
+  "skipped_not_bool": {
+    "error": "items[2].skipped",
+    "schema_rejects": true
+  },
+  "skipped_with_parts": {
+    "error": "items[2].skipped_parts",
+    "schema_rejects": true
+  },
+  "skipped_with_points": {
+    "error": "items[2].points",
+    "schema_rejects": true
+  },
+  "skipped_without_reason": {
+    "error": "items[2].skip_reason",
+    "schema_rejects": true
+  },
+  "source_digest_short": {
+    "error": "source_digest",
+    "schema_rejects": true
+  },
+  "source_digest_upper": {
+    "error": "source_digest",
+    "schema_rejects": true
+  },
+  "study_id_empty": {
+    "error": "study_id",
+    "schema_rejects": true
+  },
+  "top_level_array": {
+    "error": "must be a JSON object",
+    "schema_rejects": true
+  },
+  "truncated": {
+    "error": "not valid JSON",
+    "schema_rejects": false
+  },
+  "utf8_bom": {
+    "error": "byte order mark",
+    "schema_rejects": false
+  },
+  "version_0": {
+    "error": "unsupported major version 0",
+    "schema_rejects": true
+  },
+  "version_2": {
+    "error": "unsupported major version 2",
+    "schema_rejects": true
+  },
+  "version_leading_zero": {
+    "error": "format_version",
+    "schema_rejects": true
+  },
+  "version_number": {
+    "error": "format_version",
+    "schema_rejects": true
+  },
+  "version_three_parts": {
+    "error": "format_version",
+    "schema_rejects": true
+  },
+  "wrong_format_name": {
+    "error": "format",
+    "schema_rejects": true
+  }
+}

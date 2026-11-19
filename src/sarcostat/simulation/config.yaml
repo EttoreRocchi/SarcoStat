@@ -5,7 +5,7 @@ n_processes: 1  # Set > 1 for parallel processing
 n_sarcomeres: [5, 10, 15, 25, 50, 75, 100]
 kappa_values: [0, 1, 5, 10, 50]
 
-length_distribution: 'truncnorm'  # Options: truncnorm, gamma, lognorm, uniform
+length_distribution: 'truncnorm'  # Options: truncnorm, lognorm
 length_mean: 1.0
 length_std: 0.25
 length_min: 0.1
@@ -17,8 +17,9 @@ angular_correlation: 0.0  # Correlation between consecutive angles (0-1)
 
 enable_persistence: false  # Enable angular memory/persistence
 persistence_decay: 0.9  # Decay factor for persistence (0-1)
-enable_curvature_bias: false  # Enable systematic curvature
-curvature_strength: 0.1  # Strength of curvature bias
+enable_curvature_bias: false  # Rotate every heading by curvature_strength (mean-direction offset)
+curvature_strength: 0.1  # Heading offset (offset mode) or turn per segment (arc mode), radians
+curvature_mode: 'offset'  # 'offset' = constant rotation; 'arc' = progressive bend
 
 # Paths are relative to the project root when running from the repo root.
 output_dir: 'outputs/simulation'

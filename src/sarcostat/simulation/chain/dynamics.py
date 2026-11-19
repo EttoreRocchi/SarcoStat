@@ -5,7 +5,10 @@ raw step angles produced by an :class:`~sarcostat.simulation._distributions.Angl
 The concrete :class:`StandardDynamics` reproduces the previous chain
 simulator behaviour: an AR(1) correlation on the step series, an
 optional heading-persistence pull toward the previous heading, and an
-optional steady curvature bias.
+optional curvature term: either a constant rotation of every heading
+(``offset``: a mean-direction offset that leaves LR and MVL unchanged) or
+a progressive bend that turns the chain by the same angle at every
+segment (``arc``: a myofibril of constant curvature).
 
 Each effect is a separate small helper so that no function exceeds CC
 10. Callers can compose dynamics by constructing
@@ -87,9 +90,13 @@ class StandardDynamics:
     persistence_decay : float
         Persistence-decay factor in [0, 1).
     enable_curvature : bool
-        Whether to add a curvature bias.
+        Whether to apply the curvature term.
     curvature_strength : float
-        Per-step curvature offset (radians).
+        Heading offset (``offset`` mode) or turning angle per segment
+        (``arc`` mode), in radians.
+    curvature_mode : {"offset", "arc"}, optional
+        ``offset`` (default) rotates every heading by the same angle;
+        ``arc`` adds ``i * curvature_strength`` to the i-th heading.
     """
 
     angular_mean: float
@@ -98,6 +105,7 @@ class StandardDynamics:
     persistence_decay: float
     enable_curvature: bool
     curvature_strength: float
+    curvature_mode: str = "offset"
 
     def apply(self, raw_angles: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         """Compose the active effects in fixed order.
@@ -114,7 +122,10 @@ class StandardDynamics:
             decay = float(np.clip(self.persistence_decay, 0.0, 0.999))
             angles = _heading_persistence(angles, decay)
         if self.enable_curvature and self.curvature_strength != 0:
-            angles = angles + self.curvature_strength
+            if self.curvature_mode == "arc":
+                angles = angles + self.curvature_strength * np.arange(len(angles))
+            else:
+                angles = angles + self.curvature_strength
         return wrap_strict(angles, 0.0, TWO_PI)
 
 

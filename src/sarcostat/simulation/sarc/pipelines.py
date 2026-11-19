@@ -8,12 +8,11 @@ Two pipelines are provided:
 - :class:`BoundaryClassificationPipeline` sweeps a Cur-AsR offset grid
   to characterise misclassification at the AsR ~ Cur boundary.
 
-The boundary pipeline replaces the CC=49 god method
-``run_boundary_classification_analysis`` from the previous module: the
-nested-loop body is decomposed into focused private helpers
-(``_inner_offset_loop``, ``_resolve_ground_truth_class``,
-``_count_classification_outcomes``, ``_critical_widths``) so that no
-single function exceeds CC 10.
+The boundary pipeline uses the Cisterna et al. (2021) shape classifier
+(:func:`~sarcostat.core.sarcomere_morphometry.classify_sarcomere_shape`)
+with ``cfg.boundary_tolerance`` for both the ground truth and the noisy
+prediction, so that at zero noise every sample is classified correctly.
+Its class edges in offset space sit at ``Cur - AsR = +/- tolerance * AsR``.
 """
 
 from __future__ import annotations
@@ -27,6 +26,7 @@ from sarcostat.core.sarcomere_morphometry import (
     Point,
     SarcomereGeometry,
     ShapeClassification,
+    classify_sarcomere_shape,
 )
 
 from .config import Condition, SingleSarcomereConfig
@@ -34,15 +34,6 @@ from .generator import SarcomereGenerator
 from .metrics import compute_metrics_from_points, compute_metrics_with_noise
 from .noise import make_noise_model
 from .results import BoundaryClassificationResults, NoiseSensitivityResults
-
-
-def _classify_offset(offset: float, tolerance: float) -> ShapeClassification:
-    """Map a (Cur - AsR) offset to its ground-truth shape class."""
-    if abs(offset) < tolerance:
-        return ShapeClassification.RECTANGULAR
-    if offset < 0:
-        return ShapeClassification.BARREL
-    return ShapeClassification.HOURGLASS
 
 
 def _condition_geometry_defaults(
@@ -170,7 +161,7 @@ def _per_sample_outcomes(
         if geom is None:
             continue
         n_valid += 1
-        pred = geom.shape_classification
+        pred = classify_sarcomere_shape(geom.aspect_ratio, geom.curviness, cfg.boundary_tolerance)
         if pred == gt_class:
             continue
         n_misclass += 1
@@ -186,20 +177,22 @@ def _critical_widths(
     misclass_rate: np.ndarray,
     noise_levels: list[float],
     *,
+    edge: float,
     threshold: float,
 ) -> dict[float, float]:
-    """Compute the smallest |offset| whose misclassification stays below threshold."""
-    sorted_indices = np.argsort(np.abs(offsets))
-    fallback = max(abs(offsets.min()), abs(offsets.max()))
+    """Half-width of the unreliable band around the class edges, per noise level.
+
+    For each noise level, returns the largest distance from the nearest
+    class edge (``|offset| = edge``) among the offsets whose
+    misclassification rate reaches ``threshold``; ``0.0`` when every
+    offset stays below it. Offsets farther than this from both edges are
+    classified reliably at that noise level (to the grid resolution).
+    """
+    distance_to_edge = np.abs(np.abs(offsets) - edge)
     widths: dict[float, float] = {}
     for ni, sigma in enumerate(noise_levels):
-        for oi in sorted_indices:
-            offset = float(offsets[oi])
-            if abs(offset) > 0.01 and misclass_rate[ni, oi] < threshold:
-                widths[sigma] = abs(offset)
-                break
-        else:
-            widths[sigma] = fallback
+        unreliable = misclass_rate[ni] >= threshold
+        widths[sigma] = float(distance_to_edge[unreliable].max()) if unreliable.any() else 0.0
     return widths
 
 
@@ -207,8 +200,9 @@ def _critical_widths(
 class BoundaryClassificationPipeline:
     """Sweep Cur-AsR offsets against a noise-level grid and report misclass rates.
 
-    The CC=49 method this pipeline replaces is split into the helpers
-    above plus a thin :meth:`run` orchestrator (CC = 4).
+    Ground truth and prediction both use the shape classifier with
+    ``cfg.boundary_tolerance``; a sample counts as misclassified when the
+    noisy annotation lands in a different class than the noise-free one.
     """
 
     cfg: SingleSarcomereConfig
@@ -231,7 +225,9 @@ class BoundaryClassificationPipeline:
         hg_to_barrel = np.full((n_noise, n_offsets), np.nan)
 
         for oi, offset in enumerate(offsets):
-            gt_class = _classify_offset(float(offset), self.cfg.boundary_tolerance)
+            gt_class = classify_sarcomere_shape(
+                base_asr, base_asr + float(offset), self.cfg.boundary_tolerance
+            )
             for ni, sigma in enumerate(self.cfg.noise_levels):
                 seed_base = (
                     self.cfg.seed
@@ -260,8 +256,13 @@ class BoundaryClassificationPipeline:
                         sigma,
                     )
 
+        edge = self.cfg.boundary_tolerance * base_asr
         widths = _critical_widths(
-            offsets, misclass_rate, self.cfg.noise_levels, threshold=self.misclass_threshold
+            offsets,
+            misclass_rate,
+            self.cfg.noise_levels,
+            edge=edge,
+            threshold=self.misclass_threshold,
         )
         return BoundaryClassificationResults(
             noise_levels=self.cfg.noise_levels,
@@ -270,6 +271,8 @@ class BoundaryClassificationPipeline:
             barrel_to_hourglass_rate=barrel_to_hg,
             hourglass_to_barrel_rate=hg_to_barrel,
             critical_boundary_width=widths,
+            class_edges=(-edge, edge),
+            misclass_threshold=self.misclass_threshold,
         )
 
 

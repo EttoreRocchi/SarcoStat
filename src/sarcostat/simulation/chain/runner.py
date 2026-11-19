@@ -11,13 +11,13 @@ and makes it trivial to drop in a different parallelism strategy.
 from __future__ import annotations
 
 import logging
-import struct
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Any
 
 import numpy as np
 
+from .._seeding import per_cell_seed
 from .config import Config
 from .simulator import ChainSimulator
 
@@ -35,17 +35,6 @@ _METRIC_KEYS: tuple[str, ...] = (
 ProgressCallback = Callable[[int, int], None]
 
 
-def _per_cell_seed(base_seed: int, kappa: float, n: int) -> np.random.SeedSequence:
-    """Deterministic seed sequence for a (kappa, n) cell.
-
-    Encodes ``kappa`` via its IEEE-754 byte pattern so every distinct
-    float maps to a distinct seed, avoiding the silent collisions of
-    the previous ``int(kappa * 1e6) % 2**31`` scheme.
-    """
-    kappa_lo, kappa_hi = struct.unpack("<II", struct.pack("<d", float(kappa)))
-    return np.random.SeedSequence([int(base_seed), int(kappa_lo), int(kappa_hi), int(n)])
-
-
 def _run_cell(
     simulator: ChainSimulator,
     kappa: float,
@@ -55,7 +44,7 @@ def _run_cell(
     angle_buffer: int = 500,
 ) -> dict[str, np.ndarray]:
     """Run ``sim_count`` trials for one (kappa, n) cell."""
-    rng = np.random.default_rng(_per_cell_seed(base_seed, kappa, n))
+    rng = np.random.default_rng(per_cell_seed(base_seed, kappa, n))
     lr, mvl, rz, rp, vs, vp = [], [], [], [], [], []
     angle_pool: list[float] = []
     for _ in range(sim_count):
@@ -79,10 +68,11 @@ def _run_cell(
     }
 
 
-def _new_results_dict(cfg: Config) -> dict[str, dict[float, dict[int, list]]]:
-    """Allocate the empty nested dict consumed by plotters and tests."""
+def _new_results_dict(cfg: Config) -> dict[str, dict[float, dict[int, np.ndarray]]]:
+    """Allocate the nested dict consumed by plotters and tests (filled per cell)."""
     return {
-        m: {k: {n: [] for n in cfg.n_sarcomeres} for k in cfg.kappa_values} for m in _METRIC_KEYS
+        m: {k: {n: np.empty(0) for n in cfg.n_sarcomeres} for k in cfg.kappa_values}
+        for m in _METRIC_KEYS
     }
 
 

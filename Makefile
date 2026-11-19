@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
-.PHONY: help install lint format format-check pre-commit \
-        test clean publish publish-test smoke
+.PHONY: help install lint lint-fix format format-check typecheck check pre-commit \
+        test clean build-check publish publish-test smoke
 
 # Colours
 BOLD  := \033[1m
@@ -23,14 +23,22 @@ install:  ## Install package with development dependencies
 
 # Code quality
 
-lint:  ## Run ruff linter
-	@ruff check --fix $(SRC)/ $(TESTS)/
+lint:  ## Run ruff linter (check only, same scope as CI)
+	@ruff check .
+
+lint-fix:  ## Run ruff linter and apply safe fixes
+	@ruff check --fix .
 
 format:  ## Run ruff formatter (applies changes)
-	@ruff format $(SRC)/ $(TESTS)/
+	@ruff format .
 
 format-check:  ## Run ruff formatter in check-only mode (no changes)
-	@ruff format --check $(SRC)/ $(TESTS)/
+	@ruff format --check .
+
+typecheck:  ## Run mypy on the package (blocking in CI)
+	@mypy $(SRC)
+
+check: lint format-check typecheck test  ## Run every check CI runs
 
 pre-commit:  ## Run the full pre-commit suite on all files
 	@pre-commit run --all-files
@@ -53,11 +61,13 @@ clean:  ## Remove build artefacts and caches
 
 # Release
 
-publish: clean  ## Build and publish package to PyPI
-	@read -p "Publish to PyPI? [y/N] " ans && [ "$$ans" = "y" ]
+build-check: clean  ## Build sdist and wheel and validate their metadata
 	@python -m build
+	@twine check --strict dist/*
+
+publish: build-check  ## Build and publish package to PyPI
+	@read -p "Publish to PyPI? [y/N] " ans && [ "$$ans" = "y" ]
 	@twine upload dist/*
 
-publish-test: clean  ## Build and publish package to TestPyPI
-	@python -m build
+publish-test: build-check  ## Build and publish package to TestPyPI
 	@twine upload --repository testpypi dist/*

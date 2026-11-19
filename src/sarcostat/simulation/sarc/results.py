@@ -104,8 +104,14 @@ class BoundaryClassificationResults:
     barrel_to_hourglass_rate, hourglass_to_barrel_rate : numpy.ndarray
         Direction-specific misclassification rates.
     critical_boundary_width : dict of float to float
-        For each noise level, the smallest offset magnitude that keeps
-        the misclassification rate below the configured threshold.
+        For each noise level, the half-width (in ``Cur - AsR`` units) of
+        the band around the class edges where the misclassification rate
+        reaches ``misclass_threshold``; 0 when no offset does.
+    class_edges : tuple of float
+        Offsets ``(-tolerance * AsR, +tolerance * AsR)`` separating
+        RECTANGULAR from BARREL and HOURGLASS.
+    misclass_threshold : float
+        Rate used to define ``critical_boundary_width``.
     """
 
     noise_levels: list[float]
@@ -114,6 +120,8 @@ class BoundaryClassificationResults:
     barrel_to_hourglass_rate: np.ndarray
     hourglass_to_barrel_rate: np.ndarray
     critical_boundary_width: dict[float, float]
+    class_edges: tuple[float, float] = (float("nan"), float("nan"))
+    misclass_threshold: float = 0.1
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-friendly dictionary view of the boundary results."""
@@ -124,6 +132,8 @@ class BoundaryClassificationResults:
             "barrel_to_hourglass_rate": self.barrel_to_hourglass_rate.tolist(),
             "hourglass_to_barrel_rate": self.hourglass_to_barrel_rate.tolist(),
             "critical_boundary_width": self.critical_boundary_width,
+            "class_edges": list(self.class_edges),
+            "misclass_threshold": self.misclass_threshold,
         }
 
 

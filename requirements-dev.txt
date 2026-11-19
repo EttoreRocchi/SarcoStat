@@ -1,4 +1,11 @@
 pytest>=7.0.0
+jsonschema>=4.18
 
 ruff==0.15.0
 pre-commit>=3.0.0
+
+mypy>=1.10
+types-PyYAML
+
+build>=1.0
+twine>=5.0

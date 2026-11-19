@@ -44,7 +44,9 @@ def _sample_truncated_normal(
     hi = mean + 3 * std if max_val is None else max_val
     a = (lo - mean) / std
     b = (hi - mean) / std
-    return truncnorm.rvs(a=a, b=b, loc=mean, scale=std, size=size, random_state=rng)
+    return np.asarray(
+        truncnorm.rvs(a=a, b=b, loc=mean, scale=std, size=size, random_state=rng), dtype=float
+    )
 
 
 def _canonical_six_points(
@@ -164,8 +166,8 @@ class SarcomereGenerator:
         Parameters
         ----------
         condition : Condition
-            ``EUPLOID`` or ``TRISOMIC``. ``CUSTOM`` is unsupported here;
-            use :meth:`from_morphometry` directly.
+            ``EUPLOID`` or ``TRISOMIC``. For arbitrary target AsR/Cur
+            values use :meth:`from_morphometry` directly.
         rng : numpy.random.Generator
             RNG used for the four truncated-normal samples and the
             random orientation.

@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 """Minimum detectable effect (MDE) analysis for SarcoStat metrics.
 
 For each metric we estimate the population standard deviation under the
 specified condition by Monte Carlo simulation, then compute the smallest
 mean difference detectable at alpha = 0.05 and power = 0.80 by a two-sample
-two-sided test (equal-variance t approximation), using
+two-sided test (equal-variance normal (z) approximation), using
 
     MDE = (z_{alpha/2} + z_beta) x sigma x sqrt(2 / N_per_group).
 
@@ -17,26 +16,28 @@ Three families of comparisons are supported:
      trisomic).
   3. Cur between two sarcomere groups, parameterised as in (2).
 
-The output is a tidy table the manuscript can quote directly:
+The output is a tidy table that can be reported directly:
 "to detect a difference of Delta in <metric> with 80% power and alpha = 0.05
 requires N >= <...> sarcomeres per group."
+
+Every grid cell draws from its own seed stream, so results do not depend
+on the order or content of the rest of the grid. For AsR/Cur the same
+ground-truth population is reused at every annotation-noise level of a
+condition (common random numbers), so differences across noise levels
+reflect the noise rather than a fresh population draw.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
 import logging
 import warnings
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import yaml
 from scipy.stats import norm, vonmises
 
 from sarcostat.simulation.sarc import (
@@ -47,12 +48,22 @@ from sarcostat.simulation.sarc import (
     compute_metrics_from_points,
 )
 
-warnings.filterwarnings("ignore")
-plt.style.use("seaborn-v0_8-darkgrid")
-sns.set_palette("husl")
+from .._artifacts import RunArtifacts, run_metadata
+from .._config_io import (
+    as_bool,
+    as_float,
+    as_int,
+    as_list,
+    as_number,
+    as_str,
+    load_flat_dataclass,
+    require_unique,
+)
+from .._plotting import simulation_style
+from .._seeding import per_cell_seed
 
-Z_ALPHA_TWO = float(norm.ppf(1 - 0.025))  # 1.9600
-Z_BETA_80 = float(norm.ppf(0.80))  # 0.8416
+# Stable integer code per condition, used to derive per-condition seed streams.
+_CONDITION_CODES = {c.value: i for i, c in enumerate(Condition)}
 
 
 @dataclass
@@ -109,14 +120,70 @@ class MDEConfig:
     save_figures: bool = True
     figure_dpi: int = 300
 
+    def __post_init__(self) -> None:
+        """Reject out-of-range parameters."""
+        if self.n_replicates_for_sd < 2:
+            raise ValueError(
+                f"n_replicates_for_sd must be at least 2, got {self.n_replicates_for_sd}"
+            )
+        if not (0.0 < self.alpha < 1.0):
+            raise ValueError(f"alpha must be in (0, 1), got {self.alpha}")
+        if not (0.0 < self.power < 1.0):
+            raise ValueError(f"power must be in (0, 1), got {self.power}")
+        if any(k < 0 for k in self.kappa_values):
+            raise ValueError(f"kappa_values must be non-negative, got {self.kappa_values}")
+        if any(s < 0 for s in self.annotation_noise_nm):
+            raise ValueError(
+                f"annotation_noise_nm must be non-negative, got {self.annotation_noise_nm}"
+            )
+        for name in ("chain_lengths", "group_sizes", "sarcomere_group_sizes"):
+            values = getattr(self, name)
+            if any(v < 1 for v in values):
+                raise ValueError(f"{name} must be positive, got {values}")
+        unknown = [c for c in self.sarcomere_conditions if c not in _CONDITION_CODES]
+        if unknown:
+            raise ValueError(
+                f"sarcomere_conditions must be among {sorted(_CONDITION_CODES)}, got {unknown}"
+            )
+        for name in (
+            "kappa_values",
+            "chain_lengths",
+            "group_sizes",
+            "sarcomere_conditions",
+            "annotation_noise_nm",
+            "sarcomere_group_sizes",
+        ):
+            require_unique(list(getattr(self, name)), name)
 
-def load_mde_config(path: Path) -> MDEConfig:
-    """Load an :class:`MDEConfig` from a YAML file; unknown keys are ignored."""
-    with open(path) as f:
-        raw = yaml.safe_load(f) or {}
-    valid = set(MDEConfig.__dataclass_fields__.keys())
-    filtered = {k: v for k, v in raw.items() if k in valid}
-    return MDEConfig(**filtered)
+
+def _numbers(value, name):
+    return as_list(value, name, as_number)
+
+
+def _ints(value, name):
+    return as_list(value, name, as_int)
+
+
+_MDE_CONVERTERS = {
+    "n_replicates_for_sd": as_int,
+    "kappa_values": _numbers,
+    "chain_lengths": _ints,
+    "group_sizes": _ints,
+    "sarcomere_conditions": lambda v, name: as_list(v, name, as_str),
+    "annotation_noise_nm": _numbers,
+    "sarcomere_group_sizes": _ints,
+    "alpha": as_float,
+    "power": as_float,
+    "seed": as_int,
+    "output_dir": as_str,
+    "save_figures": as_bool,
+    "figure_dpi": as_int,
+}
+
+
+def load_mde_config(path: str | Path) -> MDEConfig:
+    """Load an :class:`MDEConfig` from a YAML file; unknown keys raise ``ValueError``."""
+    return load_flat_dataclass(path, MDEConfig, _MDE_CONVERTERS)
 
 
 def mde_two_sample(sigma: float, n_per_group: int, alpha: float, power: float) -> float:
@@ -158,11 +225,10 @@ def simulate_mvl_sigma(
     return float(mvls.mean()), float(mvls.std(ddof=1))
 
 
-def _build_generator(condition: str, seed: int) -> SarcomereGenerator:
+def _build_generator(condition: str) -> SarcomereGenerator:
     """Build a :class:`SarcomereGenerator` for one MDE simulation."""
     cfg = SingleSarcomereConfig(
         n_simulations=1,
-        seed=seed,
         target_condition=condition,
         save_figures=False,
         generate_boundary_cases=False,
@@ -174,7 +240,8 @@ def simulate_morphometry_sigma(
     condition: str,
     sigma_anno_nm: float,
     n_replicates: int,
-    rng: np.random.Generator,
+    truth_rng: np.random.Generator,
+    noise_rng: np.random.Generator,
 ) -> dict[str, tuple[float, float]]:
     """Estimate mean and SD of AsR and Cur under isotropic annotation noise.
 
@@ -187,8 +254,11 @@ def simulate_morphometry_sigma(
         the ground truth is reused unchanged.
     n_replicates : int
         Number of replicates to draw.
-    rng : numpy.random.Generator
-        Master RNG used to seed the per-call generator and worker RNG.
+    truth_rng : numpy.random.Generator
+        RNG for the ground-truth sarcomeres. Passing generators with the
+        same seed at every noise level reuses one population.
+    noise_rng : numpy.random.Generator
+        RNG for the annotation noise.
 
     Returns
     -------
@@ -196,16 +266,14 @@ def simulate_morphometry_sigma(
         ``{"AsR": (mean, std), "Cur": (mean, std)}`` over the replicates
         whose perturbed geometry is non-degenerate.
     """
-    seed = int(rng.integers(0, 2**31 - 1))
-    generator = _build_generator(condition, seed)
-    work_rng = np.random.default_rng(seed)
+    generator = _build_generator(condition)
     noise = GaussianNoise(sigma=sigma_anno_nm) if sigma_anno_nm > 0 else None
 
     asr_vals: list[float] = []
     cur_vals: list[float] = []
     for _ in range(n_replicates):
-        truth_pts, _ = generator.cisterna(Condition(condition), work_rng)
-        noisy_pts = noise.apply(truth_pts, work_rng) if noise is not None else truth_pts
+        truth_pts, _ = generator.cisterna(Condition(condition), truth_rng)
+        noisy_pts = noise.apply(truth_pts, noise_rng) if noise is not None else truth_pts
         geom = compute_metrics_from_points(noisy_pts)
         if geom is None:
             continue
@@ -227,7 +295,6 @@ def run_mvl_mde(cfg: MDEConfig, logger: logging.Logger) -> pd.DataFrame:
     combination, including the per-myofibril SD, sample mean MVL, and
     the corresponding minimum detectable effect.
     """
-    rng = np.random.default_rng(cfg.seed)
     rows: list[dict] = []
     for kappa in cfg.kappa_values:
         for chain_length in cfg.chain_lengths:
@@ -235,7 +302,7 @@ def run_mvl_mde(cfg: MDEConfig, logger: logging.Logger) -> pd.DataFrame:
                 kappa=kappa,
                 chain_length=chain_length,
                 n_replicates=cfg.n_replicates_for_sd,
-                rng=rng,
+                rng=np.random.default_rng(per_cell_seed(cfg.seed, kappa, chain_length)),
             )
             for n in cfg.group_sizes:
                 mde = mde_two_sample(sd, n, cfg.alpha, cfg.power)
@@ -262,15 +329,16 @@ def run_morphometry_mde(cfg: MDEConfig, logger: logging.Logger) -> pd.DataFrame:
     the per-sarcomere SD, sample mean, and the corresponding minimum
     detectable effect.
     """
-    rng = np.random.default_rng(cfg.seed + 1)
     rows: list[dict] = []
     for condition in cfg.sarcomere_conditions:
+        code = _CONDITION_CODES[condition]
         for sigma_anno in cfg.annotation_noise_nm:
             stats = simulate_morphometry_sigma(
                 condition=condition,
                 sigma_anno_nm=sigma_anno,
                 n_replicates=cfg.n_replicates_for_sd,
-                rng=rng,
+                truth_rng=np.random.default_rng(per_cell_seed(cfg.seed + 1, 0.0, code)),
+                noise_rng=np.random.default_rng(per_cell_seed(cfg.seed + 2, sigma_anno, code)),
             )
             for metric_name, (mu, sd) in stats.items():
                 for n in cfg.sarcomere_group_sizes:
@@ -298,9 +366,8 @@ def plot_mde_summary(
     mvl_df: pd.DataFrame,
     morpho_df: pd.DataFrame,
     cfg: MDEConfig,
-    output_dir: Path,
-) -> Path:
-    """Render the three-panel MDE summary figure to PDF and PNG."""
+) -> plt.Figure:
+    """Build the three-panel MDE summary figure (call inside :func:`simulation_style`)."""
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
     palette_mvl = sns.color_palette("viridis", n_colors=len(cfg.chain_lengths))
@@ -344,78 +411,71 @@ def plot_mde_summary(
 
     fig.suptitle(f"Minimum detectable effect (alpha = {cfg.alpha}, power = {cfg.power})")
     fig.tight_layout()
-    out = output_dir / "fig_mde.pdf"
-    fig.savefig(out, dpi=cfg.figure_dpi, bbox_inches="tight")
-    fig.savefig(out.with_suffix(".png"), dpi=cfg.figure_dpi, bbox_inches="tight")
-    plt.close(fig)
-    return out
+    return fig
 
 
-def setup_logging(output_dir: Path) -> logging.Logger:
-    """Configure a console + file logger writing under ``output_dir``."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger("mde_analysis")
-    logger.setLevel(logging.INFO)
-    logger.handlers.clear()
-    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S")
-    fh = logging.FileHandler(output_dir / "mde_analysis.log", mode="w")
-    fh.setFormatter(fmt)
-    sh = logging.StreamHandler()
-    sh.setFormatter(fmt)
-    logger.addHandler(fh)
-    logger.addHandler(sh)
-    return logger
+def run(
+    cfg: MDEConfig,
+    *,
+    config_path: str | Path | None = None,
+    console_handler: logging.Handler | None = None,
+) -> Path:
+    """Execute the MDE analysis and return the run directory.
 
+    Output follows the :class:`~sarcostat.simulation._artifacts.RunArtifacts`
+    layout: ``data/mde_mvl.csv``, ``data/mde_morphometry.csv`` and
+    ``data/simulation_parameters.json``, ``plots/fig_mde.{pdf,png}``, and
+    ``logs/``.
+    """
+    artifacts = RunArtifacts(
+        cfg.output_dir,
+        timestamped=True,
+        logger_name="sarcostat.simulation.mde",
+        console_handler=console_handler,
+    )
+    logger = artifacts.logger
+    artifacts.save_parameters({**asdict(cfg), **run_metadata(config_path)})
+    logger.info("MDE analysis: alpha=%s, power=%s", cfg.alpha, cfg.power)
+    logger.info("Replicates for sigma estimation: %d", cfg.n_replicates_for_sd)
 
-def run(cfg: MDEConfig) -> Path:
-    """Execute the MDE analysis and return the run directory."""
-    output_dir = Path(cfg.output_dir) / datetime.now().strftime("run_%Y%m%d_%H%M%S")
-    logger = setup_logging(output_dir)
-    logger.info("=" * 60)
-    logger.info("MINIMUM DETECTABLE EFFECT ANALYSIS")
-    logger.info("=" * 60)
-    logger.info(f"alpha={cfg.alpha}, power={cfg.power}")
-    logger.info(f"replicates for sigma estimation: {cfg.n_replicates_for_sd}")
-
-    logger.info("\n--- MVL MDE ---")
-    mvl_df = run_mvl_mde(cfg, logger)
-    mvl_df.to_csv(output_dir / "mde_mvl.csv", index=False)
-
-    logger.info("\n--- AsR / Cur MDE ---")
-    morpho_df = run_morphometry_mde(cfg, logger)
-    morpho_df.to_csv(output_dir / "mde_morphometry.csv", index=False)
-
-    with open(output_dir / "config.json", "w") as f:
-        json.dump(asdict(cfg), f, indent=2)
+    with warnings.catch_warnings():
+        # scipy/numpy numerical warnings from extreme cells are expected noise here.
+        warnings.simplefilter("ignore", RuntimeWarning)
+        mvl_df = run_mvl_mde(cfg, logger)
+        morpho_df = run_morphometry_mde(cfg, logger)
+    artifacts.save_csv("mde_mvl.csv", mvl_df)
+    artifacts.save_csv("mde_morphometry.csv", morpho_df)
 
     if cfg.save_figures:
-        fig_path = plot_mde_summary(mvl_df, morpho_df, cfg, output_dir)
-        logger.info(f"Figure -> {fig_path}")
+        with simulation_style():
+            fig = plot_mde_summary(mvl_df, morpho_df, cfg)
+            artifacts.save_figure(fig, "fig_mde", dpi=cfg.figure_dpi)
+            plt.close(fig)
 
-    logger.info("\nMVL summary (kappa x M, n_per_group=25):")
     sub = mvl_df[mvl_df["n_per_group"] == 25]
     if not sub.empty:
         pivot = sub.pivot(index="kappa", columns="chain_length", values="mde")
-        logger.info("\n" + pivot.to_string(float_format="%.4f"))
-
-    logger.info("\nMorphometry summary (euploid, n_per_group=25):")
+        logger.info(
+            "MVL summary (kappa x M, n_per_group=25):\n%s", pivot.to_string(float_format="%.4f")
+        )
     sub = morpho_df[(morpho_df["condition"] == "euploid") & (morpho_df["n_per_group"] == 25)]
     if not sub.empty:
         pivot = sub.pivot(index="annotation_noise_nm", columns="metric", values="mde")
-        logger.info("\n" + pivot.to_string(float_format="%.4f"))
-
-    return output_dir
-
-
-def main() -> None:
-    """CLI entry point for ``python -m sarcostat.simulation.rigor.mde``."""
-    parser = argparse.ArgumentParser(description="MDE analysis for SarcoStat metrics")
-    parser.add_argument("--config", "-c", type=Path, default=None)
-    args = parser.parse_args()
-    cfg = load_mde_config(args.config) if args.config else MDEConfig()
-    out = run(cfg)
-    print(f"\nMDE analysis complete. Output: {out}")
+        logger.info(
+            "Morphometry summary (euploid, n_per_group=25):\n%s",
+            pivot.to_string(float_format="%.4f"),
+        )
+    return artifacts.output_dir
 
 
-if __name__ == "__main__":
-    main()
+__all__ = [
+    "MDEConfig",
+    "load_mde_config",
+    "mde_two_sample",
+    "simulate_mvl_sigma",
+    "simulate_morphometry_sigma",
+    "run_mvl_mde",
+    "run_morphometry_mde",
+    "plot_mde_summary",
+    "run",
+]

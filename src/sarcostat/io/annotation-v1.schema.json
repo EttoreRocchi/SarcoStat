@@ -1,0 +1,739 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/EttoreRocchi/SarcoStat/main/src/sarcostat/io/annotation-v1.schema.json",
+  "title": "SarcoStat annotation file, format v1",
+  "description": "Landmarks clicked on TEM images, with image checksums, crops, display transforms, raw clicks and timing. sarcostat.io.annotations.validate_annotations is the authoritative check: it also enforces unique IDs, references from items to images, crops inside the image, points inside the crop, clicks inside the display, click order and the number of clicks. Readers of 1.x keep and ignore unknown fields.",
+  "type": "object",
+  "required": [
+    "format",
+    "format_version",
+    "sarcostat_version",
+    "source_digest",
+    "created_utc",
+    "annotator_id",
+    "session_id",
+    "study_id",
+    "images",
+    "items"
+  ],
+  "properties": {
+    "format": {
+      "description": "Format name.",
+      "const": "sarcostat-annotations"
+    },
+    "format_version": {
+      "description": "Format version MAJOR.MINOR; this schema covers major version 1.",
+      "type": "string",
+      "pattern": "^1\\.(0|[1-9][0-9]*)$"
+    },
+    "sarcostat_version": {
+      "description": "Version of the SarcoStat package that wrote the file.",
+      "$ref": "#/$defs/text"
+    },
+    "source_digest": {
+      "description": "SHA-256 of the SarcoStat source files that wrote the file.",
+      "$ref": "#/$defs/sha256"
+    },
+    "created_utc": {
+      "description": "Time the file was written, in UTC.",
+      "$ref": "#/$defs/utc"
+    },
+    "annotator_id": {
+      "description": "Annotator code; null outside a study.",
+      "$ref": "#/$defs/nullable_id"
+    },
+    "session_id": {
+      "description": "Session code; null outside a study.",
+      "$ref": "#/$defs/nullable_id"
+    },
+    "study_id": {
+      "description": "Study code; null outside a study.",
+      "$ref": "#/$defs/nullable_id"
+    },
+    "images": {
+      "description": "Images the items refer to.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/image"
+      }
+    },
+    "items": {
+      "description": "Annotated or skipped items, in the order they were done.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "gui": {
+      "description": "Optional. State of the GUI window in a free GUI save; never present in study files.",
+      "type": "object",
+      "required": [
+        "pixel_size",
+        "unit",
+        "expected_direction_deg",
+        "click_sigma_z",
+        "click_sigma_m",
+        "click_perp_ratio",
+        "mode",
+        "open_myofibril"
+      ],
+      "properties": {
+        "pixel_size": {
+          "description": "Physical length of one pixel, in unit.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "description": "Length unit of pixel_size and of the click errors, e.g. px, nm or um.",
+          "$ref": "#/$defs/text"
+        },
+        "expected_direction_deg": {
+          "description": "Heading tested by the V-test, in degrees (image frame: 0 = right, 90 = down); null if not set.",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "click_sigma_z": {
+          "description": "Click error of the Z-line endpoints along their line, in unit; null if not set.",
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "click_sigma_m": {
+          "description": "Click error of the M-line endpoints along their line, in unit; null if not set.",
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "click_perp_ratio": {
+          "description": "Ratio of the across-line to the along-line click error.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "mode": {
+          "description": "Analysis mode of the window.",
+          "enum": [
+            "Myofibril Linearity",
+            "Single Sarcomere"
+          ]
+        },
+        "open_myofibril": {
+          "description": "True if the last myofibril was still open for annotation when the session was saved.",
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "gui"
+        ]
+      },
+      "then": {
+        "properties": {
+          "annotator_id": {
+            "type": "null"
+          },
+          "session_id": {
+            "type": "null"
+          },
+          "study_id": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "nullable_id": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "text": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "nullable_text": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?Z$"
+    },
+    "nullable_utc": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/utc"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "point": {
+      "description": "[x, y] in original image pixels; pixel centres are at integer coordinates.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "line": {
+      "description": "The two endpoints of a line, in click order.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "z_lines": {
+      "description": "Z-lines in click order.",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/line"
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": [
+        "image_id",
+        "file_name",
+        "sha256",
+        "width_px",
+        "height_px",
+        "scale",
+        "study"
+      ],
+      "properties": {
+        "image_id": {
+          "description": "Image code, unique in the file.",
+          "$ref": "#/$defs/id"
+        },
+        "file_name": {
+          "description": "File name without folders, unique in the file.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\]+$",
+          "not": {
+            "enum": [
+              ".",
+              ".."
+            ]
+          }
+        },
+        "sha256": {
+          "description": "SHA-256 of the image file.",
+          "$ref": "#/$defs/sha256"
+        },
+        "width_px": {
+          "description": "Image width in pixels.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "height_px": {
+          "description": "Image height in pixels.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "scale": {
+          "description": "Pixel size.",
+          "type": "object",
+          "required": [
+            "nm_per_px",
+            "source"
+          ],
+          "properties": {
+            "nm_per_px": {
+              "description": "Nanometres per pixel; null if unknown.",
+              "anyOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "source": {
+              "description": "How the pixel size was obtained, e.g. scale_bar or metadata; null if unknown.",
+              "$ref": "#/$defs/nullable_text"
+            }
+          }
+        },
+        "study": {
+          "description": "Grouping of the image in a study.",
+          "type": "object",
+          "required": [
+            "animal",
+            "group"
+          ],
+          "properties": {
+            "animal": {
+              "description": "Animal or subject code; null if not applicable.",
+              "$ref": "#/$defs/nullable_text"
+            },
+            "group": {
+              "description": "Experimental group; null if not applicable.",
+              "$ref": "#/$defs/nullable_text"
+            }
+          }
+        }
+      }
+    },
+    "click": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "order",
+        "seconds",
+        "undo_count"
+      ],
+      "properties": {
+        "x": {
+          "description": "Display x in pixels of the transformed crop.",
+          "type": "number"
+        },
+        "y": {
+          "description": "Display y in pixels of the transformed crop.",
+          "type": "number"
+        },
+        "order": {
+          "description": "Position of the click in the item, from 1.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "seconds": {
+          "description": "Seconds from the start of the item to the click.",
+          "type": "number",
+          "minimum": 0
+        },
+        "undo_count": {
+          "description": "Undos made in the item before the click.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "shape_points": {
+      "type": "object",
+      "required": [
+        "z1",
+        "z2"
+      ],
+      "properties": {
+        "z1": {
+          "description": "First Z-line clicked (landmarks A, B).",
+          "$ref": "#/$defs/line"
+        },
+        "m": {
+          "description": "M-line (landmarks C, D); absent when the M-line is skipped.",
+          "$ref": "#/$defs/line"
+        },
+        "z2": {
+          "description": "Second Z-line clicked (landmarks E, F).",
+          "$ref": "#/$defs/line"
+        }
+      }
+    },
+    "chain_points": {
+      "type": "object",
+      "required": [
+        "z_lines"
+      ],
+      "properties": {
+        "z_lines": {
+          "description": "Z-lines of the chain in click order, at least 2.",
+          "$ref": "#/$defs/z_lines"
+        }
+      }
+    },
+    "pair_points": {
+      "type": "object",
+      "required": [
+        "myofibrils"
+      ],
+      "properties": {
+        "myofibrils": {
+          "description": "Z-lines of the two adjacent myofibrils, each at least 2.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/z_lines"
+          }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "item_id",
+        "target_id",
+        "image_id",
+        "type",
+        "display_transform",
+        "kit_crop_offset",
+        "kit_crop_size",
+        "raw_clicks",
+        "started_utc",
+        "finished_utc",
+        "active_seconds",
+        "skipped",
+        "skip_reason",
+        "skipped_parts"
+      ],
+      "properties": {
+        "item_id": {
+          "description": "Item code, unique in the file.",
+          "$ref": "#/$defs/id"
+        },
+        "target_id": {
+          "description": "Target code; repeated presentations of a target share it. Null outside a study.",
+          "$ref": "#/$defs/nullable_id"
+        },
+        "image_id": {
+          "description": "Image of the item (an images[].image_id).",
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "description": "shape (one sarcomere), chain (Z-lines of one myofibril) or pair (Z-lines of two adjacent myofibrils).",
+          "enum": [
+            "shape",
+            "chain",
+            "pair"
+          ]
+        },
+        "display_transform": {
+          "description": "Dihedral transform applied to the crop for display.",
+          "enum": [
+            "identity",
+            "rot90",
+            "rot180",
+            "rot270",
+            "flip_h",
+            "flip_v",
+            "transpose",
+            "anti_transpose"
+          ]
+        },
+        "kit_crop_offset": {
+          "description": "[x0, y0] of the crop in original pixels.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "kit_crop_size": {
+          "description": "[w, h] of the crop in pixels.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "raw_clicks": {
+          "description": "Kept clicks in display pixels, in order; empty if not recorded.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/click"
+          }
+        },
+        "points": {
+          "description": "Landmarks in original pixels; absent or empty when the item is skipped.",
+          "type": "object"
+        },
+        "started_utc": {
+          "description": "Time the item was first shown, in UTC; null if not recorded.",
+          "$ref": "#/$defs/nullable_utc"
+        },
+        "finished_utc": {
+          "description": "Time the item was finished or skipped, in UTC; null if not recorded.",
+          "$ref": "#/$defs/nullable_utc"
+        },
+        "active_seconds": {
+          "description": "Seconds spent on the item, pauses excluded; null if not recorded.",
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skipped": {
+          "description": "True if the whole item was skipped.",
+          "type": "boolean"
+        },
+        "skip_reason": {
+          "description": "Why the item or a part was skipped; null otherwise.",
+          "$ref": "#/$defs/nullable_text"
+        },
+        "skipped_parts": {
+          "description": "Parts skipped in an annotated item: [] or [\"m_line\"] (shape items only).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "m_line"
+            ]
+          }
+        },
+        "branch_end": {
+          "description": "Chain items only: the chain ends before a branch point. Absent means false.",
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "branch_end"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "chain"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "skipped"
+            ],
+            "properties": {
+              "skipped": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "points": {
+                "maxProperties": 0
+              },
+              "skip_reason": {
+                "$ref": "#/$defs/text"
+              },
+              "skipped_parts": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "points"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "skipped",
+              "skipped_parts"
+            ],
+            "properties": {
+              "skipped": {
+                "const": false
+              },
+              "skipped_parts": {
+                "maxItems": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "skip_reason": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "skipped_parts"
+            ],
+            "properties": {
+              "skipped_parts": {
+                "minItems": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "shape"
+              },
+              "skip_reason": {
+                "$ref": "#/$defs/text"
+              },
+              "points": {
+                "not": {
+                  "required": [
+                    "m"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type",
+              "skipped",
+              "skipped_parts"
+            ],
+            "properties": {
+              "type": {
+                "const": "shape"
+              },
+              "skipped": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "points": {
+                "$ref": "#/$defs/shape_points"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type",
+              "skipped",
+              "skipped_parts"
+            ],
+            "properties": {
+              "type": {
+                "const": "shape"
+              },
+              "skipped": {
+                "const": false
+              },
+              "skipped_parts": {
+                "maxItems": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "points": {
+                "required": [
+                  "m"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type",
+              "skipped"
+            ],
+            "properties": {
+              "type": {
+                "const": "chain"
+              },
+              "skipped": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "points": {
+                "$ref": "#/$defs/chain_points"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type",
+              "skipped"
+            ],
+            "properties": {
+              "type": {
+                "const": "pair"
+              },
+              "skipped": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "points": {
+                "$ref": "#/$defs/pair_points"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

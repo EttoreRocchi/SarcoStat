@@ -11,11 +11,28 @@ dataclass, then hand it to :func:`dump_json` if they want a file, or
 from __future__ import annotations
 
 import json
+import math
 from os import PathLike
 from pathlib import Path
 from typing import Any, Protocol, Union, runtime_checkable
 
 PathInput = Union[str, "PathLike[str]", Path]
+
+
+def _strict_json_value(value: Any) -> Any:
+    """Recursively replace NaN and +/-inf floats with ``None``.
+
+    :func:`json.dumps` would otherwise emit the non-standard ``NaN`` and
+    ``Infinity`` tokens (e.g. for an empty report, or the infinite
+    circular std of uniform data), which strict JSON parsers reject.
+    """
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _strict_json_value(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_strict_json_value(v) for v in value]
+    return value
 
 
 @runtime_checkable
@@ -48,10 +65,11 @@ def to_json_string(obj: Serializable | dict[str, Any], *, indent: int = 2) -> st
     Returns
     -------
     str
-        Pretty-printed JSON representation of the container.
+        Pretty-printed, standard-compliant JSON representation of the
+        container. Non-finite floats (NaN, inf) are written as ``null``.
     """
     payload = obj if isinstance(obj, dict) else obj.to_dict()
-    return json.dumps(payload, indent=indent)
+    return json.dumps(_strict_json_value(payload), indent=indent, allow_nan=False)
 
 
 def dump_json(

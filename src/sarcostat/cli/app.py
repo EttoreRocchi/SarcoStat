@@ -1,19 +1,26 @@
 """Top-level Typer application for SarcoStat.
 
-The CLI exposes one subcommand group (``sim``) and a ``version``
-command. Each ``sim`` subcommand is a thin wrapper around the
-corresponding pipeline / runner: it loads the YAML config, builds the
-appropriate pipeline objects, runs them, persists the artifacts via
+The CLI exposes one subcommand group (``sim``) plus ``version`` and
+``gui``. Each ``sim`` subcommand is a thin wrapper around the
+corresponding pipeline / runner: it loads the YAML config (an invalid
+config exits with status 2 and a one-line message), builds the pipeline
+objects, runs them, persists the artifacts via
 :class:`~sarcostat.simulation._artifacts.RunArtifacts`, and renders
 formatted summaries with rich tables.
 """
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Callable
+from dataclasses import asdict
 from pathlib import Path
+from typing import Annotated, Any, TypeVar
 
 import typer
+import yaml
 from rich.console import Console
+from rich.logging import RichHandler
 from rich.progress import (
     BarColumn,
     Progress,
@@ -43,19 +50,54 @@ app.add_typer(sim_app, name="sim")
 
 
 _CONSOLE = Console()
+_PACKAGED_DIR = Path(__file__).resolve().parent.parent / "simulation"
 
-
-def _ConfigOption() -> typer.Option:
-    """Reusable ``--config`` option for the simulation subcommands."""
-    return typer.Option(
-        None,
+ConfigOption = Annotated[
+    Path | None,
+    typer.Option(
         "--config",
         "-c",
         help="Path to a YAML configuration file.",
         exists=True,
         dir_okay=False,
         readable=True,
-    )
+    ),
+]
+
+C = TypeVar("C")
+
+
+def _console_handler() -> logging.Handler:
+    """Log handler that prints through the shared rich console.
+
+    Routing log records through the same :class:`~rich.console.Console`
+    as the progress bar keeps log lines above the live display instead of
+    interleaving with it.
+    """
+    return RichHandler(console=_CONSOLE, show_path=False, markup=False)
+
+
+def _load_config(loader: Callable[[Path], C], path: Path) -> C:
+    """Run a config loader, turning validation errors into a clean ``--config`` error."""
+    try:
+        return loader(path)
+    except (ValueError, TypeError, KeyError, yaml.YAMLError) as exc:
+        raise typer.BadParameter(f"{path}: {exc}", param_hint="'--config'") from exc
+
+
+def _resolve_config(
+    config: Path | None, packaged_name: str, loader: Callable[[Path], C]
+) -> tuple[C, Path]:
+    """Load ``config`` or, when it is ``None``, the packaged default YAML."""
+    if config is None:
+        config = _PACKAGED_DIR / packaged_name
+        if not config.exists():
+            raise typer.BadParameter(
+                f"No --config supplied and the packaged default {config} is missing.",
+                param_hint="'--config'",
+            )
+        _CONSOLE.print(f"Using packaged default config: [cyan]{config}[/cyan]")
+    return _load_config(loader, config), config
 
 
 @app.command("version")
@@ -65,26 +107,52 @@ def version_cmd() -> None:
 
 
 @app.command("gui")
-def gui_cmd() -> None:
-    """Launch the interactive Tk annotation window."""
-    from sarcostat.gui.gui import main as gui_main
+def gui_cmd(
+    study: Annotated[
+        Path | None,
+        typer.Option(
+            "--study",
+            help="Open a blinded study session from this session-kit folder.",
+            exists=True,
+            file_okay=False,
+        ),
+    ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            help="Folder for the study autosave and session file (default: <kit>/output).",
+            file_okay=False,
+        ),
+    ] = None,
+) -> None:
+    """Launch the interactive Tk annotation window, or a study session with --study."""
+    if study is None:
+        if output is not None:
+            raise typer.BadParameter("--output needs --study.", param_hint="'--output'")
+        from sarcostat.gui.gui import main as gui_main
 
-    gui_main()
+        gui_main()
+        return
+    from sarcostat.gui import study_app
+    from sarcostat.io.study import StudyError
+
+    try:
+        study_app.run_study(study, output)
+    except StudyError as exc:
+        _CONSOLE.print(f"Study session not opened: {exc}", style="red", markup=False)
+        raise typer.Exit(code=2) from exc
 
 
 @sim_app.command("chain")
-def sim_chain(
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="YAML config path.", exists=True, dir_okay=False, readable=True
-    ),
-) -> None:
+def sim_chain(config: ConfigOption = None) -> None:
     """Run the chain Monte Carlo (LR vs MVL across kappa x N)."""
     import matplotlib.pyplot as plt
 
-    from sarcostat.simulation._artifacts import RunArtifacts
+    from sarcostat.simulation._artifacts import RunArtifacts, run_metadata
+    from sarcostat.simulation._plotting import simulation_style
     from sarcostat.simulation.chain import (
         ChainSimulator,
-        Config,
         default_plotters,
         load_config,
         render_all,
@@ -92,9 +160,13 @@ def sim_chain(
         summarise_results,
     )
 
-    cfg: Config = load_config(config) if config else _packaged_chain_default()
-    artifacts = RunArtifacts(cfg.output_dir, logger_name="sarcostat.cli.sim.chain")
-    artifacts.save_parameters(_chain_param_summary(cfg))
+    cfg, config_path = _resolve_config(config, "config.yaml", load_config)
+    artifacts = RunArtifacts(
+        cfg.output_dir,
+        logger_name="sarcostat.cli.sim.chain",
+        console_handler=_console_handler(),
+    )
+    artifacts.save_parameters({**asdict(cfg), **run_metadata(config_path)})
 
     simulator = ChainSimulator.from_config(cfg)
     n_cells = len(cfg.kappa_values) * len(cfg.n_sarcomeres)
@@ -123,32 +195,29 @@ def sim_chain(
         _save_chain_raw_npz(artifacts, results, cfg.kappa_values, cfg.n_sarcomeres)
 
     if cfg.save_figures:
-        figures = render_all(
-            default_plotters(),
-            results,
-            cfg.kappa_values,
-            cfg.n_sarcomeres,
-            dpi=cfg.figure_dpi,
-        )
-        for name, fig in figures.items():
-            artifacts.save_figure(fig, f"chain_{name}", dpi=cfg.figure_dpi)
-            plt.close(fig)
+        with simulation_style():
+            figures = render_all(
+                default_plotters(),
+                results,
+                cfg.kappa_values,
+                cfg.n_sarcomeres,
+                dpi=cfg.figure_dpi,
+            )
+            for name, fig in figures.items():
+                artifacts.save_figure(fig, f"chain_{name}", dpi=cfg.figure_dpi)
+                plt.close(fig)
 
     _CONSOLE.print(f"\n[green]Done[/green]. Output: {artifacts.output_dir}")
 
 
 @sim_app.command("sarc")
-def sim_sarc(
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="YAML config path.", exists=True, dir_okay=False, readable=True
-    ),
-) -> None:
+def sim_sarc(config: ConfigOption = None) -> None:
     """Run the single-sarcomere noise sensitivity and boundary pipelines."""
-    from dataclasses import asdict
-
     import matplotlib.pyplot as plt
+    import numpy as np
 
-    from sarcostat.simulation._artifacts import RunArtifacts
+    from sarcostat.simulation._artifacts import RunArtifacts, run_metadata
+    from sarcostat.simulation._plotting import simulation_style
     from sarcostat.simulation.sarc import (
         BoundaryAnalysisPlot,
         BoundaryClassificationPipeline,
@@ -156,22 +225,34 @@ def sim_sarc(
         NoiseSensitivityPipeline,
         NoiseSensitivityPlot,
         SarcomereGenerator,
-        SingleSarcomereConfig,
         load_sarcomere_config,
     )
 
-    cfg: SingleSarcomereConfig = (
-        load_sarcomere_config(config) if config else SingleSarcomereConfig()
+    cfg, config_path = _resolve_config(config, "sarcomere_config.yaml", load_sarcomere_config)
+    artifacts = RunArtifacts(
+        cfg.output_dir,
+        timestamped=True,
+        logger_name="sarcostat.cli.sim.sarc",
+        console_handler=_console_handler(),
     )
-    artifacts = RunArtifacts(cfg.output_dir, timestamped=True, logger_name="sarcostat.cli.sim.sarc")
-    artifacts.save_parameters(asdict(cfg))
+    artifacts.save_parameters({**asdict(cfg), **run_metadata(config_path)})
 
     generator = SarcomereGenerator(cfg)
-    with _CONSOLE.status("Running noise sensitivity pipeline"):
-        noise_results = NoiseSensitivityPipeline(
-            cfg=cfg, generator=generator, logger=artifacts.logger
-        ).run()
-    artifacts.save_json("noise_sensitivity_summary.json", noise_results.to_dict())
+    noise_results = None
+    if cfg.run_noise_sensitivity:
+        with _CONSOLE.status("Running noise sensitivity pipeline"):
+            noise_results = NoiseSensitivityPipeline(
+                cfg=cfg, generator=generator, logger=artifacts.logger
+            ).run()
+        artifacts.save_json("noise_sensitivity_summary.json", noise_results.to_dict())
+        if cfg.save_raw_data:
+            artifacts.save_npz(
+                "noise_sensitivity_raw",
+                noise_levels=np.asarray(noise_results.noise_levels, dtype=float),
+                asr_errors=noise_results.asr_errors,
+                cur_errors=noise_results.cur_errors,
+                shape_index_errors=noise_results.shape_index_errors,
+            )
 
     boundary_results = None
     if cfg.generate_boundary_cases:
@@ -182,87 +263,49 @@ def sim_sarc(
         artifacts.save_json("boundary_analysis_summary.json", boundary_results.to_dict())
 
     if cfg.save_figures:
-        fig_noise = NoiseSensitivityPlot().render(noise_results)
-        artifacts.save_figure(fig_noise, "noise_sensitivity_combined", dpi=cfg.figure_dpi)
-        plt.close(fig_noise)
-        if boundary_results is not None:
-            fig_bound = BoundaryAnalysisPlot().render(boundary_results)
-            artifacts.save_figure(fig_bound, "boundary_misclassification", dpi=cfg.figure_dpi)
-            plt.close(fig_bound)
-        fig_examples = ExampleSarcomeresPlot().render(cfg, generator)
-        artifacts.save_figure(fig_examples, "example_sarcomeres", dpi=cfg.figure_dpi)
-        plt.close(fig_examples)
+        with simulation_style():
+            figures = {"example_sarcomeres": ExampleSarcomeresPlot().render(cfg, generator)}
+            if noise_results is not None:
+                figures["noise_sensitivity_combined"] = NoiseSensitivityPlot().render(noise_results)
+            if boundary_results is not None:
+                figures["boundary_misclassification"] = BoundaryAnalysisPlot().render(
+                    boundary_results
+                )
+            for name, fig in figures.items():
+                artifacts.save_figure(fig, name, dpi=cfg.figure_dpi)
+                plt.close(fig)
 
     _print_sarc_summary_table(noise_results, boundary_results)
     _CONSOLE.print(f"\n[green]Done[/green]. Output: {artifacts.output_dir}")
 
 
 @sim_app.command("coverage")
-def sim_coverage(
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="YAML config path.", exists=True, dir_okay=False, readable=True
-    ),
-) -> None:
+def sim_coverage(config: ConfigOption = None) -> None:
     """Empirical CI coverage for circular mean and MVL bootstrap intervals."""
-    from sarcostat.simulation.rigor.coverage import (
-        CoverageConfig,
-        load_coverage_config,
-    )
-    from sarcostat.simulation.rigor.coverage import (
-        run as run_coverage,
-    )
+    from sarcostat.simulation.rigor.coverage import CoverageConfig, load_coverage_config, run
 
-    cfg = load_coverage_config(config) if config else CoverageConfig()
+    cfg = _load_config(load_coverage_config, config) if config else CoverageConfig()
     with _CONSOLE.status("Running CI coverage validation"):
-        out = run_coverage(cfg)
+        out = run(cfg, config_path=config, console_handler=_console_handler())
     _CONSOLE.print(f"\n[green]Done[/green]. Output: {out}")
 
 
 @sim_app.command("mde")
-def sim_mde(
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="YAML config path.", exists=True, dir_okay=False, readable=True
-    ),
-) -> None:
+def sim_mde(config: ConfigOption = None) -> None:
     """Minimum detectable effect size for MVL, AsR, and Cur."""
-    from sarcostat.simulation.rigor.mde import (
-        MDEConfig,
-        load_mde_config,
-    )
-    from sarcostat.simulation.rigor.mde import (
-        run as run_mde,
-    )
+    from sarcostat.simulation.rigor.mde import MDEConfig, load_mde_config, run
 
-    cfg = load_mde_config(config) if config else MDEConfig()
+    cfg = _load_config(load_mde_config, config) if config else MDEConfig()
     with _CONSOLE.status("Running MDE analysis"):
-        out = run_mde(cfg)
+        out = run(cfg, config_path=config, console_handler=_console_handler())
     _CONSOLE.print(f"\n[green]Done[/green]. Output: {out}")
 
 
-def _packaged_chain_default():
-    """Return the chain ``Config`` from the packaged ``config.yaml``.
-
-    The packaged YAML lives next to this module's grandparent (the
-    ``simulation/`` directory). If it is missing, raise a clear error.
-    """
-    from sarcostat.simulation.chain import load_config
-
-    candidate = Path(__file__).parent.parent / "simulation" / "config.yaml"
-    if not candidate.exists():
-        raise typer.BadParameter(
-            "No --config supplied and the packaged default "
-            f"{candidate} is missing. Pass --config explicitly."
-        )
-    _CONSOLE.print(f"Using packaged default config: [cyan]{candidate}[/cyan]")
-    return load_config(candidate)
-
-
-def _save_chain_raw_npz(artifacts, results: dict, kappa_values, n_sarcomeres) -> None:
+def _save_chain_raw_npz(artifacts: Any, results: dict, kappa_values, n_sarcomeres) -> None:
     """Persist per-cell raw arrays to ``data/raw_k{k}_N{n}.npz``.
 
-    The figure scripts under ``paper/latex_ejtm/figures`` consume these
-    files directly; the per-cell layout matches the original
-    ``ChainSimulator`` output.
+    Downstream figure scripts read these files directly, so the file
+    naming and array keys are kept stable.
     """
     metric_keys = (
         "linearity_ratio",
@@ -280,19 +323,7 @@ def _save_chain_raw_npz(artifacts, results: dict, kappa_values, n_sarcomeres) ->
             artifacts.save_npz(f"raw_k{k_str}_N{n}", **payload)
 
 
-def _chain_param_summary(cfg) -> dict:
-    """Subset of the chain config that gets persisted alongside the run."""
-    return {
-        "n_simulations": cfg.n_simulations,
-        "seed": cfg.seed,
-        "n_sarcomeres": cfg.n_sarcomeres,
-        "kappa_values": cfg.kappa_values,
-        "length_distribution": cfg.length_distribution,
-        "angular_distribution": cfg.angular_distribution,
-    }
-
-
-def _print_chain_summary_table(summary: dict, cfg) -> None:
+def _print_chain_summary_table(summary: dict, cfg: Any) -> None:
     """Render the chain-summary table for a single representative metric."""
     table = Table(title="Linearity ratio (mean across MC replicates)")
     table.add_column("kappa", justify="right")
@@ -308,25 +339,27 @@ def _print_chain_summary_table(summary: dict, cfg) -> None:
     _CONSOLE.print(table)
 
 
-def _print_sarc_summary_table(noise_results, boundary_results) -> None:
-    """Render the sarc-summary table covering RMSE per noise level."""
-    table = Table(title="Single-sarcomere noise sensitivity")
-    table.add_column("noise sigma (nm)", justify="right")
-    table.add_column("AsR RMSE", justify="right")
-    table.add_column("Cur RMSE", justify="right")
-    table.add_column("class. accuracy", justify="right")
-    for i, sigma in enumerate(noise_results.noise_levels):
-        table.add_row(
-            f"{sigma:g}",
-            f"{noise_results.asr_rmse[i]:.4f}",
-            f"{noise_results.cur_rmse[i]:.4f}",
-            f"{noise_results.classification_agreement[i] * 100:.1f}%",
-        )
-    _CONSOLE.print(table)
+def _print_sarc_summary_table(noise_results: Any, boundary_results: Any) -> None:
+    """Render the sarc-summary tables (noise RMSE and boundary band widths)."""
+    if noise_results is not None:
+        table = Table(title="Single-sarcomere noise sensitivity")
+        table.add_column("noise sigma (nm)", justify="right")
+        table.add_column("AsR RMSE", justify="right")
+        table.add_column("Cur RMSE", justify="right")
+        table.add_column("class. accuracy", justify="right")
+        for i, sigma in enumerate(noise_results.noise_levels):
+            table.add_row(
+                f"{sigma:g}",
+                f"{noise_results.asr_rmse[i]:.4f}",
+                f"{noise_results.cur_rmse[i]:.4f}",
+                f"{noise_results.classification_agreement[i] * 100:.1f}%",
+            )
+        _CONSOLE.print(table)
     if boundary_results is not None:
-        bt = Table(title="Critical boundary width per noise level")
+        threshold = 100 * boundary_results.misclass_threshold
+        bt = Table(title="Unreliable band around the class edges per noise level")
         bt.add_column("noise sigma (nm)", justify="right")
-        bt.add_column("|Cur - AsR| at <10% misclassification", justify="right")
+        bt.add_column(f"half-width with >= {threshold:g}% misclassification", justify="right")
         for sigma in sorted(boundary_results.critical_boundary_width):
             width = boundary_results.critical_boundary_width[sigma]
             bt.add_row(f"{sigma:g}", f"{width:.3f}")

@@ -13,6 +13,6 @@ alpha: 0.05
 power: 0.80
 seed: 42
 
-output_dir: paper/results/mde_smoke
+output_dir: outputs/mde_smoke
 save_figures: true
 figure_dpi: 150

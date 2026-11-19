@@ -31,10 +31,11 @@ class EffectSizeBand:
     Attributes
     ----------
     upper_bound : float
-        Inclusive upper bound on the magnitude (mean vector length) for
-        which this band applies. The first band whose ``upper_bound``
-        exceeds the observed value wins; bands are ordered from smallest
-        to largest.
+        Exclusive upper bound on the magnitude (mean vector length) for
+        which this band applies: the first band whose ``upper_bound``
+        is strictly greater than the observed value wins, so a value
+        exactly on a bound gets the next band's label. Bands are
+        ordered from smallest to largest.
     label : str
         Short adjective (``"weak"``, ``"strong"``, ...).
     """
@@ -76,8 +77,7 @@ class RayleighInterpreter:
         :data:`DEFAULT_EFFECT_BANDS` (Cohen-style: <0.2 negligible, ...,
         >=0.8 very strong).
     significance_level : float, optional
-        Two-sided alpha used to flag a result as significant
-        (default 0.05).
+        Alpha used to flag a result as significant (default 0.05).
     """
 
     bands: tuple[EffectSizeBand, ...] = DEFAULT_EFFECT_BANDS
@@ -95,7 +95,7 @@ class RayleighInterpreter:
         z_stat : float
             Rayleigh Z statistic.
         p_value : float
-            Two-sided p-value from the test.
+            p-value of the test against uniformity.
         n : int
             Sample size used to compute Z.
 
@@ -145,15 +145,17 @@ class RayleighInterpreter:
 class VTestInterpreter:
     """Convert V-test outputs to a labelled interpretation bundle.
 
-    The V-test refines the Rayleigh test by checking concentration about
-    a hypothesized mean direction. The bundle reports whether the
-    observed mean direction is consistent with the expected one at the
-    chosen significance level.
+    The V-test refines the Rayleigh test with a one-sided alternative:
+    the angles are concentrated *around* a hypothesised mean direction.
+    A significant result is evidence for that concentration; a
+    non-significant one only means that uniformity could not be
+    rejected in favour of it (it is not evidence that the mean direction
+    matches, nor that it differs).
 
     Parameters
     ----------
     significance_level : float, optional
-        Two-sided alpha (default 0.05).
+        One-sided alpha (default 0.05).
     """
 
     significance_level: float = SIGNIFICANCE_LEVEL
@@ -171,7 +173,7 @@ class VTestInterpreter:
         v_stat : float
             V statistic.
         p_value : float
-            Two-sided p-value.
+            One-sided p-value.
         expected_dir : float
             Expected mean direction (radians).
 
@@ -188,14 +190,14 @@ class VTestInterpreter:
         if significant:
             interpretation = (
                 f"The V-test is significant (p = {p_value:.4f}), indicating that "
-                f"the mean direction significantly differs from the expected direction "
+                f"the angles are concentrated around the expected direction "
                 f"of {expected_deg:.1f} deg."
             )
         else:
             interpretation = (
-                f"The V-test is not significant (p = {p_value:.4f}), suggesting that "
-                f"the mean direction is consistent with the expected direction "
-                f"of {expected_deg:.1f} deg."
+                f"The V-test is not significant (p = {p_value:.4f}): there is no "
+                f"evidence that the angles are concentrated around the expected "
+                f"direction of {expected_deg:.1f} deg (uniformity is not rejected)."
             )
 
         return {
@@ -224,7 +226,7 @@ def interpret_rayleigh_test(z_stat: float, p_value: float, n: int) -> dict[str, 
     z_stat : float
         Rayleigh Z statistic.
     p_value : float
-        Two-sided p-value.
+        p-value of the test against uniformity.
     n : int
         Sample size.
 
@@ -244,7 +246,7 @@ def interpret_v_test(v_stat: float, p_value: float, expected_dir: float) -> dict
     v_stat : float
         V statistic.
     p_value : float
-        Two-sided p-value.
+        One-sided p-value.
     expected_dir : float
         Expected mean direction (radians).
 

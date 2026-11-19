@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "sarcostat"
 description = "Sarcomeric sequence analysis with circular statistics and morphometry"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = [
     "sarcomere",
     "myofibril",
@@ -23,7 +24,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Image Processing",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -41,6 +41,7 @@ sarcostat = "sarcostat.cli.app:app"
 Homepage = "https://github.com/EttoreRocchi/SarcoStat"
 Repository = "https://github.com/EttoreRocchi/SarcoStat"
 Issues = "https://github.com/EttoreRocchi/SarcoStat/issues"
+Changelog = "https://github.com/EttoreRocchi/SarcoStat/blob/main/CHANGELOG.md"
 
 [tool.setuptools.dynamic]
 version = {attr = "sarcostat.__version__"}
@@ -52,7 +53,10 @@ where = ["src"]
 include = ["sarcostat*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.yaml", "*.png", "py.typed"]
+sarcostat = ["py.typed"]
+"sarcostat.simulation" = ["*.yaml"]
+"sarcostat.gui" = ["*.png"]
+"sarcostat.io" = ["*.json"]
 
 [tool.ruff]
 line-length = 100
@@ -60,6 +64,7 @@ target-version = "py310"
 src = ["src"]
 extend-exclude = [
     "outputs",
+    "paper",
 ]
 
 [tool.ruff.lint]

@@ -109,6 +109,27 @@ class TestVTestInterpreter:
         out = relaxed.interpret(v_stat=1.0, p_value=0.4, expected_dir=0.0)
         assert out["significant"] is True
 
+    def test_text_matches_one_sided_alternative(self) -> None:
+        """Angles at ~90 deg tested against 90 deg are concentrated *around* it.
+
+        The V-test alternative is concentration around the expected direction,
+        so a significant result must not be described as "differs from".
+        """
+        from sarcostat.core.circular_stats import perform_v_test
+
+        angles = [math.radians(a) for a in (85, 88, 90, 91, 93, 95, 87, 89)]
+        v_stat, p_val = perform_v_test(angles, expected_dir=math.pi / 2)
+        text = interpret_v_test(v_stat, p_val, math.pi / 2)["interpretation"]
+        assert p_val < 0.05
+        assert "concentrated around the expected direction" in text
+        assert "differs" not in text
+
+        v_stat, p_val = perform_v_test(angles, expected_dir=-math.pi / 2)
+        text = interpret_v_test(v_stat, p_val, -math.pi / 2)["interpretation"]
+        assert p_val > 0.05
+        assert "no evidence" in text
+        assert "consistent with" not in text
+
 
 class TestInterpreterContract:
     """Cross-cutting contract: keys present, types are JSON-friendly."""

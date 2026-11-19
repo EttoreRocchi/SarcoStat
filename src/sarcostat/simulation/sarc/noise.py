@@ -132,19 +132,21 @@ class AnisotropicNoise:
 
 
 def make_noise_model(cfg: SingleSarcomereConfig, sigma: float) -> NoiseModel:
-    """Build the noise model that matches ``cfg.noise_model``.
+    """Build the noise model that matches ``cfg.noise_model`` at level ``sigma``.
 
-    The isotropic model takes the per-call ``sigma`` directly; the
-    anisotropic model uses the ``anisotropic_sigma_along`` and
-    ``anisotropic_sigma_perpendicular`` parameters from the config and
-    ignores ``sigma`` (matching the original behaviour).
+    The isotropic model uses ``sigma`` in both axes. The anisotropic model
+    splits the same total per-point variance (``2 * sigma**2``) between
+    the along-axis and perpendicular directions in the ratio given by
+    ``cfg.anisotropic_along_weight`` and
+    ``cfg.anisotropic_perpendicular_weight``, so both models are noise-free
+    at ``sigma = 0`` and comparable at every swept level.
     """
     if cfg.noise_model == "isotropic":
         return GaussianNoise(sigma=sigma)
-    return AnisotropicNoise(
-        sigma_along=cfg.anisotropic_sigma_along,
-        sigma_perpendicular=cfg.anisotropic_sigma_perpendicular,
-    )
+    along = cfg.anisotropic_along_weight
+    perp = cfg.anisotropic_perpendicular_weight
+    scale = sigma / float(np.sqrt((along**2 + perp**2) / 2.0))
+    return AnisotropicNoise(sigma_along=along * scale, sigma_perpendicular=perp * scale)
 
 
 __all__ = ["NoiseModel", "GaussianNoise", "AnisotropicNoise", "make_noise_model"]

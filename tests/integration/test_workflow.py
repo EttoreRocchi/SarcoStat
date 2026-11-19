@@ -37,12 +37,11 @@ class TestLinearityWorkflow:
         assert metrics.mean_vector_length > 0.99  # Highly concentrated
 
     def test_zigzag_workflow(self):
-        """A zigzag of midpoints averages to a uniform turning distribution.
+        """A zigzag of midpoints: headings alternate between +45 and -45 deg.
 
-        The relative-angle series alternates between roughly +pi/2 and -pi/2
-        which has mean resultant length R = 0, so :func:`calculate_circular_std`
-        returns ``inf`` and emits a ``UserWarning``. The warning is part of the
-        contract for uniform input and is asserted explicitly here.
+        Statistics are computed on the headings, so
+        for these equal-length segments MVL = LR = |2 e^{i pi/4} + e^{-i pi/4}| / 3
+        = sqrt(5) / 3.
         """
         session = AnalysisSession()
 
@@ -52,11 +51,12 @@ class TestLinearityWorkflow:
         session.segments.append(UserSegment(p1=(150.0, 50.0), p2=(250.0, 50.0)))
 
         midpoints = np.array(session.midpoints, dtype=float)
-        with pytest.warns(UserWarning, match="uniform"):
-            metrics = analyze_segment_sequence(midpoints)
+        metrics = analyze_segment_sequence(midpoints)
 
         assert metrics.linearity_ratio < 0.95
         assert metrics.n_segments == 3
+        assert metrics.mean_vector_length == pytest.approx(metrics.linearity_ratio)
+        assert metrics.mean_vector_length == pytest.approx(np.sqrt(5.0) / 3.0)
 
     def test_workflow_with_export(self, tmp_path):
         """Round-trip metrics through ``dump_json`` and verify the file."""

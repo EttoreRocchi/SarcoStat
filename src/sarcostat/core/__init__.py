@@ -3,7 +3,10 @@
 This subpackage exposes circular-statistics utilities (mean vector length,
 Rayleigh and V tests, bootstrap CIs, segment-sequence analysis) and
 single-sarcomere morphometry (geometry, alpha angle, shape classification,
-Z-line alignment). It depends only on numpy and pingouin; it has no GUI,
+Z-line alignment), chain statistics of traced myofibrils (effective sample
+size, bias correction, turning angles, persistence length), the Z-line
+register between adjacent myofibrils, and the annotation uncertainty of the
+shape indices. It depends only on numpy and pingouin; it has no GUI,
 plotting, or I/O dependencies.
 """
 
@@ -18,6 +21,17 @@ from ._interpretation import (
     interpret_v_test,
 )
 from ._serialization import Serializable, dump_json, to_json_string
+from .chain_statistics import (
+    corrected_rho_squared,
+    effective_sample_size,
+    lr_noise_floor,
+    lr_uniformity_p,
+    persistence_length,
+    pooled_persistence_length,
+    serial_dependence_test,
+    tangent_correlation,
+    turning_angle_statistics,
+)
 from .circular_stats import (
     CircularStatisticsReport,
     SegmentData,
@@ -35,6 +49,24 @@ from .circular_stats import (
     perform_rayleigh_test,
     perform_v_test,
 )
+from .register import (
+    RegisterMetrics,
+    expected_register_correlation,
+    register_decay_length,
+    z_line_register,
+)
+from .reliability import (
+    BalancedCore,
+    BootstrapInterval,
+    EffectiveSigma,
+    VarianceComponents,
+    bootstrap_derived,
+    complete_cases,
+    ems_coefficients,
+    mls_interval,
+    sigma_effective,
+    variance_components,
+)
 from .sarcomere_morphometry import (
     DEFAULT_SHAPE_TOLERANCE,
     SarcomereChainMetrics,
@@ -48,6 +80,14 @@ from .sarcomere_morphometry import (
     calculate_z_staircase_alignment,
     classify_sarcomere_shape,
     quick_sarcomere_analysis,
+)
+from .shape_uncertainty import (
+    canonicalize_sarcomere_landmarks,
+    class_stability,
+    classification_margin,
+    estimate_annotation_sigma,
+    landmark_offsets,
+    shape_uncertainty,
 )
 
 __all__ = [
@@ -88,4 +128,33 @@ __all__ = [
     "calculate_z_staircase_alignment",
     "classify_sarcomere_shape",
     "quick_sarcomere_analysis",
+    "corrected_rho_squared",
+    "effective_sample_size",
+    "lr_noise_floor",
+    "lr_uniformity_p",
+    "persistence_length",
+    "pooled_persistence_length",
+    "serial_dependence_test",
+    "tangent_correlation",
+    "turning_angle_statistics",
+    "RegisterMetrics",
+    "expected_register_correlation",
+    "register_decay_length",
+    "z_line_register",
+    "class_stability",
+    "classification_margin",
+    "estimate_annotation_sigma",
+    "shape_uncertainty",
+    "canonicalize_sarcomere_landmarks",
+    "landmark_offsets",
+    "BalancedCore",
+    "BootstrapInterval",
+    "EffectiveSigma",
+    "VarianceComponents",
+    "bootstrap_derived",
+    "complete_cases",
+    "ems_coefficients",
+    "mls_interval",
+    "sigma_effective",
+    "variance_components",
 ]

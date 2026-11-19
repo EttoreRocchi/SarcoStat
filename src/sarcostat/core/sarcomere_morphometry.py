@@ -35,6 +35,13 @@ LineSegment = tuple[Point, Point]
 
 DEFAULT_SHAPE_TOLERANCE = 0.05
 
+# Absolute slack on the dimensionless classifier comparisons, so that
+# ratios that equal the tolerance in exact arithmetic (e.g. AsR = 21/20 =
+# 1.05 from integer-pixel annotations) land inside the "<= tolerance"
+# class despite floating-point rounding.
+_BOUNDARY_SLACK = 1e-9
+_DEGENERATE_LENGTH_PX = 1e-10
+
 
 class ShapeClassification(Enum):
     """Sarcomere shape classes based on the AsR/Cur relationship.
@@ -158,6 +165,10 @@ def calculate_alpha_angle(axis1: LineSegment, axis2: LineSegment) -> float:
     (Cisterna et al. 2021, Section 2.5). The absolute value is used so
     that opposing deviations do not cancel in the chain mean.
 
+    Sarcomere axes are undirected lines: which Z-line the user annotated
+    first only flips the vector, so the angle is folded onto
+    ``[0, pi/2]`` (an axis entered in reverse order gives 0, not pi).
+
     Parameters
     ----------
     axis1, axis2 : LineSegment
@@ -166,7 +177,7 @@ def calculate_alpha_angle(axis1: LineSegment, axis2: LineSegment) -> float:
     Returns
     -------
     float
-        Angle in radians, in [0, pi].
+        Angle in radians, in [0, pi/2].
 
     Examples
     --------
@@ -178,7 +189,8 @@ def calculate_alpha_angle(axis1: LineSegment, axis2: LineSegment) -> float:
     """
     v1 = (axis1[1][0] - axis1[0][0], axis1[1][1] - axis1[0][1])
     v2 = (axis2[1][0] - axis2[0][0], axis2[1][1] - axis2[0][1])
-    return angle_between_vectors(v1, v2)
+    angle = angle_between_vectors(v1, v2)
+    return float(min(angle, np.pi - angle))
 
 
 @dataclass
@@ -268,14 +280,20 @@ def classify_sarcomere_shape(
     curviness : float
         Cur = sarcomere_length / m_line_length.
     tolerance : float, optional
-        Relative tolerance for ``SQUARE`` (``|AsR - 1| < tolerance``)
-        and ``RECTANGULAR`` (``|Cur - AsR| / AsR < tolerance``)
+        Relative tolerance for ``SQUARE`` (``|AsR - 1| <= tolerance``)
+        and ``RECTANGULAR`` (``|Cur - AsR| / AsR <= tolerance``)
         decisions. Defaults to :data:`DEFAULT_SHAPE_TOLERANCE`.
 
     Returns
     -------
     ShapeClassification
         One of SQUARE, RECTANGULAR, BARREL, HOURGLASS.
+
+    Raises
+    ------
+    ValueError
+        If ``aspect_ratio`` or ``curviness`` is not a positive finite
+        number, or ``tolerance`` is negative.
 
     Notes
     -----
@@ -284,9 +302,11 @@ def classify_sarcomere_shape(
     Cur < AsR             -> BARREL (convex lateral sides).
     Cur > AsR             -> HOURGLASS (concave lateral sides).
 
-    The boundaries follow the manuscript Table 1: comparisons use
+    The classes follow Cisterna et al. (2021); comparisons use
     non-strict inequalities (``<=``), so a sample at exactly the
     tolerance edge is included in the closer (less restrictive) class.
+    A slack of :data:`_BOUNDARY_SLACK` absorbs floating-point rounding
+    at the edge.
 
     Examples
     --------
@@ -294,10 +314,18 @@ def classify_sarcomere_shape(
     <ShapeClassification.RECTANGULAR: 'rectangular'>
     >>> classify_sarcomere_shape(4.0, 3.5)
     <ShapeClassification.BARREL: 'barrel'>
+    >>> classify_sarcomere_shape(1.05, 1.05)
+    <ShapeClassification.SQUARE: 'square'>
     """
+    for name, value in (("aspect_ratio", aspect_ratio), ("curviness", curviness)):
+        if not (np.isfinite(value) and value > 0):
+            raise ValueError(f"{name} must be a positive finite number, got {value}")
+    if tolerance < 0:
+        raise ValueError(f"tolerance must be non-negative, got {tolerance}")
+    edge = tolerance + _BOUNDARY_SLACK
     relative_diff = (curviness - aspect_ratio) / aspect_ratio
-    near_diagonal = abs(relative_diff) <= tolerance
-    if abs(aspect_ratio - 1.0) <= tolerance and near_diagonal:
+    near_diagonal = abs(relative_diff) <= edge
+    if abs(aspect_ratio - 1.0) <= edge and near_diagonal:
         return ShapeClassification.SQUARE
     if near_diagonal:
         return ShapeClassification.RECTANGULAR
@@ -342,8 +370,10 @@ def calculate_sarcomere_geometry(
     Raises
     ------
     ValueError
-        If any of the three lines or the sarcomere length collapse to
-        zero.
+        If any point is non-finite, ``pixel_to_unit`` is not positive,
+        or any of the three lines or the sarcomere length collapse to
+        zero (checked in pixel units, so that a valid annotation stays
+        valid under any unit conversion).
 
     References
     ----------
@@ -359,22 +389,32 @@ def calculate_sarcomere_geometry(
     >>> abs(geom.aspect_ratio - 1.0) < 0.01
     True
     """
-    z_line_1_length = euclidean_distance(point_a, point_b) * pixel_to_unit
-    z_line_2_length = euclidean_distance(point_e, point_f) * pixel_to_unit
-    m_line_length = euclidean_distance(point_c, point_d) * pixel_to_unit
+    if not (np.isfinite(pixel_to_unit) and pixel_to_unit > 0):
+        raise ValueError(f"pixel_to_unit must be a positive finite number, got {pixel_to_unit}")
+    all_points = (point_a, point_b, point_c, point_d, point_e, point_f)
+    if not np.all(np.isfinite(np.asarray(all_points, dtype=float))):
+        raise ValueError("Annotation points must be finite; got NaN or inf")
 
-    if z_line_1_length < 1e-10:
+    z_line_1_px = euclidean_distance(point_a, point_b)
+    z_line_2_px = euclidean_distance(point_e, point_f)
+    m_line_px = euclidean_distance(point_c, point_d)
+    if z_line_1_px < _DEGENERATE_LENGTH_PX:
         raise ValueError("Z-line 1 has zero length (points A and B coincide)")
-    if z_line_2_length < 1e-10:
+    if z_line_2_px < _DEGENERATE_LENGTH_PX:
         raise ValueError("Z-line 2 has zero length (points E and F coincide)")
-    if m_line_length < 1e-10:
+    if m_line_px < _DEGENERATE_LENGTH_PX:
         raise ValueError("M-line has zero length (points C and D coincide)")
 
     midpoint_m = line_midpoint(point_a, point_b)
     midpoint_n = line_midpoint(point_e, point_f)
-    sarcomere_length = euclidean_distance(midpoint_m, midpoint_n) * pixel_to_unit
-    if sarcomere_length < 1e-10:
+    sarcomere_px = euclidean_distance(midpoint_m, midpoint_n)
+    if sarcomere_px < _DEGENERATE_LENGTH_PX:
         raise ValueError("Sarcomere length is zero (midpoints M and N coincide)")
+
+    z_line_1_length = z_line_1_px * pixel_to_unit
+    z_line_2_length = z_line_2_px * pixel_to_unit
+    m_line_length = m_line_px * pixel_to_unit
+    sarcomere_length = sarcomere_px * pixel_to_unit
 
     mean_z_line_length = (z_line_1_length + z_line_2_length) / 2.0
     aspect_ratio = sarcomere_length / mean_z_line_length
@@ -458,14 +498,17 @@ def calculate_h_parameter(
     Returns
     -------
     float
-        Perpendicular distance from the first endpoint of ``z_line_2``
-        to the line through ``z_line_1``, in physical units.
+        Perpendicular distance from the midpoint of ``z_line_2`` to the
+        line through ``z_line_1``, in physical units. Using the midpoint
+        makes H independent of the order in which the endpoints of
+        ``z_line_2`` were annotated; for parallel Z-lines it equals the
+        distance from either endpoint.
 
     References
     ----------
     Cisterna et al. (2021), Section 2.6.
     """
-    point = z_line_2[0]
+    point = line_midpoint(z_line_2[0], z_line_2[1])
     return perpendicular_distance_point_to_line(point, z_line_1[0], z_line_1[1]) * pixel_to_unit
 
 
@@ -657,7 +700,7 @@ def analyze_sarcomere_chain(sarcomeres: list[SarcomereGeometry]) -> SarcomereCha
     asr_mean, asr_std = _summary_mean_std(np.array([s.aspect_ratio for s in sarcomeres]))
     cur_mean, cur_std = _summary_mean_std(np.array([s.curviness for s in sarcomeres]))
     si_mean, si_std = _summary_mean_std(np.array([s.shape_index for s in sarcomeres]))
-    alpha_mean, alpha_std = _summary_mean_std(np.abs(alpha_angles)) if alpha_angles else (0.0, 0.0)
+    alpha_mean, alpha_std = _summary_mean_std(np.asarray(alpha_angles))
 
     shape_counts = Counter(s.shape_classification for s in sarcomeres)
     dominant_shape = shape_counts.most_common(1)[0][0]

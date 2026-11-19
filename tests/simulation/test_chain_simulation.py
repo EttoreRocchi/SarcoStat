@@ -107,11 +107,10 @@ class TestConfigLoading:
     def test_unknown_length_distribution_raises(self, tmp_path: Path) -> None:
         """A length distribution not in the registry is rejected by the loader.
 
-        Gamma was removed in this refactor; the loader must surface the
-        change as an immediate ValueError rather than dispatching to a
-        silent fallback.
+        The loader must raise an immediate ValueError rather than dispatch
+        to a silent fallback.
         """
-        body = _VALID_YAML.replace("length_distribution: truncnorm", "length_distribution: gamma")
+        body = _VALID_YAML.replace("length_distribution: truncnorm", "length_distribution: weibull")
         with pytest.raises(ValueError, match="length_distribution"):
             load_config(_write_yaml(tmp_path, body))
 
@@ -196,7 +195,7 @@ class TestRunMonteCarlo:
 
 
 class TestLinearityRatioFormula:
-    """Regression guards for the iid-heading model behind manuscript eq. (4).
+    """Regression guards for the iid-heading model of the Linearity Ratio.
 
     For sarcomeres of equal length and von Mises iid headings, the
     second moment of the Linearity Ratio satisfies
@@ -233,7 +232,7 @@ class TestLinearityRatioFormula:
         return ChainSimulator.from_config(cfg)
 
     def test_lr_equals_mvl_for_equal_lengths(self) -> None:
-        """For equal-length chains, LR = MVL exactly (paper eq. 2 -> 3)."""
+        """For equal-length chains, LR = MVL exactly."""
         sim = self._equal_length_simulator(kappa=2.0, n_sarc=20)
         rng = np.random.default_rng(123)
         for _ in range(20):
@@ -283,3 +282,42 @@ class TestHeadingPersistence:
         raw = np.array([0.1, -0.2, 0.5, 1.0, -1.5])
         out = _heading_persistence(raw, decay=0.0)
         np.testing.assert_allclose(out, raw)
+
+
+class TestCurvatureModes:
+    """``offset`` rotates every heading; ``arc`` bends the chain progressively."""
+
+    def _dynamics(self, mode: str):
+        from sarcostat.simulation.chain.dynamics import StandardDynamics
+
+        return StandardDynamics(
+            angular_mean=0.0,
+            correlation=0.0,
+            enable_persistence=False,
+            persistence_decay=0.9,
+            enable_curvature=True,
+            curvature_strength=0.1,
+            curvature_mode=mode,
+        )
+
+    def test_offset_is_a_constant_rotation(self) -> None:
+        out = self._dynamics("offset").apply(np.zeros(5), np.random.default_rng(0))
+        np.testing.assert_allclose(out, 0.1)
+
+    def test_arc_turns_by_the_same_angle_at_every_segment(self) -> None:
+        out = self._dynamics("arc").apply(np.zeros(5), np.random.default_rng(0))
+        np.testing.assert_allclose(np.diff(out), 0.1)
+        assert out[0] == pytest.approx(0.0)
+
+    def test_config_accepts_and_validates_the_mode(self, tmp_path: Path) -> None:
+        path = tmp_path / "c.yaml"
+        path.write_text(_VALID_YAML.rstrip() + "\ncurvature_mode: arc\n")
+        assert load_config(path).curvature_mode == "arc"
+        path.write_text(_VALID_YAML.rstrip() + "\ncurvature_mode: spiral\n")
+        with pytest.raises(ValueError, match="curvature_mode"):
+            load_config(path)
+
+    def test_default_mode_is_offset(self, tmp_path: Path) -> None:
+        path = tmp_path / "c.yaml"
+        path.write_text(_VALID_YAML)
+        assert load_config(path).curvature_mode == "offset"

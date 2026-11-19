@@ -4,9 +4,8 @@
 
 n_simulations: 1000        # Sarcomeres per condition
 seed: 42                   # Random seed for reproducibility
-n_processes: 4             # Parallel workers (currently single-threaded)
 
-# Choose: 'euploid', 'trisomic', or 'custom'
+# Choose: 'euploid' or 'trisomic'
 target_condition: 'euploid'
 
 # Cisterna et al. (2021) reference values (mean, std in nm)
@@ -14,15 +13,11 @@ cisterna_parameters:
   euploid:
     z_length: [414, 109]           # Z-line length: 414 +/- 109 nm
     sarcomere_length: [1638, 114]  # MN distance: 1638 +/- 114 nm
-    m_line_length: [469, 77]       # M-line length (derived from Cur ~3.49)
+    m_line_length: [469, 118]      # M-line length: 469 +/- 118 nm
   trisomic:
     z_length: [350, 108]           # Z-line length: 350 +/- 108 nm
     sarcomere_length: [1281, 89]   # MN distance: 1281 +/- 89 nm
-    m_line_length: [366, 60]       # M-line length (derived from Cur ~3.50)
-
-# Custom targets (only used if target_condition='custom')
-custom_asr_range: [3.0, 5.0]      # Aspect Ratio range
-custom_cur_range: [2.8, 4.5]      # Curviness range
+    m_line_length: [478, 123]      # M-line length: 478 +/- 123 nm
 
 noise_sensitivity:
   enabled: true
@@ -32,10 +27,12 @@ noise_sensitivity:
   noise_model: 'isotropic'  # 'isotropic' or 'anisotropic'
   n_replicates: 100         # Noise samples per sarcomere
 
-  # Anisotropic noise parameters (if noise_model='anisotropic')
+  # Anisotropic noise shape (if noise_model='anisotropic'): relative weights
+  # along / perpendicular to the sarcomere axis. The overall scale follows
+  # each noise level, with the same total variance as the isotropic model.
   anisotropic:
-    sigma_along_line: 10       # Along Z/M line direction (nm)
-    sigma_perpendicular: 20    # Perpendicular to line (nm)
+    along_weight: 1
+    perpendicular_weight: 2
 
 # Tests classification robustness when Cur ~ AsR (boundary region)
 boundary_analysis:
@@ -45,6 +42,6 @@ boundary_analysis:
   offset_range: [-0.3, 0.3]    # Cur - AsR range to test
 
 output_dir: 'outputs/sarcomere_simulation'
-save_raw_data: true            # Save detailed error arrays (.npz)
+save_raw_data: false           # Save per-replicate error arrays (.npz, ~20 MB at defaults)
 save_figures: true             # Generate and save figures
 figure_dpi: 300                # Figure resolution for publication

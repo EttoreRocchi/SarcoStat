@@ -10,7 +10,7 @@ accepts a sample size and a numpy ``Generator``.
 Two length families are supported:
 
 - ``truncnorm``: Gaussian truncated to ``[length_min, length_max]``
-  (paper default for sarcomere length distributions).
+  (default for sarcomere length distributions).
 - ``lognorm``: log-normal with mean and std matched to the supplied
   configuration (useful for skewed length distributions).
 
@@ -22,7 +22,6 @@ Three angle families are supported:
   von Mises mean resultant length (Mardia and Jupp 2000, Section
   3.5.4).
 
-Gamma and uniform length families have been removed in this refactor.
 Add a new sampler via the :func:`register_length` or
 :func:`register_angle` decorator.
 """
@@ -34,6 +33,7 @@ from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 import numpy as np
+from scipy.special import i0e, i1e
 from scipy.stats import truncnorm, vonmises
 
 TWO_PI = 2.0 * np.pi
@@ -109,7 +109,10 @@ class TruncnormLengthSampler:
             return np.full(n, max(self.mean, 0.0))
         a = (self.lower - self.mean) / self.std
         b = (self.upper - self.mean) / self.std
-        return truncnorm.rvs(a=a, b=b, loc=self.mean, scale=self.std, size=n, random_state=rng)
+        return np.asarray(
+            truncnorm.rvs(a=a, b=b, loc=self.mean, scale=self.std, size=n, random_state=rng),
+            dtype=float,
+        )
 
 
 @dataclass(frozen=True)
@@ -209,13 +212,9 @@ class WrappedNormalAngleSampler:
         """
         if kappa == 0:
             return rng.uniform(0.0, TWO_PI, n)
-        R_vm = float(
-            np.clip(
-                np.where(kappa > 0, np.i1(kappa) / np.i0(kappa), 0.0),
-                1e-6,
-                0.999999,
-            )
-        )
+        # Exponentially scaled Bessel functions: the ratio I1/I0 is unchanged
+        # and does not overflow for large kappa.
+        R_vm = float(np.clip(i1e(kappa) / i0e(kappa), 1e-6, 0.999999))
         sigma = float(np.sqrt(-2.0 * np.log(R_vm)))
         base = rng.normal(loc=self.mean, scale=sigma, size=n)
         return _wrap_strict(base, 0.0, TWO_PI)

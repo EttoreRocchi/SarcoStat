@@ -10,7 +10,9 @@ import pytest
 
 from sarcostat.core.sarcomere_morphometry import (
     ShapeClassification,
+    analyze_sarcomere_chain,
     calculate_alpha_angle,
+    calculate_h_parameter,
     calculate_sarcomere_geometry,
     calculate_z_staircase_alignment,
     classify_sarcomere_shape,
@@ -95,6 +97,33 @@ class TestAlphaAngle:
         # Small angle, should be less than 10 degrees
         assert np.degrees(alpha) < 10
 
+    def test_reversed_axis_is_not_a_half_turn(self):
+        """Axes are undirected: annotating a sarcomere's Z-lines in reverse is still collinear."""
+        axis1 = ((0, 0), (10, 0))
+        reversed_axis2 = ((20, 1), (10, 0))
+        forward = calculate_alpha_angle(axis1, ((10, 0), (20, 1)))
+        assert calculate_alpha_angle(axis1, reversed_axis2) == pytest.approx(forward)
+        assert calculate_alpha_angle(axis1, ((20, 0), (10, 0))) == pytest.approx(0.0)
+
+    def test_alpha_range(self):
+        rng = np.random.default_rng(1)
+        for _ in range(50):
+            a, b, c, d = rng.normal(size=(4, 2))
+            alpha = calculate_alpha_angle((tuple(a), tuple(b)), (tuple(c), tuple(d)))
+            assert 0.0 <= alpha <= np.pi / 2 + 1e-12
+
+
+class TestHParameter:
+    def test_independent_of_endpoint_order(self):
+        z1 = ((0.0, 0.0), (0.0, 10.0))
+        z2 = ((1.0, 12.0), (3.0, 22.0))
+        z2_swapped = (z2[1], z2[0])
+        assert calculate_h_parameter(z1, z2) == pytest.approx(calculate_h_parameter(z1, z2_swapped))
+        assert calculate_h_parameter(z1, z2) == pytest.approx(2.0)  # midpoint x = 2
+
+    def test_parallel_lines_give_their_distance(self):
+        assert calculate_h_parameter(((0, 0), (0, 10)), ((5, 3), (5, 8))) == pytest.approx(5.0)
+
 
 class TestShapeClassification:
     """Tests for sarcomere shape classification."""
@@ -120,7 +149,7 @@ class TestShapeClassification:
         assert shape == ShapeClassification.HOURGLASS
 
     def test_square_requires_cur_close_to_asr(self):
-        """SQUARE requires AsR ~ 1 AND Cur ~ AsR (manuscript Table 1).
+        """SQUARE requires AsR ~ 1 AND Cur ~ AsR (Cisterna et al. 2021).
 
         A sarcomere with AsR ~ 1 but a very different Cur is not SQUARE,
         it falls back to BARREL/HOURGLASS along the AsR/Cur ordering.
@@ -134,7 +163,7 @@ class TestShapeClassification:
     def test_boundary_uses_non_strict_inequalities(self):
         """Just inside the rectangular wedge -> RECTANGULAR.
 
-        Manuscript Table 1 uses non-strict ``<= epsilon`` for the
+        The classifier uses non-strict ``<= epsilon`` for the
         rectangular wedge. We probe just inside the boundary because the
         exact ``Cur = AsR * (1 +/- epsilon)`` is unrepresentable in
         floating point and results vary with rounding.
@@ -146,6 +175,39 @@ class TestShapeClassification:
         # Just inside the lower rectangular boundary:
         shape = classify_sarcomere_shape(4.0, 4.0 * (1.0 - tol) + 1e-9, tolerance=tol)
         assert shape == ShapeClassification.RECTANGULAR
+
+    @pytest.mark.parametrize(
+        ("asr", "cur", "expected"),
+        [
+            (1.0, 1.05, ShapeClassification.SQUARE),
+            (1.05, 1.05, ShapeClassification.SQUARE),
+            (0.95, 0.95, ShapeClassification.SQUARE),
+            (4.0, 4.2, ShapeClassification.RECTANGULAR),
+            (4.0, 3.8, ShapeClassification.RECTANGULAR),
+            (4.0, 4.2 + 1e-6, ShapeClassification.HOURGLASS),
+            (4.0, 3.8 - 1e-6, ShapeClassification.BARREL),
+        ],
+    )
+    def test_exact_boundaries_are_inclusive(self, asr, cur, expected):
+        """Values exactly on the class edges belong to the <= epsilon class."""
+        assert classify_sarcomere_shape(asr, cur) == expected
+
+    def test_integer_pixel_annotation_on_square_edge(self):
+        """Z = 20 px, sarcomere length = 21 px, M = 20 px gives AsR = Cur = 1.05 -> SQUARE."""
+        geom = calculate_sarcomere_geometry(
+            point_a=(0, 0),
+            point_b=(0, 20),
+            point_c=(10.5, 0),
+            point_d=(10.5, 20),
+            point_e=(21, 0),
+            point_f=(21, 20),
+        )
+        assert geom.shape_classification == ShapeClassification.SQUARE
+
+    @pytest.mark.parametrize(("asr", "cur"), [(0.0, 1.0), (1.0, -1.0), (float("nan"), 1.0)])
+    def test_invalid_ratios_rejected(self, asr, cur):
+        with pytest.raises(ValueError):
+            classify_sarcomere_shape(asr, cur)
 
 
 class TestSarcomereGeometry:
@@ -244,6 +306,50 @@ class TestSarcomereGeometry:
                 point_f=(100, 100),
             )
 
+    _SQUARE = {
+        "point_a": (0, 0),
+        "point_b": (0, 100),
+        "point_c": (50, 0),
+        "point_d": (50, 100),
+        "point_e": (100, 0),
+        "point_f": (100, 100),
+    }
+
+    def test_tiny_conversion_factor_is_valid(self):
+        """Degeneracy is checked in pixels, so scaling px -> metres stays valid."""
+        geom = calculate_sarcomere_geometry(**self._SQUARE, pixel_to_unit=1e-12, unit="m")
+        assert geom.z_line_1_length == pytest.approx(1e-10)
+        assert geom.shape_classification == ShapeClassification.SQUARE
+
+    @pytest.mark.parametrize("factor", [0.0, -1.0, float("nan")])
+    def test_invalid_conversion_factor_rejected(self, factor):
+        with pytest.raises(ValueError, match="pixel_to_unit"):
+            calculate_sarcomere_geometry(**self._SQUARE, pixel_to_unit=factor)
+
+    def test_non_finite_point_rejected(self):
+        with pytest.raises(ValueError, match="finite"):
+            calculate_sarcomere_geometry(**{**self._SQUARE, "point_c": (float("nan"), 0)})
+
+
+class TestSarcomereChain:
+    def test_reversed_annotation_order_does_not_inflate_alpha(self):
+        """Two collinear sarcomeres, the second annotated F..A instead of A..F."""
+        first = calculate_sarcomere_geometry(
+            (0, 0), (0, 10), (5, 0), (5, 10), (10, 0), (10, 10), sarcomere_id=0
+        )
+        second_reversed = calculate_sarcomere_geometry(
+            (20, 0), (20, 10), (15, 0), (15, 10), (10, 0), (10, 10), sarcomere_id=1
+        )
+        chain = analyze_sarcomere_chain([first, second_reversed])
+        assert chain.alpha_angles == [pytest.approx(0.0)]
+        assert chain.alpha_mean == pytest.approx(0.0)
+
+    def test_single_sarcomere_has_no_alpha(self):
+        geom = calculate_sarcomere_geometry((0, 0), (0, 10), (5, 0), (5, 10), (10, 0), (10, 10))
+        chain = analyze_sarcomere_chain([geom])
+        assert chain.alpha_angles == []
+        assert (chain.alpha_mean, chain.alpha_std) == (0.0, 0.0)
+
 
 class TestZLineAlignment:
     """Tests for Z-line alignment (H parameter) calculation."""
@@ -295,7 +401,7 @@ class TestQuickAnalysis:
 
     def test_quick_analysis_literature_values(self):
         """Test with values from Cisterna et al. 2021 euploid tissue."""
-        # Approximate values from paper: Z=414nm, M=469nm, sarc=1638nm
+        # Mean values reported by Cisterna et al. 2021: Z=414nm, M=469nm, sarc=1638nm
         result = quick_sarcomere_analysis(
             z1_length=414, z2_length=414, m_length=469, sarcomere_length=1638
         )

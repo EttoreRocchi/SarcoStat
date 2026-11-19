@@ -132,14 +132,17 @@ class BoundaryAnalysisPlot:
             linewidths=1,
         )
         ax.clabel(cs, fmt="%.2f", fontsize=8)
+        for edge in results.class_edges:
+            ax.axvline(edge, color="black", linestyle="--", linewidth=1, alpha=0.6)
 
         ax = axes[1]
         noise_levels = sorted(results.critical_boundary_width.keys())
         widths = [results.critical_boundary_width[n] for n in noise_levels]
         ax.plot(noise_levels, widths, "o-", linewidth=2, markersize=8, color="darkblue")
         ax.set_xlabel("Annotation noise sigma (nm)")
-        ax.set_ylabel("Critical boundary width |Cur - AsR|")
-        ax.set_title("Minimum separation for reliable classification (<10% error)")
+        ax.set_ylabel("Unreliable band half-width (Cur - AsR)")
+        threshold = 100 * results.misclass_threshold
+        ax.set_title(f"Band around class edges with >= {threshold:g}% misclassification")
         ax.grid(True, alpha=0.3)
 
         plt.tight_layout()

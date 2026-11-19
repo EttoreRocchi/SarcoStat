@@ -8,7 +8,7 @@ Protocol so that callers can compose any subset (and users can register
 their own without touching this module).
 
 The 3D matplotlib landscape and Plotly HTML plotters that lived in the
-old ``Visualizer`` have been removed; they were paper-figure specific
+old ``Visualizer`` have been removed; they were specific to single figures
 and required a heavy ``plotly`` dependency.
 """
 
@@ -48,7 +48,10 @@ _BOX_Y_LABELS: dict[str, str] = {
 class Plotter(Protocol):
     """Structural type for chain-result plotters."""
 
-    name: str
+    @property
+    def name(self) -> str:
+        """Stem used for the saved figure files."""
+        ...
 
     def render(
         self,
@@ -79,7 +82,7 @@ def _style_metric_axes(
     if is_bottom_row:
         ax.set_xlabel("N (sarcomeres)", fontsize=11)
         ax.set_xticks(range(1, len(n_sarcomeres) + 1))
-        ax.set_xticklabels(n_sarcomeres, rotation=45)
+        ax.set_xticklabels([str(n) for n in n_sarcomeres], rotation=45)
     else:
         ax.set_xticks(range(1, len(n_sarcomeres) + 1))
         ax.set_xticklabels([])

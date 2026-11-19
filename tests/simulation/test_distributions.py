@@ -38,11 +38,6 @@ class TestLengthRegistry:
         assert "truncnorm" in LENGTH_SAMPLERS
         assert "lognorm" in LENGTH_SAMPLERS
 
-    def test_gamma_and_uniform_dropped(self) -> None:
-        """Gamma and uniform length families have been removed in Phase 2B."""
-        assert "gamma" not in LENGTH_SAMPLERS
-        assert "uniform" not in LENGTH_SAMPLERS
-
     def test_make_truncnorm(self) -> None:
         """The factory returns the matching concrete class."""
         sampler = make_length_sampler("truncnorm", mean=1.0, std=0.25, lower=0.5, upper=1.5)
@@ -56,8 +51,8 @@ class TestLengthRegistry:
 
     def test_unknown_name_raises_with_helpful_message(self) -> None:
         """Unregistered names produce a descriptive KeyError."""
-        with pytest.raises(KeyError, match="gamma.*available"):
-            make_length_sampler("gamma", mean=1.0, std=0.25, lower=0.5, upper=1.5)
+        with pytest.raises(KeyError, match="weibull.*available"):
+            make_length_sampler("weibull", mean=1.0, std=0.25, lower=0.5, upper=1.5)
 
 
 class TestTruncnormSampler:

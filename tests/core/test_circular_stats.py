@@ -230,8 +230,167 @@ class TestSequenceAnalysis:
         assert abs(metrics_um.total_length - metrics_px.total_length * 0.065) < 1e-6
 
 
+def _arc_points(n_segments: int, turn_deg: float, step: float = 1.0) -> np.ndarray:
+    """Polyline of equal-length segments turning by ``turn_deg`` at each joint."""
+    headings = np.radians(turn_deg) * np.arange(n_segments)
+    steps = step * np.column_stack([np.cos(headings), np.sin(headings)])
+    return np.vstack([[0.0, 0.0], np.cumsum(steps, axis=0)])
+
+
+class TestSequenceStatisticsOnHeadings:
+    """MVL and the tests are computed on headings theta_i."""
+
+    def test_lr_equals_mvl_for_equal_lengths(self):
+        """For equal lengths LR = N^-1 ||sum u_i|| = MVL."""
+        rng = np.random.default_rng(0)
+        headings = rng.vonmises(0.3, 2.0, size=25)
+        points = np.vstack(
+            [[0.0, 0.0], np.cumsum(np.column_stack([np.cos(headings), np.sin(headings)]), axis=0)]
+        )
+        metrics = analyze_segment_sequence(points)
+        assert metrics.mean_vector_length == pytest.approx(metrics.linearity_ratio, abs=1e-12)
+
+    def test_smooth_arc_is_not_perfectly_aligned(self):
+        """A 20 deg/step arc has MVL ~ 0.57, not the turning-angle MVL of 1."""
+        metrics = analyze_segment_sequence(_arc_points(10, 20.0))
+        assert metrics.linearity_ratio == pytest.approx(0.5672, abs=1e-3)
+        assert metrics.mean_vector_length == pytest.approx(metrics.linearity_ratio, abs=1e-12)
+
+    def test_right_angle_turn(self):
+        metrics = analyze_segment_sequence(np.array([[0, 0], [1, 0], [1, 1]]))
+        assert metrics.mean_vector_length == pytest.approx(np.sqrt(0.5))
+
+    def test_statistics_are_rotation_invariant(self):
+        points = _arc_points(8, 7.0)
+        theta = 1.1
+        rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+        a = analyze_segment_sequence(points)
+        b = analyze_segment_sequence(points @ rot.T)
+        assert a.mean_vector_length == pytest.approx(b.mean_vector_length)
+        assert a.rayleigh_p == pytest.approx(b.rayleigh_p)
+        assert a.circular_std == pytest.approx(b.circular_std)
+
+    def test_turning_angles_still_reported_per_segment(self):
+        metrics = analyze_segment_sequence(_arc_points(4, 20.0))
+        rel = [np.degrees(s.angle_relative) for s in metrics.segments]
+        assert rel == pytest.approx([0.0, 20.0, 20.0, 20.0])
+        assert metrics.metadata["angle_basis"] == "heading"
+
+    def test_v_test_skipped_without_expected_direction(self):
+        metrics = analyze_segment_sequence(_arc_points(6, 5.0))
+        assert metrics.v_statistic is None
+        assert metrics.v_p_value is None
+        assert "not run" in metrics.summary_string()
+
+    def test_v_test_against_expected_direction(self):
+        points = _arc_points(12, 1.0)  # headings 0..11 deg
+        along = analyze_segment_sequence(points, expected_direction=0.0)
+        against = analyze_segment_sequence(points, expected_direction=np.pi)
+        assert along.v_p_value < 0.05
+        assert against.v_p_value > 0.95
+        assert along.expected_direction == 0.0
+
+    def test_summary_string_reports_units(self):
+        metrics = analyze_segment_sequence(_arc_points(3, 0.0), pixel_to_unit=0.5, unit_name="um")
+        text = metrics.summary_string()
+        assert "1.50 um" in text
+        assert metrics.unit == "um"
+
+
+class TestSequenceChainStatistics:
+    """Order- and length-aware statistics attached to SequenceMetrics."""
+
+    def test_equal_lengths(self):
+        metrics = analyze_segment_sequence(_arc_points(10, 2.0))
+        assert metrics.n_eff == pytest.approx(10.0)
+        expected = (10 * metrics.linearity_ratio**2 - 1) / 9
+        assert metrics.rho_squared_corrected == pytest.approx(expected)
+
+    def test_turning_angles_measure_curvature(self):
+        metrics = analyze_segment_sequence(_arc_points(10, 2.0), pixel_to_unit=2.0, unit_name="um")
+        assert np.degrees(metrics.turning_mean) == pytest.approx(2.0)
+        assert metrics.turning_mvl == pytest.approx(1.0)
+        assert np.degrees(metrics.curvature_per_unit) == pytest.approx(1.0)
+
+    def test_tangent_correlation_and_persistence_of_arc(self):
+        metrics = analyze_segment_sequence(_arc_points(12, 3.0))
+        assert metrics.tangent_correlation[0] == pytest.approx(np.cos(np.radians(3.0)))
+        assert metrics.persistence_amplitude is not None
+
+    def test_unresolved_persistence_is_not_printed(self):
+        """A fit far beyond the traced length is reported as not resolved, but kept."""
+        straight = analyze_segment_sequence(_arc_points(6, 0.5))
+        assert straight.persistence_length > 10 * straight.total_length
+        assert "not resolved" in straight.chain_statistics_string()
+        curved = analyze_segment_sequence(_arc_points(20, 10.0))
+        assert curved.persistence_length < 10 * curved.total_length
+        assert "not resolved" not in curved.chain_statistics_string()
+
+    def test_serial_dependence_is_reproducible(self):
+        points = _arc_points(12, 3.0)
+        a = analyze_segment_sequence(points)
+        b = analyze_segment_sequence(points)
+        assert a.serial_dependence_p == b.serial_dependence_p
+        assert a.serial_dependence_p < 0.05
+
+    def test_short_chains_leave_fields_empty(self):
+        metrics = analyze_segment_sequence(np.array([[0.0, 0.0], [1.0, 0.0]]))
+        assert metrics.turning_mvl is None
+        assert metrics.serial_dependence_p is None
+        assert metrics.tangent_correlation is None
+        assert metrics.persistence_length is None
+        assert "n/a" in metrics.chain_statistics_string()
+
+    def test_noise_floor_and_uniformity_p(self):
+        metrics = analyze_segment_sequence(_arc_points(5, 0.0))
+        assert metrics.lr_noise_floor == pytest.approx(np.sqrt(-np.log(0.05) / 5))
+        assert metrics.lr_uniformity_p == pytest.approx(np.exp(-5.0))
+
+    def test_von_mises_interval_contains_estimate(self):
+        metrics = analyze_segment_sequence(_arc_points(10, 4.0))
+        lo, hi = metrics.mvl_ci
+        assert lo <= metrics.mean_vector_length <= hi
+        assert "von Mises" in metrics.summary_string()
+
+    def test_json_is_strict(self):
+        from sarcostat.core._serialization import to_json_string
+
+        metrics = analyze_segment_sequence(_arc_points(8, 0.0))
+        text = to_json_string(metrics)
+        assert "NaN" not in text and "Infinity" not in text
+
+
+class TestSequenceInputValidation:
+    def test_duplicate_points_rejected(self):
+        points = np.array([[0, 0], [1, 1], [1, 1], [2, 2]])
+        with pytest.raises(ValueError, match="Segment 1 has zero length"):
+            analyze_segment_sequence(points)
+
+    @pytest.mark.parametrize("bad", [np.nan, np.inf])
+    def test_non_finite_points_rejected(self, bad):
+        with pytest.raises(ValueError, match="finite"):
+            analyze_segment_sequence(np.array([[0, 0], [1, bad], [2, 0]]))
+
+    @pytest.mark.parametrize("factor", [0.0, -1.0, np.nan])
+    def test_non_positive_pixel_to_unit_rejected(self, factor):
+        with pytest.raises(ValueError, match="pixel_to_unit"):
+            analyze_segment_sequence(np.array([[0, 0], [1, 0]]), pixel_to_unit=factor)
+
+    def test_wrong_shape_rejected(self):
+        with pytest.raises(ValueError, match="shape"):
+            analyze_segment_sequence(np.array([0, 1, 2, 3]))
+
+
 class TestStatisticsReport:
     """Tests for comprehensive statistics report."""
+
+    def test_report_records_bootstrap_parameters(self):
+        angles = np.linspace(-0.2, 0.2, 12)
+        report = compute_circular_statistics_report(angles, confidence=0.8, n_bootstrap=50, seed=3)
+        assert (report.confidence, report.n_bootstrap, report.seed) == (0.8, 50, 3)
+        text = report.summary_string()
+        assert "80% CI" in text
+        assert "95% CI" not in text
 
     def test_report_generation(self):
         """Report generates correctly; small-sample bootstrap warning is asserted."""
@@ -255,3 +414,22 @@ class TestStatisticsReport:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestAnalysisTimestamp:
+    """Headless analyses carry no wall-clock time unless the caller sets one."""
+
+    POINTS = np.array([[0, 0], [1, 0.2], [2, 0], [3, 0.3]])
+
+    def test_default_is_none_and_reproducible(self):
+        a = analyze_segment_sequence(self.POINTS)
+        b = analyze_segment_sequence(self.POINTS)
+        assert a.timestamp is None
+        assert a.to_dict() == b.to_dict()
+        assert "Timestamp" not in a.summary_string()
+
+    def test_caller_sets_the_timestamp(self):
+        stamp = "2026-11-02T09:00:00"
+        metrics = analyze_segment_sequence(self.POINTS, timestamp=stamp)
+        assert metrics.timestamp == stamp
+        assert f"Timestamp: {stamp}" in metrics.summary_string()

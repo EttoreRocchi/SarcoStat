@@ -8,6 +8,6 @@ kappa_values: [1.0, 5.0]
 n_values: [25, 100]
 seed: 42
 
-output_dir: paper/results/coverage_smoke
+output_dir: outputs/coverage_smoke
 save_figures: true
 figure_dpi: 150
