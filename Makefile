@@ -24,19 +24,19 @@ install:  ## Install package with development dependencies
 # Code quality
 
 lint:  ## Run ruff linter (check only, same scope as CI)
-	@ruff check .
+	@python -m ruff check .
 
 lint-fix:  ## Run ruff linter and apply safe fixes
-	@ruff check --fix .
+	@python -m ruff check --fix .
 
 format:  ## Run ruff formatter (applies changes)
-	@ruff format .
+	@python -m ruff format .
 
 format-check:  ## Run ruff formatter in check-only mode (no changes)
-	@ruff format --check .
+	@python -m ruff format --check .
 
 typecheck:  ## Run mypy on the package (blocking in CI)
-	@mypy $(SRC)
+	@python -m mypy $(SRC)
 
 check: lint format-check typecheck test  ## Run every check CI runs
 
@@ -46,7 +46,7 @@ pre-commit:  ## Run the full pre-commit suite on all files
 # Tests
 
 test:  ## Run tests
-	@pytest $(TESTS)/
+	@python -m pytest $(TESTS)/
 
 smoke:  ## Quick end-to-end smoke run for the simulation pipelines
 	@sarcostat sim sarc --config examples/configs/config_sarc_minimal.yaml

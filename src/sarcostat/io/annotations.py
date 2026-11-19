@@ -48,9 +48,7 @@ FORMAT_NAME = "sarcostat-annotations"
 FORMAT_VERSION = "1.0"
 SCHEMA_RESOURCE = "annotation-v1.schema.json"
 
-#: Item types: one sarcomere (6 landmarks), a chain of Z-lines, a pair of myofibrils.
 ITEM_TYPES = ("shape", "chain", "pair")
-#: The eight dihedral display transforms (implemented in :mod:`sarcostat.io.study`).
 DISPLAY_TRANSFORMS = (
     "identity",
     "rot90",
@@ -61,9 +59,7 @@ DISPLAY_TRANSFORMS = (
     "transpose",
     "anti_transpose",
 )
-#: Parts of an item that can be skipped while the rest is kept.
 SKIPPABLE_PARTS = ("m_line",)
-#: Analysis modes of the GUI window, stored in the optional ``gui`` block.
 GUI_MODES = ("Myofibril Linearity", "Single Sarcomere")
 
 _SWAPS_AXES = frozenset({"rot90", "rot270", "transpose", "anti_transpose"})
@@ -122,9 +118,6 @@ class ImageMismatchError(AnnotationFormatError):
 
 class MissingImageWarning(UserWarning):
     """An image of the annotation file was not found, so its SHA-256 was not checked."""
-
-
-# Primitive checks ------------------------------------------------------------
 
 
 def _fail(path: str, message: str) -> NoReturn:
@@ -222,9 +215,6 @@ def _positive(value: Any, path: str, nullable: bool = False) -> Any:
 def _int_pair(value: Any, path: str, minimum: int) -> tuple[int, int]:
     a, b = _array(value, path, 2, exact=True)
     return _int(a, f"{path}[0]", minimum), _int(b, f"{path}[1]", minimum)
-
-
-# Document structure ----------------------------------------------------------
 
 
 def _check_header(doc: Any) -> None:
@@ -450,9 +440,6 @@ def validate_annotations(doc: dict[str, Any]) -> None:
         if item["item_id"] in item_ids:
             _fail(f"items[{i}].item_id", f"duplicate item_id {item['item_id']!r}")
         item_ids.add(item["item_id"])
-
-
-# Reading and writing ---------------------------------------------------------
 
 
 def dumps_annotations(doc: dict[str, Any]) -> str:

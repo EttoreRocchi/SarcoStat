@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import textwrap
 from pathlib import Path
 
@@ -13,6 +14,18 @@ from sarcostat import __version__
 from sarcostat.cli.app import app
 
 _RUNNER = CliRunner()
+_ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
+
+def _plain(output: str) -> str:
+    """CLI output without colour codes, panel borders and line wrapping.
+
+    Rich prints errors in a box as wide as the terminal, so a message can be
+    split over several lines with border glyphs in between.
+    """
+    text = _ANSI.sub("", output)
+    text = re.sub(r"[│╭╮╰╯─]", " ", text)
+    return " ".join(text.split())
 
 
 _SARC_SMOKE_YAML = textwrap.dedent(
@@ -171,6 +184,4 @@ class TestBadConfig:
         result = _RUNNER.invoke(app, ["sim", command, "--config", str(config)])
         assert result.exit_code == 2
         assert "Traceback" not in result.output
-        # Rich wraps the message in a box; drop the border glyphs before matching.
-        text = " ".join(result.output.replace("│", " ").split())
-        assert fragment in text
+        assert fragment in _plain(result.output)

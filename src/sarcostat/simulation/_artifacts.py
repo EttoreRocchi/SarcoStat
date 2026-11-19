@@ -263,7 +263,8 @@ class RunArtifacts:
         if not name.endswith(".npz"):
             name = f"{name}.npz"
         target = self.data_path(name)
-        np.savez(target, **arrays)
+        payload: dict[str, Any] = dict(arrays)
+        np.savez(target, **payload)
         self.logger.info("Saved NPZ: %s", target)
         return target
 

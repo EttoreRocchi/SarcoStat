@@ -193,7 +193,7 @@ class TestNoImportSideEffects:
             import matplotlib
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
-            import seaborn  # noqa: F401  (imported first so its own setup is excluded)
+            import seaborn  # noqa: F401
             filters = list(warnings.filters)
             rc = dict(plt.rcParams)
             import sarcostat.simulation  # noqa: F401

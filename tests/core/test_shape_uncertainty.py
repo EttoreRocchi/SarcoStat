@@ -112,7 +112,7 @@ class TestClassStability:
         assert stab.sd_curviness == pytest.approx(u.u_curviness, rel=0.05)
 
     def test_on_boundary_is_coin_flip(self):
-        lm = LZ / 0.95  # SI exactly on the barrel/rectangular edge
+        lm = LZ / 0.95
         stab = class_stability(_geom(lm=lm), sigma_z=10.0, n_draws=20000, seed=2)
         assert stab.stability == pytest.approx(0.5, abs=0.03)
 
@@ -172,8 +172,6 @@ class TestEstimateAnnotationSigma:
             estimate_annotation_sigma([_geom(), other])
 
 
-# The eight dihedral display transforms of a w x h crop, (x, y) -> (x', y'),
-# pixel centres at integers (as in sarcostat.io.study).
 _TRANSFORMS = {
     "identity": lambda x, y, w, h: (x, y),
     "rot90": lambda x, y, w, h: (y, w - 1 - x),
@@ -205,7 +203,7 @@ def _clicked_on_screen(original, transform):
     shown = np.array([_TRANSFORMS[transform](x, y, *_CROP) for x, y in original])
     lines = [(0, 1), (2, 3), (4, 5)]
     z_a, z_b = shown[0:2].mean(0), shown[4:6].mean(0)
-    axis = np.argmax(np.abs(z_b - z_a))  # 0: horizontal on screen
+    axis = np.argmax(np.abs(z_b - z_a))
     if z_b[axis] < z_a[axis]:
         lines = lines[::-1]
     order = []
@@ -231,8 +229,6 @@ class TestCanonicalizeLandmarks:
     def test_axis_direction_sets_z_line_1(self):
         pts = np.array(_points())
         out = canonicalize_sarcomere_landmarks(pts, axis=(-2.0, 0.0))
-        # Z-line 1 is now the right one; endpoints run left to right of the
-        # reversed axis, i.e. from the bottom of the image up.
         np.testing.assert_array_equal(out, pts[[5, 4, 3, 2, 1, 0]])
 
     @pytest.mark.parametrize("degrees", [0.0, 30.0, 90.0, 135.0, 250.0])
@@ -257,7 +253,7 @@ class TestCanonicalizeLandmarks:
         np.testing.assert_array_equal(out, pts)
 
     def test_without_axis_vertical_sarcomere_starts_at_the_top(self):
-        pts = _rotate(_points(), -90.0)  # clicked Z-line 1 at the bottom of the image
+        pts = _rotate(_points(), -90.0)
         assert pts[0:2, 1].mean() > pts[4:6, 1].mean()
         out = canonicalize_sarcomere_landmarks(pts)
         np.testing.assert_array_equal(out[0:2], pts[[5, 4]])
@@ -291,12 +287,11 @@ class TestLandmarkOffsets:
         b = 7.0
         ref = np.array(_points())
         inward = ref.copy()
-        inward[[0, 2, 4], 1] += b  # first endpoints moved down, towards the midpoint
-        inward[[1, 3, 5], 1] -= b  # second endpoints moved up, towards the midpoint
+        inward[[0, 2, 4], 1] += b
+        inward[[1, 3, 5], 1] -= b
         off = landmark_offsets(inward, ref, axis=(1.0, 0.0))
         np.testing.assert_allclose(off[:, 0], -b)
         np.testing.assert_allclose(off[:, 1], 0.0, atol=1e-12)
-        # with one along direction per line the bias would cancel
         assert off[[0, 1], 0].mean() == pytest.approx(-b)
 
     def test_across_is_positive_towards_z_line_2(self):
@@ -338,10 +333,10 @@ class TestEstimateWithSwappedRepeats:
 
     def test_swapped_repeat_k_m3(self):
         reps = self._repeats()
-        reps[2] = reps[2][[4, 5, 3, 2, 0, 1]]  # starts from the other Z-line, M-line reversed
+        reps[2] = reps[2][[4, 5, 3, 2, 0, 1]]
         est = estimate_annotation_sigma([_px_geom(p) for p in reps])
-        assert est.sigma_z_perp <= 0.1  # 11.5 px before the fix
-        assert est.sigma_z_perp / est.sigma_z_along <= 3.0  # about 270 before the fix
+        assert est.sigma_z_perp <= 0.1
+        assert est.sigma_z_perp / est.sigma_z_along <= 3.0
 
     def test_swap_gives_the_same_estimate(self):
         reps = self._repeats(n=4, seed=1)

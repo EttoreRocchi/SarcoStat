@@ -62,7 +62,6 @@ from .._config_io import (
 from .._plotting import simulation_style
 from .._seeding import per_cell_seed
 
-# Stable integer code per condition, used to derive per-condition seed streams.
 _CONDITION_CODES = {c.value: i for i, c in enumerate(Condition)}
 
 
@@ -439,7 +438,6 @@ def run(
     logger.info("Replicates for sigma estimation: %d", cfg.n_replicates_for_sd)
 
     with warnings.catch_warnings():
-        # scipy/numpy numerical warnings from extreme cells are expected noise here.
         warnings.simplefilter("ignore", RuntimeWarning)
         mvl_df = run_mvl_mde(cfg, logger)
         morpho_df = run_morphometry_mde(cfg, logger)

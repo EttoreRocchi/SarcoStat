@@ -182,7 +182,7 @@ class TestCompleteCases:
         data = [list(x) for x in _simulate(rng, n_t=3, n_dup=0)]
         change(data)
         if match is None:
-            core = complete_cases(*data)  # one missing cell only drops its target
+            core = complete_cases(*data)
             assert len(core.dropped_targets) == 1
         else:
             with pytest.raises(ValueError, match=match):

@@ -35,10 +35,6 @@ LineSegment = tuple[Point, Point]
 
 DEFAULT_SHAPE_TOLERANCE = 0.05
 
-# Absolute slack on the dimensionless classifier comparisons, so that
-# ratios that equal the tolerance in exact arithmetic (e.g. AsR = 21/20 =
-# 1.05 from integer-pixel annotations) land inside the "<= tolerance"
-# class despite floating-point rounding.
 _BOUNDARY_SLACK = 1e-9
 _DEGENERATE_LENGTH_PX = 1e-10
 

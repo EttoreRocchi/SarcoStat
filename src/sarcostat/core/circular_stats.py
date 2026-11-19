@@ -34,9 +34,6 @@ BOOTSTRAP_MIN_RECOMMENDED = 10
 UNIFORM_R_THRESHOLD = 0.01
 KAPPA_MAX = 1.0e6
 _KAHAN_THRESHOLD = 100
-# Beyond this many traced lengths C(k) falls by a few percent at most over
-# the fitted lags (up to a third of the chain), so the summary does not
-# report a single-chain persistence length.
 _LP_RESOLVED_MAX_TRACES = 10.0
 
 
@@ -253,7 +250,6 @@ def calculate_circular_std(angles: np.ndarray) -> float:
         return float("inf")
 
     R = float(np.clip(R, UNIFORM_R_THRESHOLD, 1.0))
-    # max() maps the -0.0 produced at R == 1 to +0.0.
     return float(np.sqrt(max(0.0, -2.0 * np.log(R))))
 
 

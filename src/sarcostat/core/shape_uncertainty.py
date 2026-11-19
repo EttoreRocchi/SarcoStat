@@ -399,10 +399,10 @@ def _default_axis(pts: np.ndarray) -> np.ndarray:
 
 
 def _canonical(pts: np.ndarray, u: np.ndarray) -> np.ndarray:
-    out = pts.copy()
+    out: np.ndarray = pts.copy()
     if (pts[4:6].mean(axis=0) - pts[0:2].mean(axis=0)) @ u < 0:
         out = out[[4, 5, 2, 3, 0, 1]]
-    right = np.array([-u[1], u[0]])  # right of the axis, with the image y axis pointing down
+    right = np.array([-u[1], u[0]])
     for i in (0, 2, 4):
         if out[i + 1] @ right < out[i] @ right:
             out[[i, i + 1]] = out[[i + 1, i]]
@@ -457,7 +457,7 @@ def _offsets(pts: np.ndarray, ref: np.ndarray, u: np.ndarray) -> np.ndarray:
         along = ref[i + 1] - ref[i]
         length = float(np.hypot(*along))
         if np.isnan(length):
-            continue  # skipped M-line
+            continue
         if length == 0:
             raise ValueError("A line of the reference annotation has zero length")
         along /= length

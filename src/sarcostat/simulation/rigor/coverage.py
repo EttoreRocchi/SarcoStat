@@ -342,7 +342,6 @@ def run(
     )
 
     with warnings.catch_warnings():
-        # scipy/numpy numerical warnings from extreme cells are expected noise here.
         warnings.simplefilter("ignore", RuntimeWarning)
         df = compute_coverage_grid(cfg, logger)
     artifacts.save_csv("coverage_results.csv", df)

@@ -212,8 +212,6 @@ class WrappedNormalAngleSampler:
         """
         if kappa == 0:
             return rng.uniform(0.0, TWO_PI, n)
-        # Exponentially scaled Bessel functions: the ratio I1/I0 is unchanged
-        # and does not overflow for large kappa.
         R_vm = float(np.clip(i1e(kappa) / i0e(kappa), 1e-6, 0.999999))
         sigma = float(np.sqrt(-2.0 * np.log(R_vm)))
         base = rng.normal(loc=self.mean, scale=sigma, size=n)

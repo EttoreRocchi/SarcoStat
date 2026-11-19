@@ -37,7 +37,6 @@ class TestLargeArrays:
         R = calculate_mean_vector_length(angles)
 
         assert 0.0 <= R <= 1.0
-        # For kappa=5, R should be around 0.89
         assert 0.85 < R < 0.95
 
     @pytest.mark.slow
@@ -47,7 +46,7 @@ class TestLargeArrays:
         angles = rng.vonmises(mu=0, kappa=10, size=1_000_000)
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")  # Ignore any warnings
+            warnings.simplefilter("ignore")
             std = calculate_circular_std(angles)
 
         assert std > 0
@@ -61,7 +60,6 @@ class TestLargeArrays:
 
         kappa = calculate_concentration_parameter(angles)
 
-        # Should recover approximately kappa=5
         assert 4.0 < kappa < 6.0
 
 
@@ -122,39 +120,31 @@ class TestExtremeKappa:
 
     def test_very_high_kappa_capped(self):
         """Test that kappa is capped for near-point-mass data."""
-        # Nearly identical angles - should produce very high R
         angles = np.array([0.0, 1e-10, -1e-10, 0.0, 0.0])
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             kappa = calculate_concentration_parameter(angles)
 
-            # Should be capped at KAPPA_MAX
             assert kappa <= KAPPA_MAX
-
-            # May or may not warn depending on exact R value
-            # Just verify it doesn't crash
 
     def test_zero_kappa_for_uniform(self):
         """Test kappa approaches 0 for uniform distribution."""
-        # Perfect uniform: 4 points at 90-degree intervals
         angles = np.array([0, np.pi / 2, np.pi, 3 * np.pi / 2])
 
         kappa = calculate_concentration_parameter(angles)
 
-        assert kappa < 0.1  # Should be near zero
+        assert kappa < 0.1
 
     def test_moderate_kappa_recovery(self):
         """Test that moderate kappa values are recovered correctly."""
         rng = np.random.default_rng(42)
         true_kappa = 10
 
-        # Sample from von Mises
         angles = rng.vonmises(mu=0, kappa=true_kappa, size=1000)
 
         estimated_kappa = calculate_concentration_parameter(angles)
 
-        # Should be reasonably close to true value
         assert 7 < estimated_kappa < 15
 
 
@@ -163,17 +153,14 @@ class TestUniformDistribution:
 
     def test_circular_std_uniform_returns_inf(self):
         """Test circular std returns inf for uniform data."""
-        # Perfect uniform distribution
         angles = np.linspace(0, 2 * np.pi, 100, endpoint=False)
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             std = calculate_circular_std(angles)
 
-            # Should return inf
             assert np.isinf(std)
 
-            # Should emit warning
             assert len(w) >= 1
             assert "uniform" in str(w[0].message).lower()
 
@@ -183,7 +170,6 @@ class TestUniformDistribution:
 
         var = calculate_circular_variance(angles)
 
-        # Variance should be close to 1 for uniform
         assert var > 0.95
 
 
@@ -198,7 +184,6 @@ class TestBootstrapSmallSamples:
             warnings.simplefilter("always")
             mean, ci_low, ci_high = bootstrap_circular_mean_ci(angles, seed=42)
 
-            # Should warn about small sample
             warning_messages = [str(warning.message).lower() for warning in w]
             assert any("sample size" in msg or "n=" in msg for msg in warning_messages)
 
@@ -210,10 +195,8 @@ class TestBootstrapSmallSamples:
             warnings.simplefilter("always")
             mean, ci_low, ci_high = bootstrap_circular_mean_ci(angles, seed=42)
 
-            # Should return point estimate for all
             assert mean == ci_low == ci_high
 
-            # Should warn about degenerate case
             assert len(w) >= 1
 
     def test_bootstrap_mvl_small_sample(self):
@@ -224,10 +207,8 @@ class TestBootstrapSmallSamples:
             warnings.simplefilter("always")
             mvl, ci_low, ci_high = bootstrap_mvl_ci(angles, seed=42)
 
-            # Should warn
             assert len(w) >= 1
 
-            # CI should be valid
             assert ci_low <= mvl <= ci_high
 
 
@@ -243,7 +224,6 @@ class TestStatisticsReport:
             report = compute_circular_statistics_report(angles, seed=42)
 
         assert report.n_observations == 1
-        # Should handle gracefully
 
     def test_report_with_uniform_data(self):
         """Test report generation with uniform data."""
@@ -254,7 +234,6 @@ class TestStatisticsReport:
             report = compute_circular_statistics_report(angles, seed=42)
 
         assert report.n_observations == 20
-        # MVL should be low
         assert report.mean_vector_length < 0.2
 
 
@@ -267,7 +246,6 @@ class TestNumericalStability:
 
         R = calculate_mean_vector_length(angles)
         assert 0.0 <= R <= 1.0
-        # Nearly identical angles should give R ~ 1
         assert R > 0.99
 
     def test_angles_near_boundary(self):
@@ -277,22 +255,17 @@ class TestNumericalStability:
         r = calculate_mean_vector_length(angles)
         mean = np.arctan2(np.sin(angles).mean(), np.cos(angles).mean())
 
-        # R should be high (angles are clustered)
         assert r > 0.9
-        # Mean should be near pi or -pi
         assert abs(abs(mean) - np.pi) < 0.1
 
     def test_bootstrap_near_boundary(self):
         """Test bootstrap CI near the -pi/pi boundary."""
-        # Angles clustered near pi
         angles = np.array([np.pi - 0.1, np.pi - 0.05, -np.pi + 0.1, -np.pi + 0.05])
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             mean, ci_low, ci_high = bootstrap_circular_mean_ci(angles, n_bootstrap=100, seed=42)
 
-        # The point estimate sits at +/-pi and the CI must stay on that side
-        # of the circle instead of jumping across 0.
         assert abs(abs(mean) - np.pi) < 0.1
         for bound in (ci_low, ci_high):
             assert abs(abs(bound) - np.pi) < 0.2

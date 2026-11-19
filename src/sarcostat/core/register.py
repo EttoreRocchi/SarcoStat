@@ -247,7 +247,6 @@ def z_line_register(
 
     nearest = np.abs(s_b[:, None] - s_a[None, :]).argmin(axis=1)
     offsets = s_b - s_a[nearest]
-    # Local sarcomere length: the A spacing on the side of the offset.
     idx = np.clip(np.where(offsets >= 0, nearest, nearest - 1), 0, spacing.size - 1)
     local_len = spacing[idx]
     phases = np.angle(np.exp(2j * np.pi * offsets / local_len))

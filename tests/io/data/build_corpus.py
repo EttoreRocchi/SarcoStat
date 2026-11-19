@@ -33,8 +33,6 @@ EXAMPLES_DIR = DATA_DIR.parents[2] / "examples"
 TEM_1 = "human_skeletal_muscle_tem_1.jpg"
 TEM_3 = "human_skeletal_muscle_tem_3.jpg"
 
-# Forward maps crop -> display for a crop of width w and height h, with pixel
-# centres at integer coordinates (rot90 is numpy's np.rot90(k=1)).
 _FORWARD: dict[str, Callable[[float, float, int, int], tuple[float, float]]] = {
     "identity": lambda x, y, w, h: (x, y),
     "rot90": lambda x, y, w, h: (y, w - 1 - x),
@@ -331,7 +329,6 @@ def golden_gui() -> dict[str, Any]:
     }
 
 
-# Window state of the free GUI session: every value type the block allows.
 GUI_BLOCK: dict[str, Any] = {
     "pixel_size": 4.39,
     "unit": "nm",
@@ -398,9 +395,7 @@ def _two(*fns):
     return _mutate(fn)
 
 
-# name -> (builder, error substring, rejected by the JSON Schema too)
 INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
-    # header and version policy
     "top_level_array": (lambda: "[]\n", "must be a JSON object", True),
     "missing_format": (_drop("format"), "format", True),
     "wrong_format_name": (_set("format", "other-format"), "format", True),
@@ -409,7 +404,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
     "version_three_parts": (_set("format_version", "1.0.0"), "format_version", True),
     "version_leading_zero": (_set("format_version", "1.01"), "format_version", True),
     "version_number": (_set("format_version", 1.0), "format_version", True),
-    # top level
     "missing_source_digest": (_drop("source_digest"), "source_digest", True),
     "source_digest_upper": (
         _set("source_digest", "A" * 64),
@@ -427,7 +421,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
     "missing_images": (_drop("images"), "images", True),
     "images_empty": (_set("images", []), "images", True),
     "items_object": (_set("items", {}), "items", True),
-    # images
     "image_sha256_bad": (_set("images/0/sha256", "z" * 64), "images[0].sha256", True),
     "image_file_name_path": (
         _set("images/0/file_name", "examples/" + TEM_1),
@@ -462,7 +455,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
         "duplicate file_name",
         False,
     ),
-    # items: identity, references, enums
     "item_missing_raw_clicks": (_drop("items/0/raw_clicks"), "items[0].raw_clicks", True),
     "item_id_space": (_set("items/0/item_id", "S0 001"), "items[0].item_id", True),
     "item_duplicate_id": (_set("items/1/item_id", "S0-001"), "duplicate item_id", False),
@@ -473,7 +465,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
         "items[0].display_transform",
         True,
     ),
-    # crop
     "item_crop_offset_negative": (
         _set("items/0/kit_crop_offset", [-1, 600]),
         "items[0].kit_crop_offset",
@@ -494,10 +485,8 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
         "outside image",
         False,
     ),
-    # timing
     "item_started_bad": (_set("items/0/started_utc", "yesterday"), "items[0].started_utc", True),
     "item_active_negative": (_set("items/0/active_seconds", -1.0), "items[0].active_seconds", True),
-    # clicks
     "click_order_zero": (_set("items/0/raw_clicks/0/order", 0), "raw_clicks[0].order", True),
     "click_order_gap": (_set("items/0/raw_clicks/2/order", 4), "raw_clicks[2].order", False),
     "click_seconds_negative": (
@@ -518,7 +507,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
     ),
     "click_missing_x": (_drop("items/0/raw_clicks/0/x"), "raw_clicks[0].x", True),
     "click_outside_display": (
-        # rot90 swaps the axes: the display is 180 px wide, not 240
         _set("items/1/raw_clicks/0/x", 200.0),
         "outside the display",
         False,
@@ -528,7 +516,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
         "6 points but 5 raw_clicks",
         False,
     ),
-    # points
     "points_outside_crop": (
         _set("items/0/points/z1/0/0", 999.0),
         "outside the crop",
@@ -564,7 +551,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
         "items[4].points.myofibrils[0]",
         True,
     ),
-    # skips
     "skipped_without_reason": (_set("items/2/skip_reason", None), "items[2].skip_reason", True),
     "skipped_with_points": (
         _set("items/2/points", {"z1": [[401.0, 301.0], [402.0, 350.0]]}),
@@ -603,7 +589,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
     "reason_without_skip": (_set("items/0/skip_reason", "tired"), "items[0].skip_reason", True),
     "branch_end_on_shape": (_set("items/0/branch_end", False), "items[0].branch_end", True),
     "branch_end_not_bool": (_set("items/3/branch_end", 1), "items[3].branch_end", True),
-    # gui block (free GUI saves only)
     "gui_in_study_file": (_set("gui", dict(GUI_BLOCK)), "annotator_id: must be null", True),
     "gui_with_session_id": (_set("session_id", "S1", golden_gui), "session_id", True),
     "gui_not_object": (_set("gui", [], golden_gui), "gui: must be a JSON object", True),
@@ -635,7 +620,6 @@ INVALID: dict[str, tuple[Callable[[], str], str, bool]] = {
         "gui.open_myofibril",
         True,
     ),
-    # JSON text
     "nan_token": (
         _text(lambda t: t.replace('"active_seconds": 30.25', '"active_seconds": NaN')),
         "NaN",

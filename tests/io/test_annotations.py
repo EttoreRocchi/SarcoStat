@@ -48,7 +48,6 @@ needs_format_doc = pytest.mark.skipif(
 GOLDEN = sorted(DATA.glob("golden_v1_*.json"))
 INVALID_DIR = DATA / "invalid"
 MANIFEST = json.loads((DATA / "invalid_manifest.json").read_text())
-# Cases rejected while parsing the JSON text, before any validation.
 TEXT_CASES = {
     "duplicate_key",
     "infinity_token",
@@ -68,7 +67,7 @@ def _load_builder():
 
 @pytest.fixture(scope="module")
 def schema_validator():
-    jsonschema = pytest.importorskip("jsonschema")  # dev-only; the validator does not need it
+    jsonschema = pytest.importorskip("jsonschema")
     schema = load_schema()
     cls = jsonschema.validators.validator_for(schema)
     cls.check_schema(schema)
@@ -417,7 +416,6 @@ class TestImageCheck:
         assert doc["images"][1]["image_id"] == "tem3"
 
     def test_sha256_file_reference_value(self, tmp_path):
-        # FIPS 180-2, appendix B.1
         (tmp_path / "abc").write_bytes(b"abc")
         assert (
             sha256_file(tmp_path / "abc")
@@ -470,7 +468,7 @@ class TestSchemaCrossCheck:
     def test_every_property_has_a_description(self):
         for path, node in _schema_nodes(load_schema()):
             if "/allOf/" in path:
-                continue  # conditional constraints repeat documented properties
+                continue
             for name, sub in node.get("properties", {}).items():
                 assert "description" in sub or "$ref" in sub, f"{path}/{name}"
 

@@ -47,7 +47,6 @@ class TestAngleWrapping:
         angles = np.array([0.5, 1.0, 2.0])
         normalized = to_minuspi_pi(angles)
 
-        # Small positive angles should stay positive
         assert all(normalized > 0)
 
 
@@ -127,10 +126,8 @@ class TestCircularStatistics:
 
     def test_circular_variance_uniform(self):
         """Variance of uniformly spread angles should approach 1."""
-        # 4 angles at 0, pi/2, pi, 3pi/2
         angles = np.array([0, np.pi / 2, np.pi, 3 * np.pi / 2])
         var = calculate_circular_variance(angles)
-        # Should be high but may not be exactly 1
         assert var > 0.5
 
 
@@ -141,7 +138,7 @@ class TestStatisticalTests:
         """Rayleigh test on concentrated data should be significant."""
         angles = np.array([0.1, 0.15, 0.05, 0.08, 0.12, 0.09, 0.11, 0.07])
         z, p = perform_rayleigh_test(angles)
-        assert p < 0.05  # Should reject uniformity
+        assert p < 0.05
 
     def test_rayleigh_empty(self):
         """Empty array should return safe defaults."""
@@ -189,7 +186,7 @@ class TestSequenceAnalysis:
         metrics = analyze_segment_sequence(points)
 
         assert abs(metrics.linearity_ratio - 1.0) < 1e-6
-        assert metrics.mean_vector_length > 0.99  # Nearly 1
+        assert metrics.mean_vector_length > 0.99
 
     def test_zigzag_path(self):
         """Zigzag path should have lower linearity than straight."""
@@ -226,7 +223,6 @@ class TestSequenceAnalysis:
         metrics_px = analyze_segment_sequence(points, pixel_to_unit=1.0)
         metrics_um = analyze_segment_sequence(points, pixel_to_unit=0.065)
 
-        # Total length should scale by conversion factor
         assert abs(metrics_um.total_length - metrics_px.total_length * 0.065) < 1e-6
 
 
@@ -283,7 +279,7 @@ class TestSequenceStatisticsOnHeadings:
         assert "not run" in metrics.summary_string()
 
     def test_v_test_against_expected_direction(self):
-        points = _arc_points(12, 1.0)  # headings 0..11 deg
+        points = _arc_points(12, 1.0)
         along = analyze_segment_sequence(points, expected_direction=0.0)
         against = analyze_segment_sequence(points, expected_direction=np.pi)
         assert along.v_p_value < 0.05

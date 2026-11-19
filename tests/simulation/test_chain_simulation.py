@@ -214,7 +214,7 @@ class TestLinearityRatioFormula:
             kappa_values=[kappa],
             length_distribution="truncnorm",
             length_mean=1.0,
-            length_std=0.0,  # collapses to mean -> exactly equal lengths
+            length_std=0.0,
             length_min=0.0,
             length_max=2.0,
             angular_distribution="vonmises",
@@ -252,7 +252,6 @@ class TestLinearityRatioFormula:
         lr2 = np.array(
             [sim.simulate_trial(n_sarc, kappa, rng).linearity_ratio ** 2 for _ in range(n_trials)]
         )
-        # Monte Carlo SE ~ sigma(LR^2)/sqrt(n_trials); 0.01 is comfortable.
         assert abs(lr2.mean() - predicted) < 0.01
 
 
@@ -270,7 +269,6 @@ class TestHeadingPersistence:
         decay = 0.95
         raw = np.array([0.5, -1.2, 2.0, -0.8, 1.5])
         out = _heading_persistence(raw, decay=decay)
-        # Each step deviates from the previous heading by at most (1 - decay)*pi.
         max_step = float((1.0 - decay) * np.pi)
         for i in range(1, len(out)):
             assert abs(out[i] - out[i - 1]) <= max_step + 1e-12

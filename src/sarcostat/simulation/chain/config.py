@@ -30,8 +30,6 @@ from .._config_io import (
 )
 from .._distributions import ANGLE_SAMPLERS, LENGTH_SAMPLERS
 
-# Warnings raised from validators run inside the dataclass-generated
-# ``__init__``; stacklevel 4 points at the caller that built the Config.
 _WARN_STACKLEVEL = 4
 
 

@@ -66,7 +66,7 @@ def _heading_persistence(angles: np.ndarray, decay: float) -> np.ndarray:
     """
     n = len(angles)
     if n == 0:
-        return angles.copy()
+        return np.copy(angles)
     out = np.zeros(n)
     out[0] = float(angles[0])
     for i in range(1, n):

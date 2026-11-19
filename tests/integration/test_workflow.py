@@ -17,24 +17,20 @@ class TestLinearityWorkflow:
 
     def test_straight_line_workflow(self):
         """Test complete workflow with straight line segments."""
-        # Create session
         session = AnalysisSession(pixel_size=0.065, unit_name="um")
 
-        # Simulate annotations (5 horizontal segments)
         for i in range(5):
             seg = UserSegment(p1=(i * 100.0, 50.0), p2=((i + 1) * 100.0, 50.0))
             session.segments.append(seg)
 
-        # Run analysis
         midpoints = np.array(session.midpoints, dtype=float)
         metrics = analyze_segment_sequence(
             midpoints, pixel_to_unit=session.pixel_size, unit_name=session.unit_name
         )
 
-        # Verify results
-        assert metrics.n_segments == 4  # 5 segments -> 4 midpoint connections
-        assert metrics.linearity_ratio > 0.99  # Nearly straight
-        assert metrics.mean_vector_length > 0.99  # Highly concentrated
+        assert metrics.n_segments == 4
+        assert metrics.linearity_ratio > 0.99
+        assert metrics.mean_vector_length > 0.99
 
     def test_zigzag_workflow(self):
         """A zigzag of midpoints: headings alternate between +45 and -45 deg.
@@ -82,19 +78,16 @@ class TestLinearityWorkflow:
         """Test that scale factor correctly affects length calculations."""
         session = AnalysisSession()
 
-        # Same segments, different scales
         session.segments.append(UserSegment(p1=(0.0, 0.0), p2=(100.0, 0.0)))
         session.segments.append(UserSegment(p1=(100.0, 0.0), p2=(200.0, 0.0)))
 
         midpoints = np.array(session.midpoints, dtype=float)
 
         metrics_px = analyze_segment_sequence(midpoints, pixel_to_unit=1.0)
-        metrics_nm = analyze_segment_sequence(midpoints, pixel_to_unit=65.0)  # 65nm/px
+        metrics_nm = analyze_segment_sequence(midpoints, pixel_to_unit=65.0)
 
-        # Length should scale
         assert abs(metrics_nm.total_length - metrics_px.total_length * 65.0) < 0.1
 
-        # Ratios should be identical
         assert abs(metrics_nm.linearity_ratio - metrics_px.linearity_ratio) < 1e-10
 
 
@@ -105,7 +98,6 @@ class TestSarcomereWorkflow:
         """Test workflow with square sarcomere."""
         session = AnalysisSession()
 
-        # Square sarcomere: 100x100
         geom = calculate_sarcomere_geometry(
             point_a=(0.0, 0.0),
             point_b=(0.0, 100.0),
@@ -125,7 +117,6 @@ class TestSarcomereWorkflow:
         """Test workflow with rectangular sarcomere."""
         session = AnalysisSession()
 
-        # Rectangular sarcomere: wider than tall
         geom = calculate_sarcomere_geometry(
             point_a=(0.0, 0.0),
             point_b=(0.0, 50.0),
@@ -137,7 +128,7 @@ class TestSarcomereWorkflow:
         )
         session.sarcomere_geometries.append(geom)
 
-        assert geom.aspect_ratio > 1.5  # Width > height
+        assert geom.aspect_ratio > 1.5
         assert geom.shape_classification.value == "rectangular"
 
 
@@ -150,17 +141,13 @@ class TestModeSwitch:
             image_path=Path("/path/to/image.tif"), pixel_size=0.065, unit_name="um"
         )
 
-        # Add linearity annotations
         session.segments.append(UserSegment(p1=(0.0, 0.0), p2=(100.0, 0.0)))
 
-        # Simulate mode switch (clear annotations but preserve image)
         session.clear_linearity_annotations()
 
-        # Image state preserved
         assert session.image_path == Path("/path/to/image.tif")
         assert session.pixel_size == 0.065
 
-        # Annotations cleared
         assert len(session.segments) == 0
 
     def test_mode_switch_clears_pending(self):
@@ -176,7 +163,6 @@ class TestModeSwitch:
         """Clear all should reset analysis history."""
         session = AnalysisSession()
 
-        # Add some history
         session.segments.append(UserSegment(p1=(0.0, 0.0), p2=(100.0, 0.0)))
         session.segments.append(UserSegment(p1=(100.0, 0.0), p2=(200.0, 0.0)))
 
@@ -184,7 +170,6 @@ class TestModeSwitch:
         metrics = analyze_segment_sequence(midpoints)
         session.analysis_history.append(metrics)
 
-        # Clear all
         session.clear_all()
 
         assert len(session.segments) == 0
