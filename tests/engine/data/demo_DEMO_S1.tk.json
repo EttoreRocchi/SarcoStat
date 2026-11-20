@@ -1,0 +1,635 @@
+{
+  "annotator_id": "DEMO",
+  "created_utc": "2026-11-16T09:00:00.500000Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem_1",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "scale bar"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2200
+    },
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem_3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "scale bar"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": 9.0,
+      "display_transform": "rot90",
+      "finished_utc": "2026-11-16T09:00:10.000000Z",
+      "image_id": "tem_3",
+      "item_id": "S1-001",
+      "kit_crop_offset": [
+        720,
+        520
+      ],
+      "kit_crop_size": [
+        841,
+        561
+      ],
+      "points": {
+        "m": [
+          [
+            1140.0,
+            656.0
+          ],
+          [
+            1140.0,
+            944.0
+          ]
+        ],
+        "z1": [
+          [
+            912.0,
+            656.0
+          ],
+          [
+            912.0,
+            944.0
+          ]
+        ],
+        "z2": [
+          [
+            1368.0,
+            656.0
+          ],
+          [
+            1368.0,
+            944.0
+          ]
+        ]
+      },
+      "raw_clicks": [
+        {
+          "order": 1,
+          "seconds": 1.0,
+          "undo_count": 0,
+          "x": 136.0,
+          "y": 648.0
+        },
+        {
+          "order": 2,
+          "seconds": 3.5,
+          "undo_count": 1,
+          "x": 424.0,
+          "y": 648.0
+        },
+        {
+          "order": 3,
+          "seconds": 4.5,
+          "undo_count": 1,
+          "x": 136.0,
+          "y": 420.0
+        },
+        {
+          "order": 4,
+          "seconds": 5.5,
+          "undo_count": 1,
+          "x": 424.0,
+          "y": 420.0
+        },
+        {
+          "order": 5,
+          "seconds": 6.5,
+          "undo_count": 1,
+          "x": 136.0,
+          "y": 192.0
+        },
+        {
+          "order": 6,
+          "seconds": 7.5,
+          "undo_count": 1,
+          "x": 424.0,
+          "y": 192.0
+        }
+      ],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": "2026-11-16T09:00:01.000000Z",
+      "target_id": "T01",
+      "type": "shape"
+    },
+    {
+      "active_seconds": 9.5,
+      "branch_end": false,
+      "display_transform": "flip_v",
+      "finished_utc": "2026-11-16T09:00:20.500000Z",
+      "image_id": "tem_1",
+      "item_id": "S1-002",
+      "kit_crop_offset": [
+        1160,
+        40
+      ],
+      "kit_crop_size": [
+        961,
+        481
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              1332.0,
+              160.0
+            ],
+            [
+              1332.0,
+              400.0
+            ]
+          ],
+          [
+            [
+              1508.0,
+              160.0
+            ],
+            [
+              1508.0,
+              400.0
+            ]
+          ],
+          [
+            [
+              1684.0,
+              160.0
+            ],
+            [
+              1684.0,
+              400.0
+            ]
+          ],
+          [
+            [
+              1860.0,
+              160.0
+            ],
+            [
+              1860.0,
+              400.0
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [
+        {
+          "order": 1,
+          "seconds": 1.0,
+          "undo_count": 0,
+          "x": 172.0,
+          "y": 360.0
+        },
+        {
+          "order": 2,
+          "seconds": 2.0,
+          "undo_count": 0,
+          "x": 172.0,
+          "y": 120.0
+        },
+        {
+          "order": 3,
+          "seconds": 3.0,
+          "undo_count": 0,
+          "x": 348.0,
+          "y": 360.0
+        },
+        {
+          "order": 4,
+          "seconds": 4.0,
+          "undo_count": 0,
+          "x": 348.0,
+          "y": 120.0
+        },
+        {
+          "order": 5,
+          "seconds": 5.0,
+          "undo_count": 0,
+          "x": 524.0,
+          "y": 360.0
+        },
+        {
+          "order": 6,
+          "seconds": 6.0,
+          "undo_count": 0,
+          "x": 524.0,
+          "y": 120.0
+        },
+        {
+          "order": 7,
+          "seconds": 7.0,
+          "undo_count": 0,
+          "x": 700.0,
+          "y": 360.0
+        },
+        {
+          "order": 8,
+          "seconds": 8.0,
+          "undo_count": 0,
+          "x": 700.0,
+          "y": 120.0
+        }
+      ],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": "2026-11-16T09:00:11.000000Z",
+      "target_id": "T04",
+      "type": "chain"
+    },
+    {
+      "active_seconds": 6.0,
+      "display_transform": "identity",
+      "finished_utc": "2026-11-16T09:00:27.500000Z",
+      "image_id": "tem_3",
+      "item_id": "S1-003",
+      "kit_crop_offset": [
+        0,
+        160
+      ],
+      "kit_crop_size": [
+        801,
+        481
+      ],
+      "points": {
+        "z1": [
+          [
+            184.0,
+            280.0
+          ],
+          [
+            184.0,
+            520.0
+          ]
+        ],
+        "z2": [
+          [
+            616.0,
+            280.0
+          ],
+          [
+            616.0,
+            520.0
+          ]
+        ]
+      },
+      "raw_clicks": [
+        {
+          "order": 1,
+          "seconds": 1.0,
+          "undo_count": 0,
+          "x": 184.0,
+          "y": 120.0
+        },
+        {
+          "order": 2,
+          "seconds": 2.0,
+          "undo_count": 0,
+          "x": 184.0,
+          "y": 360.0
+        },
+        {
+          "order": 3,
+          "seconds": 3.5,
+          "undo_count": 0,
+          "x": 616.0,
+          "y": 120.0
+        },
+        {
+          "order": 4,
+          "seconds": 4.5,
+          "undo_count": 0,
+          "x": 616.0,
+          "y": 360.0
+        }
+      ],
+      "skip_reason": "M-line not identifiable",
+      "skipped": false,
+      "skipped_parts": [
+        "m_line"
+      ],
+      "started_utc": "2026-11-16T09:00:21.500000Z",
+      "target_id": "T02",
+      "type": "shape"
+    },
+    {
+      "active_seconds": 14.0,
+      "display_transform": "transpose",
+      "finished_utc": "2026-11-16T09:00:42.500000Z",
+      "image_id": "tem_1",
+      "item_id": "S1-004",
+      "kit_crop_offset": [
+        1480,
+        560
+      ],
+      "kit_crop_size": [
+        720,
+        561
+      ],
+      "points": {
+        "myofibrils": [
+          [
+            [
+              [
+                1648.0,
+                648.0
+              ],
+              [
+                1648.0,
+                816.0
+              ]
+            ],
+            [
+              [
+                1840.0,
+                648.0
+              ],
+              [
+                1840.0,
+                816.0
+              ]
+            ],
+            [
+              [
+                2032.0,
+                648.0
+              ],
+              [
+                2032.0,
+                816.0
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                1648.0,
+                864.0
+              ],
+              [
+                1648.0,
+                1032.0
+              ]
+            ],
+            [
+              [
+                1840.0,
+                864.0
+              ],
+              [
+                1840.0,
+                1032.0
+              ]
+            ],
+            [
+              [
+                2032.0,
+                864.0
+              ],
+              [
+                2032.0,
+                1032.0
+              ]
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [
+        {
+          "order": 1,
+          "seconds": 1.0,
+          "undo_count": 0,
+          "x": 88.0,
+          "y": 168.0
+        },
+        {
+          "order": 2,
+          "seconds": 2.0,
+          "undo_count": 0,
+          "x": 256.0,
+          "y": 168.0
+        },
+        {
+          "order": 3,
+          "seconds": 3.0,
+          "undo_count": 0,
+          "x": 88.0,
+          "y": 360.0
+        },
+        {
+          "order": 4,
+          "seconds": 4.0,
+          "undo_count": 0,
+          "x": 256.0,
+          "y": 360.0
+        },
+        {
+          "order": 5,
+          "seconds": 5.0,
+          "undo_count": 0,
+          "x": 88.0,
+          "y": 552.0
+        },
+        {
+          "order": 6,
+          "seconds": 6.0,
+          "undo_count": 0,
+          "x": 256.0,
+          "y": 552.0
+        },
+        {
+          "order": 7,
+          "seconds": 7.5,
+          "undo_count": 0,
+          "x": 304.0,
+          "y": 168.0
+        },
+        {
+          "order": 8,
+          "seconds": 8.5,
+          "undo_count": 0,
+          "x": 472.0,
+          "y": 168.0
+        },
+        {
+          "order": 9,
+          "seconds": 9.5,
+          "undo_count": 0,
+          "x": 304.0,
+          "y": 360.0
+        },
+        {
+          "order": 10,
+          "seconds": 10.5,
+          "undo_count": 0,
+          "x": 472.0,
+          "y": 360.0
+        },
+        {
+          "order": 11,
+          "seconds": 11.5,
+          "undo_count": 0,
+          "x": 304.0,
+          "y": 552.0
+        },
+        {
+          "order": 12,
+          "seconds": 12.5,
+          "undo_count": 0,
+          "x": 472.0,
+          "y": 552.0
+        }
+      ],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": "2026-11-16T09:00:28.500000Z",
+      "target_id": "T05",
+      "type": "pair"
+    },
+    {
+      "active_seconds": 7.5,
+      "display_transform": "anti_transpose",
+      "finished_utc": "2026-11-16T09:00:51.000000Z",
+      "image_id": "tem_3",
+      "item_id": "S1-005",
+      "kit_crop_offset": [
+        720,
+        520
+      ],
+      "kit_crop_size": [
+        841,
+        561
+      ],
+      "points": {
+        "m": [
+          [
+            1140.0,
+            656.0
+          ],
+          [
+            1140.0,
+            944.0
+          ]
+        ],
+        "z1": [
+          [
+            912.0,
+            656.0
+          ],
+          [
+            912.0,
+            944.0
+          ]
+        ],
+        "z2": [
+          [
+            1368.0,
+            656.0
+          ],
+          [
+            1368.0,
+            944.0
+          ]
+        ]
+      },
+      "raw_clicks": [
+        {
+          "order": 1,
+          "seconds": 1.0,
+          "undo_count": 0,
+          "x": 424.0,
+          "y": 648.0
+        },
+        {
+          "order": 2,
+          "seconds": 2.0,
+          "undo_count": 0,
+          "x": 136.0,
+          "y": 648.0
+        },
+        {
+          "order": 3,
+          "seconds": 3.0,
+          "undo_count": 0,
+          "x": 424.0,
+          "y": 420.0
+        },
+        {
+          "order": 4,
+          "seconds": 4.0,
+          "undo_count": 0,
+          "x": 136.0,
+          "y": 420.0
+        },
+        {
+          "order": 5,
+          "seconds": 5.0,
+          "undo_count": 0,
+          "x": 424.0,
+          "y": 192.0
+        },
+        {
+          "order": 6,
+          "seconds": 6.0,
+          "undo_count": 0,
+          "x": 136.0,
+          "y": 192.0
+        }
+      ],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": "2026-11-16T09:00:43.500000Z",
+      "target_id": "T01",
+      "type": "shape"
+    },
+    {
+      "active_seconds": 1.5,
+      "display_transform": "rot180",
+      "finished_utc": "2026-11-16T09:00:53.500000Z",
+      "image_id": "tem_3",
+      "item_id": "S1-006",
+      "kit_crop_offset": [
+        1560,
+        960
+      ],
+      "kit_crop_size": [
+        561,
+        481
+      ],
+      "points": {},
+      "raw_clicks": [],
+      "skip_reason": "Demo: skipped on purpose",
+      "skipped": true,
+      "skipped_parts": [],
+      "started_utc": "2026-11-16T09:00:52.000000Z",
+      "target_id": "T03",
+      "type": "shape"
+    }
+  ],
+  "sarcostat_version": "0.2.0rc1.dev0",
+  "session_id": "S1",
+  "source_digest": "0c867a0b2c4b486d7707277c1cc1066cabf632af4a190b97d3c834de90be3f5d",
+  "study_id": "demo"
+}

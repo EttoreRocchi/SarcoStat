@@ -1,0 +1,223 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "gui": {
+    "click_perp_ratio": 1.0,
+    "click_sigma_m": null,
+    "click_sigma_z": 13.24,
+    "expected_direction_deg": 2.0,
+    "mode": "Myofibril Linearity",
+    "open_myofibril": false,
+    "pixel_size": 6.62,
+    "unit": "nm"
+  },
+  "images": [
+    {
+      "file_name": "synthetic_5000x800.png",
+      "height_px": 800,
+      "image_id": "wide",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "user"
+      },
+      "sha256": "5f63852881929bf8ce294c0ae8b9d96de5687999ddb268fb4705e3e0975a94f2",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 5000
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "wide",
+      "item_id": "barrel",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        5000,
+        800
+      ],
+      "points": {
+        "m": [
+          [
+            4415.703125,
+            100.40625
+          ],
+          [
+            4384.296875,
+            699.59375
+          ]
+        ],
+        "z1": [
+          [
+            4062.25,
+            156.984375
+          ],
+          [
+            4038.703125,
+            606.375
+          ]
+        ],
+        "z2": [
+          [
+            4761.296875,
+            193.625
+          ],
+          [
+            4737.75,
+            643.015625
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "wide",
+      "item_id": "hourglass",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        5000,
+        800
+      ],
+      "points": {
+        "m": [
+          [
+            4588.484375,
+            255.40625
+          ],
+          [
+            4611.515625,
+            584.59375
+          ]
+        ],
+        "z1": [
+          [
+            4237.703125,
+            184.703125
+          ],
+          [
+            4273.984375,
+            703.4375
+          ]
+        ],
+        "z2": [
+          [
+            4926.015625,
+            136.5625
+          ],
+          [
+            4962.296875,
+            655.296875
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "wide",
+      "item_id": "chain",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        5000,
+        800
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              4153.046875,
+              228.46875
+            ],
+            [
+              4144.84375,
+              528.359375
+            ]
+          ],
+          [
+            [
+              4334.890625,
+              238.765625
+            ],
+            [
+              4321.75,
+              538.484375
+            ]
+          ],
+          [
+            [
+              4527.40625,
+              255.65625
+            ],
+            [
+              4494.375,
+              553.828125
+            ]
+          ],
+          [
+            [
+              4696.0625,
+              269.9375
+            ],
+            [
+              4678.71875,
+              569.4375
+            ]
+          ],
+          [
+            [
+              4875.9375,
+              287.09375
+            ],
+            [
+              4856.484375,
+              586.46875
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

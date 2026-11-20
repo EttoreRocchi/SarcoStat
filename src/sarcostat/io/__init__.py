@@ -11,9 +11,6 @@ study
 provenance
     Digest of the installed source and provenance blocks for exports
     (:mod:`sarcostat.io.provenance`).
-loader
-    Headless measurement of the sarcomeres in an annotation file
-    (:mod:`sarcostat.io.loader`).
 
 Nothing is imported here, so importing :mod:`sarcostat.io` stays cheap;
 import the submodules directly.

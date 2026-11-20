@@ -1,0 +1,279 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "synthetic_5000x800.png",
+      "height_px": 800,
+      "image_id": "wide",
+      "scale": {
+        "nm_per_px": null,
+        "source": null
+      },
+      "sha256": "5f63852881929bf8ce294c0ae8b9d96de5687999ddb268fb4705e3e0975a94f2",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 5000
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "wide",
+      "item_id": "long-sarcomere",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        5000,
+        800
+      ],
+      "points": {
+        "m": [
+          [
+            2556.921875,
+            95.078125
+          ],
+          [
+            2543.078125,
+            704.921875
+          ]
+        ],
+        "z1": [
+          [
+            306.25,
+            99.015625
+          ],
+          [
+            294.90625,
+            598.890625
+          ]
+        ],
+        "z2": [
+          [
+            4805.09375,
+            201.109375
+          ],
+          [
+            4793.75,
+            700.984375
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "wide",
+      "item_id": "chain",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        5000,
+        800
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              412.4375,
+              251.796875
+            ],
+            [
+              387.15625,
+              550.734375
+            ]
+          ],
+          [
+            [
+              1475.734375,
+              300.5625
+            ],
+            [
+              1465.796875,
+              600.390625
+            ]
+          ],
+          [
+            [
+              2555.953125,
+              350.34375
+            ],
+            [
+              2535.9375,
+              649.671875
+            ]
+          ],
+          [
+            [
+              3630.921875,
+              380.09375
+            ],
+            [
+              3615.265625,
+              679.6875
+            ]
+          ],
+          [
+            [
+              4690.0625,
+              399.640625
+            ],
+            [
+              4698.4375,
+              699.515625
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "wide",
+      "item_id": "pair",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        5000,
+        800
+      ],
+      "points": {
+        "myofibrils": [
+          [
+            [
+              [
+                4139.484375,
+                120.796875
+              ],
+              [
+                4119.953125,
+                339.921875
+              ]
+            ],
+            [
+              [
+                4314.3125,
+                125.484375
+              ],
+              [
+                4305.109375,
+                345.296875
+              ]
+            ],
+            [
+              [
+                4493.203125,
+                130.875
+              ],
+              [
+                4482.6875,
+                350.625
+              ]
+            ],
+            [
+              [
+                4671.765625,
+                133.578125
+              ],
+              [
+                4671.28125,
+                353.578125
+              ]
+            ],
+            [
+              [
+                4853.453125,
+                143.390625
+              ],
+              [
+                4841.0,
+                363.046875
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                4173.75,
+                422.359375
+              ],
+              [
+                4162.109375,
+                642.046875
+              ]
+            ],
+            [
+              [
+                4347.203125,
+                423.671875
+              ],
+              [
+                4344.515625,
+                643.65625
+              ]
+            ],
+            [
+              [
+                4532.75,
+                433.984375
+              ],
+              [
+                4520.375,
+                653.625
+              ]
+            ],
+            [
+              [
+                4714.1875,
+                437.78125
+              ],
+              [
+                4702.71875,
+                657.484375
+              ]
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "pair"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

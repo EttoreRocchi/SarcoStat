@@ -1,0 +1,14 @@
+{
+  "approved": "D-048",
+  "rel_default": 1e-12,
+  "rel_special": 1e-09,
+  "rule": "A number a matches the expected number b when |a - b| <= rel * max(1, |b|), with rel = rel_special when the path of b is listed in special and rel = rel_default otherwise. A path names a value from the root of the expected JSON: object keys joined by '.', every list index written '[*]' (for example images[*].chains[*].metrics.mvl_ci[*]). Object keys, list lengths, strings, booleans and nulls must be equal.",
+  "special": [
+    "images[*].chains[*].metrics.circular_std",
+    "images[*].chains[*].metrics.mvl_ci[*]",
+    "images[*].chains[*].metrics.turning_circular_std",
+    "images[*].chains[*].metrics.v_p_value",
+    "images[*].register[*].metrics.register_spread",
+    "images[*].register[*].metrics.v_p_value"
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "format": "sarcostat-results",
+  "format_version": "1.0",
+  "images": [
+    {
+      "chains": [],
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem1",
+      "notices": [],
+      "register": [
+        {
+          "item_id": "pair-1",
+          "metrics": null,
+          "myofibril_a": 1,
+          "myofibril_b": 2,
+          "n_z_lines_a": 6,
+          "n_z_lines_b": 4,
+          "pair": 1,
+          "skip_reason": "no_overlap",
+          "skipped": true,
+          "target_id": null
+        },
+        {
+          "item_id": "pair-2",
+          "metrics": {
+            "correlation_lags": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "correlation_values": [
+              0.9959518009601173,
+              0.9918569776892702,
+              0.9893986834178298,
+              0.9958425128463919,
+              0.9972005467120206
+            ],
+            "h_mean": 195.0037425046336,
+            "h_unregistered": 247.65593153176712,
+            "lateral_distance": 932.688029189424,
+            "local_sarcomere_lengths": [
+              999.3835462189486,
+              1008.9759839561893,
+              965.3426062425533,
+              1007.0268508204153,
+              981.506684762152,
+              981.506684762152
+            ],
+            "mean_phase": 1.2365404481859144,
+            "n_pairs": 6,
+            "offsets": [
+              203.95954642918423,
+              199.62850625234023,
+              172.32654132993866,
+              191.22915536546407,
+              190.87616882976454,
+              212.00253682110997
+            ],
+            "phases": [
+              1.2823061078315008,
+              1.2431444527161069,
+              1.1216324499918433,
+              1.1931441731844312,
+              1.2219074593185626,
+              1.3571494164219498
+            ],
+            "rayleigh_p": 0.00036195431928885956,
+            "rayleigh_z": 5.968089512738655,
+            "register_index": 0.9973372476030574,
+            "register_spread": 11.513269561994287,
+            "serial_dependence_p": 0.169,
+            "serial_dependence_statistic": 0.00138219061685807,
+            "unit": "nm",
+            "v_p_value": 0.1285170747430664,
+            "v_statistic": 1.963156581690322
+          },
+          "myofibril_a": 3,
+          "myofibril_b": 4,
+          "n_z_lines_a": 6,
+          "n_z_lines_b": 6,
+          "pair": 2,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        },
+        {
+          "item_id": "pair-3",
+          "metrics": {
+            "correlation_lags": [
+              1,
+              2
+            ],
+            "correlation_values": [
+              0.9950334383593125,
+              0.9992229135184474
+            ],
+            "h_mean": 269.14202953281045,
+            "h_unregistered": 250.1381199054907,
+            "lateral_distance": 862.9447004502408,
+            "local_sarcomere_lengths": [
+              1010.1632073819292,
+              986.3941513474274,
+              1005.1000801365317
+            ],
+            "mean_phase": 1.690555958978212,
+            "n_pairs": 3,
+            "offsets": [
+              269.7270893506611,
+              275.63060621188015,
+              262.06839303589004
+            ],
+            "phases": [
+              1.6776945273513897,
+              1.755726321768812,
+              1.638268973548976
+            ],
+            "rayleigh_p": 0.03395951064178266,
+            "rayleigh_z": 2.9928598601580476,
+            "register_index": 0.9988092677713877,
+            "register_spread": 7.7734069198700295,
+            "serial_dependence_p": 1.0,
+            "serial_dependence_statistic": -0.0023931519190215633,
+            "unit": "nm",
+            "v_p_value": 0.6149716779580939,
+            "v_statistic": -0.35799391069476266
+          },
+          "myofibril_a": 5,
+          "myofibril_b": 6,
+          "n_z_lines_a": 5,
+          "n_z_lines_b": 3,
+          "pair": 3,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        }
+      ],
+      "sarcomeres": [],
+      "settings": {
+        "click_perp_ratio": 1.0,
+        "click_sigma_m": null,
+        "click_sigma_z": null,
+        "pixel_size": 6.62,
+        "reference_direction_deg": null,
+        "scale_source": "image",
+        "unit": "nm"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "shape_summary": null,
+      "width_px": 2200
+    }
+  ]
+}

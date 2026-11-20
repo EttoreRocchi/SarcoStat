@@ -14,7 +14,7 @@ import pytest
 
 import sarcostat
 from sarcostat.io import provenance as prov
-from sarcostat.io.provenance import provenance, source_digest
+from sarcostat.io.provenance import provenance, provenance_from_digests, source_digest
 
 PACKAGE = Path(sarcostat.__file__).resolve().parent
 ABC_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
@@ -38,7 +38,6 @@ class TestSourceDigest:
             "py.typed",
             "core/shape_uncertainty.py",
             "io/annotation-v1.schema.json",
-            "gui/logo.png",
             "simulation/config.yaml",
             "simulation/sarcomere_config.yaml",
         ):
@@ -47,7 +46,7 @@ class TestSourceDigest:
             parts = rel.split("/")
             assert "__pycache__" not in parts and ".omc" not in parts, rel
             assert parts[0] not in ("tests", "docs", "paper"), rel
-            assert re.search(r"(\.py|\.yaml|^io/[^/]+\.json|^gui/[^/]+\.png|py\.typed)$", rel), rel
+            assert re.search(r"(\.py|\.yaml|^io/[^/]+\.json|py\.typed)$", rel), rel
 
     @pytest.mark.needs_cpython(reason="runs sha256sum in a subprocess")
     def test_matches_sha256sum_recipe(self):
@@ -91,6 +90,7 @@ class TestSourceDigest:
             "sarcostat-0.2.0.dist-info/RECORD.py": "x = 1\n",
             "README.txt": "text",
             "gui/settings.json": "{}",
+            "gui/logo.png": "png",
             "io/sample.png": "png",
             "simulation/extra.json": "{}",
             ".hidden/module.py": "x = 1\n",
@@ -108,8 +108,6 @@ class TestSourceDigest:
             "simulation/config.yaml",
             "io/annotation-v1.schema.json",
             "io/other.json",
-            "gui/logo.png",
-            "gui/icon.png",
             "py.typed",
         ],
     )
@@ -201,3 +199,46 @@ class TestProvenance:
     def test_missing_file(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             provenance([tmp_path / "absent.png"])
+
+
+class TestProvenanceFromDigests:
+    def test_equals_the_path_form(self, tmp_path):
+        (tmp_path / "abc.tif").write_bytes(b"abc")
+        (tmp_path / "empty.json").write_bytes(b"")
+        params = {"nm_per_px": 4.39, "grid": [1, 2]}
+        by_path = provenance([tmp_path / "abc.tif", tmp_path / "empty.json"], parameters=params)
+        by_digest = provenance_from_digests(
+            [("abc.tif", ABC_SHA256), ("empty.json", hashlib.sha256(b"").hexdigest())],
+            parameters=params,
+        )
+        assert by_digest == by_path
+
+    def test_defaults(self):
+        assert provenance_from_digests() == provenance()
+
+    def test_accepts_any_iterable_of_pairs(self):
+        block = provenance_from_digests(iter([["image.png", ABC_SHA256]]))
+        assert block["files"] == [{"file_name": "image.png", "sha256": ABC_SHA256}]
+
+    @pytest.mark.parametrize(
+        "name", ["", ".", "..", "sub/image.png", "/home/user/image.png", "C:\\x\\image.png", 3]
+    )
+    def test_rejects_names_with_folders(self, name):
+        with pytest.raises(ValueError, match="without folders"):
+            provenance_from_digests([(name, ABC_SHA256)])
+
+    @pytest.mark.parametrize("digest", [ABC_SHA256.upper(), ABC_SHA256[:-1], "", None, b"x" * 64])
+    def test_rejects_malformed_digests(self, digest):
+        with pytest.raises(ValueError, match="SHA-256"):
+            provenance_from_digests([("image.png", digest)])
+
+    def test_rejects_absolute_paths_in_parameters(self):
+        with pytest.raises(ValueError, match="absolute path"):
+            provenance_from_digests(parameters={"image": "/home/user/image.png"})
+
+    def test_parameters_are_copied_and_no_path_is_recorded(self):
+        params = {"grid": [1, 2]}
+        block = provenance_from_digests([("image.png", ABC_SHA256)], parameters=params)
+        params["grid"].append(3)
+        assert block["parameters"] == {"grid": [1, 2]}
+        assert set(block) == {"sarcostat_version", "source_digest", "files", "parameters"}

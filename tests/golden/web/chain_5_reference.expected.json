@@ -1,0 +1,140 @@
+{
+  "format": "sarcostat-results",
+  "format_version": "1.0",
+  "images": [
+    {
+      "chains": [
+        {
+          "branch_end": false,
+          "chain": 1,
+          "item_id": "chain-5",
+          "metrics": {
+            "circular_mean": 0.4768891604721497,
+            "circular_std": 0.02675617550205535,
+            "curvature_per_unit": 1.61580862615871e-05,
+            "expected_direction": 0.3490658503988659,
+            "head_to_tail_distance": 5779.489555977279,
+            "linearity_ratio": 0.9996405903038491,
+            "lr_noise_floor": 0.8655190487453924,
+            "lr_uniformity_p": 0.018387014081065942,
+            "mean_vector_length": 0.999642117591444,
+            "metadata": {
+              "angle_basis": "heading",
+              "conversion_factor": 4.39,
+              "unit": "nm"
+            },
+            "mvl_ci": [
+              0.9932168334480664,
+              0.9998491466264928
+            ],
+            "n_eff": 3.9989846511409337,
+            "n_segments": 4,
+            "persistence_amplitude": null,
+            "persistence_length": null,
+            "rayleigh_p": 0.007663059569337098,
+            "rayleigh_z": 3.997137453050825,
+            "rho_squared_corrected": 0.999041665269776,
+            "segments": [
+              {
+                "angle_absolute": 0.4365177958435823,
+                "angle_relative": 0.0,
+                "cumulative_angle": 0.0,
+                "end_point": [
+                  702.125,
+                  642.4296875
+                ],
+                "length": 1458.799911519114,
+                "segment_id": 0,
+                "start_point": [
+                  400.984375,
+                  501.9375
+                ]
+              },
+              {
+                "angle_absolute": 0.4700829170132641,
+                "angle_relative": 0.03356512116968169,
+                "cumulative_angle": 0.03356512116968169,
+                "end_point": [
+                  989.640625,
+                  788.5078125
+                ],
+                "length": 1415.7600482116852,
+                "segment_id": 1,
+                "start_point": [
+                  702.125,
+                  642.4296875
+                ]
+              },
+              {
+                "angle_absolute": 0.4943681210577493,
+                "angle_relative": 0.024285204044485198,
+                "cumulative_angle": 0.05785032521416689,
+                "end_point": [
+                  1285.421875,
+                  947.9375
+                ],
+                "length": 1475.0946983068427,
+                "segment_id": 2,
+                "start_point": [
+                  989.640625,
+                  788.5078125
+                ]
+              },
+              {
+                "angle_absolute": 0.5065820428053067,
+                "angle_relative": 0.012213921747557421,
+                "cumulative_angle": 0.07006424696172431,
+                "end_point": [
+                  1570.6328125,
+                  1106.1953125
+                ],
+                "length": 1431.912849360748,
+                "segment_id": 3,
+                "start_point": [
+                  1285.421875,
+                  947.9375
+                ]
+              }
+            ],
+            "serial_dependence_p": 0.072,
+            "serial_dependence_statistic": 0.0006774311891651896,
+            "tangent_correlation": [
+              0.9996890947048307,
+              0.9988305587040469,
+              0.9975465045790651
+            ],
+            "timestamp": null,
+            "total_length": 5781.567507398389,
+            "turning_circular_std": 0.00874142756981432,
+            "turning_mean": 0.023354766627933073,
+            "turning_mvl": 0.9999617944518714,
+            "v_p_value": 0.0025209224558658816,
+            "v_statistic": 3.96594702049071
+          },
+          "n_z_lines": 5,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        }
+      ],
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "notices": [],
+      "register": [],
+      "sarcomeres": [],
+      "settings": {
+        "click_perp_ratio": 1.0,
+        "click_sigma_m": null,
+        "click_sigma_z": null,
+        "pixel_size": 4.39,
+        "reference_direction_deg": 20.0,
+        "scale_source": "gui",
+        "unit": "nm"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "shape_summary": null,
+      "width_px": 2400
+    }
+  ]
+}

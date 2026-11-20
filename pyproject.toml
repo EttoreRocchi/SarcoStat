@@ -59,7 +59,6 @@ include = ["sarcostat*"]
 [tool.setuptools.package-data]
 sarcostat = ["py.typed"]
 "sarcostat.simulation" = ["*.yaml"]
-"sarcostat.gui" = ["*.png"]
 "sarcostat.io" = ["*.json"]
 
 [tool.ruff]
@@ -93,11 +92,6 @@ warn_unused_configs = true
 ignore_missing_imports = true
 disallow_untyped_defs = false
 check_untyped_defs = true
-exclude = ["src/sarcostat/gui/"]
-
-[[tool.mypy.overrides]]
-module = ["sarcostat.gui", "sarcostat.gui.*"]
-follow_imports = "skip"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

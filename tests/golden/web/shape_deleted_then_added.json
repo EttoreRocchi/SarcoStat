@@ -1,0 +1,201 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "gui": {
+    "click_perp_ratio": 1.0,
+    "click_sigma_m": null,
+    "click_sigma_z": 9.93,
+    "expected_direction_deg": null,
+    "mode": "Single Sarcomere",
+    "open_myofibril": false,
+    "pixel_size": 6.62,
+    "unit": "nm"
+  },
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem1",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "user"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2200
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "sarcomere-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "m": [
+          [
+            427.4375,
+            244.40625
+          ],
+          [
+            372.5625,
+            555.59375
+          ]
+        ],
+        "z1": [
+          [
+            265.296875,
+            213.78125
+          ],
+          [
+            209.71875,
+            528.921875
+          ]
+        ],
+        "z2": [
+          [
+            590.28125,
+            271.078125
+          ],
+          [
+            534.703125,
+            586.21875
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "sarcomere-3",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "m": [
+          [
+            972.640625,
+            524.828125
+          ],
+          [
+            1027.359375,
+            675.171875
+          ]
+        ],
+        "z1": [
+          [
+            771.015625,
+            555.640625
+          ],
+          [
+            853.109375,
+            781.171875
+          ]
+        ],
+        "z2": [
+          [
+            1146.890625,
+            418.828125
+          ],
+          [
+            1228.984375,
+            644.359375
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "sarcomere-4",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "m": [
+          [
+            1689.984375,
+            792.75
+          ],
+          [
+            1510.015625,
+            1007.25
+          ]
+        ],
+        "z1": [
+          [
+            1503.40625,
+            688.40625
+          ],
+          [
+            1374.859375,
+            841.625
+          ]
+        ],
+        "z2": [
+          [
+            1825.140625,
+            958.375
+          ],
+          [
+            1696.59375,
+            1111.59375
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

@@ -1,0 +1,191 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "scale": {
+        "nm_per_px": null,
+        "source": null
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "s1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            574.359375,
+            397.15625
+          ],
+          [
+            625.640625,
+            602.84375
+          ]
+        ],
+        "z1": [
+          [
+            370.84375,
+            448.921875
+          ],
+          [
+            421.640625,
+            652.6875
+          ]
+        ],
+        "z2": [
+          [
+            778.359375,
+            347.3125
+          ],
+          [
+            829.15625,
+            551.078125
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "s2",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1372.765625,
+            563.140625
+          ],
+          [
+            1227.234375,
+            836.859375
+          ]
+        ],
+        "z1": [
+          [
+            1175.046875,
+            508.984375
+          ],
+          [
+            1071.765625,
+            703.234375
+          ]
+        ],
+        "z2": [
+          [
+            1528.234375,
+            696.765625
+          ],
+          [
+            1424.953125,
+            891.015625
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "s3",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1962.375,
+            1168.21875
+          ],
+          [
+            1837.625,
+            1231.78125
+          ]
+        ],
+        "z1": [
+          [
+            1925.125,
+            973.953125
+          ],
+          [
+            1702.359375,
+            1087.453125
+          ]
+        ],
+        "z2": [
+          [
+            2097.640625,
+            1312.546875
+          ],
+          [
+            1874.875,
+            1426.046875
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

@@ -4,7 +4,8 @@ set -euo pipefail
 if [ "$#" -lt 1 ]; then
   echo "usage: tools/check_install.sh <wheel> [work dir]" >&2
   echo "Installs the wheel in fresh core-only, [cli] and [sim] venvs and checks each one." >&2
-  echo "PYTHON selects the interpreter (default python3); SMOKE_CONFIG runs 'sim sarc' in [sim]." >&2
+  echo "PYTHON selects the interpreter (default python3); SMOKE_CONFIG runs 'sim sarc' in [sim];" >&2
+  echo "ANALYZE_FILE (default tests/io/data/golden_v1_gui.json, when present) runs 'analyze --json' in [cli]." >&2
   exit 2
 fi
 
@@ -76,6 +77,12 @@ pass "core: analyze names [cli] and exits 1"
 if run "$work/core/bin/sarcostat" sim chain; then fail "core: sim exited 0"; fi
 [[ "$output" == *'pip install "sarcostat[sim]"'* ]] || fail "core: sim printed: $output"
 pass "core: sim names [sim] and exits 1"
+for args in "gui" "gui --study kit" "gui --output out"; do
+  read -r -a words <<< "$args"
+  run "$work/core/bin/sarcostat" "${words[@]}" || fail "core: sarcostat $args exited non-zero: $output"
+  [ "$output" = "https://ettorerocchi.github.io/SarcoStat/" ] || fail "core: sarcostat $args printed: $output"
+done
+pass "core: sarcostat gui prints the web app URL and exits 0"
 "$work/core/bin/python" - "$wheel" <<'PY' || fail "wheel METADATA lacks an extra"
 import sys
 import zipfile
@@ -104,6 +111,14 @@ pass "[cli]: the Typer application loads without the simulation stack"
 if run "$work/cli/bin/sarcostat" sim chain; then fail "[cli]: sim exited 0"; fi
 [[ "$output" == *'pip install "sarcostat[sim]"'* ]] || fail "[cli]: sim printed: $output"
 pass "[cli]: sim names [sim] and exits 1"
+analyze_file=${ANALYZE_FILE:-tests/io/data/golden_v1_gui.json}
+if [ -f "$analyze_file" ]; then
+  run "$work/cli/bin/sarcostat" analyze "$(realpath "$analyze_file")" --json || fail "[cli]: analyze: $output"
+  [[ "$output" == *'"format": "sarcostat-results"'* ]] || fail "[cli]: analyze --json printed: $output"
+  pass "[cli]: sarcostat analyze --json exits 0"
+else
+  pass "[cli]: analyze --json not run ($analyze_file not found)"
+fi
 
 make_venv sim "$wheel[sim]"
 run "$work/sim/bin/sarcostat" sim --help || fail "[sim]: sim --help: $output"

@@ -1,0 +1,256 @@
+{
+  "format": "sarcostat-results",
+  "format_version": "1.0",
+  "images": [
+    {
+      "chains": [
+        {
+          "branch_end": false,
+          "chain": 1,
+          "item_id": "chain",
+          "metrics": {
+            "circular_mean": 0.03451655569535533,
+            "circular_std": 0.011928202654450925,
+            "curvature_per_unit": -8.544873843315202e-06,
+            "expected_direction": null,
+            "head_to_tail_distance": 4297.0134093901215,
+            "linearity_ratio": 0.9999289379415073,
+            "lr_noise_floor": 0.8654118481200586,
+            "lr_uniformity_p": 0.018326503884358886,
+            "mean_vector_length": 0.9999288615211787,
+            "metadata": {
+              "angle_basis": "heading",
+              "conversion_factor": 1.0,
+              "unit": "px"
+            },
+            "mvl_ci": [
+              0.9986864785506687,
+              0.999968665926287
+            ],
+            "n_eff": 3.9999754399957115,
+            "n_segments": 4,
+            "persistence_amplitude": null,
+            "persistence_length": null,
+            "rayleigh_p": 0.0076290623580776125,
+            "rayleigh_z": 3.999430912412162,
+            "rho_squared_corrected": 0.9998105075226105,
+            "segments": [
+              {
+                "angle_absolute": 0.04591762992084047,
+                "angle_relative": 0.0,
+                "cumulative_angle": 0.0,
+                "end_point": [
+                  1470.765625,
+                  450.4765625
+                ],
+                "length": 1072.0987733628797,
+                "segment_id": 0,
+                "start_point": [
+                  399.796875,
+                  401.265625
+                ]
+              },
+              {
+                "angle_absolute": 0.04603533334828623,
+                "angle_relative": 0.00011770342744554796,
+                "cumulative_angle": 0.00011770342744554796,
+                "end_point": [
+                  2545.9453125,
+                  500.0078125
+                ],
+                "length": 1076.319982690631,
+                "segment_id": 1,
+                "start_point": [
+                  1470.765625,
+                  450.4765625
+                ]
+              },
+              {
+                "angle_absolute": 0.027735406363885502,
+                "angle_relative": -0.018299926984401083,
+                "cumulative_angle": -0.018182223556955535,
+                "end_point": [
+                  3623.09375,
+                  529.890625
+                ],
+                "length": 1077.5628700412806,
+                "segment_id": 2,
+                "start_point": [
+                  2545.9453125,
+                  500.0078125
+                ]
+              },
+              {
+                "angle_absolute": 0.018377602292708274,
+                "angle_relative": -0.009357804071177256,
+                "cumulative_angle": -0.02754002762813279,
+                "end_point": [
+                  4694.25,
+                  549.578125
+                ],
+                "length": 1071.3371596142424,
+                "segment_id": 3,
+                "start_point": [
+                  3623.09375,
+                  529.890625
+                ]
+              }
+            ],
+            "serial_dependence_p": 0.166,
+            "serial_dependence_statistic": 0.00011399676824686011,
+            "tangent_correlation": [
+              0.9999295900509902,
+              0.9997261286320208,
+              0.9996207974073124
+            ],
+            "timestamp": null,
+            "total_length": 4297.318785709033,
+            "turning_circular_std": 0.007520043678278118,
+            "turning_mean": -0.009180011722098041,
+            "turning_mvl": 0.9999717248712874,
+            "v_p_value": null,
+            "v_statistic": null
+          },
+          "n_z_lines": 5,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        }
+      ],
+      "file_name": "synthetic_5000x800.png",
+      "height_px": 800,
+      "image_id": "wide",
+      "notices": [],
+      "register": [
+        {
+          "item_id": "pair",
+          "metrics": {
+            "correlation_lags": [
+              1,
+              2,
+              3
+            ],
+            "correlation_values": [
+              0.9990509601622186,
+              0.9991486157267475,
+              0.9999907224623649
+            ],
+            "h_mean": 46.70595333830033,
+            "h_unregistered": 44.866958874520776,
+            "lateral_distance": 300.12052583349856,
+            "local_sarcomere_lengths": [
+              180.06183656051144,
+              178.31490266127093,
+              183.5785894964356,
+              175.91601327411445
+            ],
+            "mean_phase": 1.6351584582625684,
+            "n_pairs": 4,
+            "offsets": [
+              47.44112055154892,
+              45.27019885347909,
+              47.884281465871936,
+              46.22821248230139
+            ],
+            "phases": [
+              1.6554388053542635,
+              1.595161391695934,
+              1.6388938087851472,
+              1.6511312417782746
+            ],
+            "rayleigh_p": 0.0076544071121791655,
+            "rayleigh_z": 3.9977204172012577,
+            "register_index": 0.9997150115409466,
+            "register_spread": 0.6819716747409592,
+            "serial_dependence_p": 0.841,
+            "serial_dependence_statistic": -0.00037812295260952755,
+            "unit": "px",
+            "v_p_value": 0.5721560933162044,
+            "v_statistic": -0.2571974974038523
+          },
+          "myofibril_a": 1,
+          "myofibril_b": 2,
+          "n_z_lines_a": 5,
+          "n_z_lines_b": 4,
+          "pair": 1,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        }
+      ],
+      "sarcomeres": [
+        {
+          "class_stability": null,
+          "geometry": {
+            "aspect_ratio": 8.99993751654894,
+            "curviness": 7.377042102490185,
+            "m_line_length": 610.0008596945786,
+            "m_line_points": [
+              [
+                2556.921875,
+                95.078125
+              ],
+              [
+                2543.078125,
+                704.921875
+              ]
+            ],
+            "midpoint_z1": [
+              300.578125,
+              348.953125
+            ],
+            "midpoint_z2": [
+              4799.421875,
+              451.046875
+            ],
+            "sarcomere_id": 1,
+            "sarcomere_length": 4500.002024522114,
+            "shape_classification": "barrel",
+            "shape_index": 0.819677035415568,
+            "unit": "px",
+            "z_line_1_length": 500.00369627540005,
+            "z_line_1_points": [
+              [
+                306.25,
+                99.015625
+              ],
+              [
+                294.90625,
+                598.890625
+              ]
+            ],
+            "z_line_2_length": 500.00369627540005,
+            "z_line_2_points": [
+              [
+                4805.09375,
+                201.109375
+              ],
+              [
+                4793.75,
+                700.984375
+              ]
+            ]
+          },
+          "item_id": "long-sarcomere",
+          "sarcomere_id": 1,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null,
+          "uncertainty": null
+        }
+      ],
+      "settings": {
+        "click_perp_ratio": 1.0,
+        "click_sigma_m": null,
+        "click_sigma_z": null,
+        "pixel_size": 1.0,
+        "reference_direction_deg": null,
+        "scale_source": "none",
+        "unit": "px"
+      },
+      "sha256": "5f63852881929bf8ce294c0ae8b9d96de5687999ddb268fb4705e3e0975a94f2",
+      "shape_summary": null,
+      "width_px": 5000
+    }
+  ]
+}

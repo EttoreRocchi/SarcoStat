@@ -1,0 +1,79 @@
+{
+  "format": "sarcostat-golden-index",
+  "goldens": [
+    {
+      "checks": [],
+      "description": "Four sarcomeres, one per shape class (square, rectangular, barrel, hourglass), and one whose M-line was skipped; scale from the gui block (nm); no click error.",
+      "image": "human_skeletal_muscle_tem_3.jpg",
+      "name": "shape_classes"
+    },
+    {
+      "checks": [],
+      "description": "Four sarcomeres with a click error set (Z-lines 13.24 nm, M-line 19.86 nm, across/along 0.75): uncertainties and class stability seeded by sarcomere_id.",
+      "image": "human_skeletal_muscle_tem_1.jpg",
+      "name": "shape_click_set"
+    },
+    {
+      "checks": [
+        "estimate_click_error"
+      ],
+      "description": "Five repeats of one sarcomere, two of them started from the other Z-line; the gui block holds the click error estimated from the repeats (estimate_click_error), which the check recomputes.",
+      "image": "human_skeletal_muscle_tem_3.jpg",
+      "name": "shape_click_estimated"
+    },
+    {
+      "checks": [],
+      "description": "Three sarcomeres annotated, the second deleted, then a fourth added: sarcomere_id 1, 2, 3 and class-stability seeds 1, 2, 3 by position; click error 9.93 nm.",
+      "image": "human_skeletal_muscle_tem_1.jpg",
+      "name": "shape_deleted_then_added"
+    },
+    {
+      "checks": [],
+      "description": "Three sarcomeres in a study-style file without a gui block and without a scale: lengths in px.",
+      "image": "human_skeletal_muscle_tem_3.jpg",
+      "name": "shape_scale_unset"
+    },
+    {
+      "checks": [],
+      "description": "Synthetic 5000 x 800 image without a scale: coordinates and lengths above 4096 px (a 4500 px sarcomere, a chain of 5 Z-lines over 4300 px, a pair at x > 4096).",
+      "image": "synthetic_5000x800.png",
+      "name": "large_px"
+    },
+    {
+      "checks": [],
+      "description": "Synthetic 5000 x 800 image at 6.62 nm per px: coordinates above 4096 px and lengths above 4096 nm (sarcomeres of about 4600 nm, a chain of 5 Z-lines), click error and reference direction set.",
+      "image": "synthetic_5000x800.png",
+      "name": "large_nm"
+    },
+    {
+      "checks": [],
+      "description": "One chain of 5 Z-lines heading about 24 degrees (off the image axes), V-test against the reference direction 20 degrees.",
+      "image": "human_skeletal_muscle_tem_3.jpg",
+      "name": "chain_5_reference"
+    },
+    {
+      "checks": [],
+      "description": "One curved chain of 20 Z-lines heading about -61 degrees (off the image axes), V-test against -60 degrees; persistence length and MVL belt with 19 segments.",
+      "image": "human_skeletal_muscle_tem_1.jpg",
+      "name": "chain_20_reference"
+    },
+    {
+      "checks": [],
+      "description": "Three pair items in a study-style file with the image scale (6.62 nm per px): pair 1 without overlap (skipped, no_overlap), pairs 2 and 3 computed and labelled 2 and 3 (K-M2); pair 3 has 5 and 3 Z-lines.",
+      "image": "human_skeletal_muscle_tem_1.jpg",
+      "name": "register_pairs"
+    },
+    {
+      "checks": [],
+      "description": "Two chain items and no pair item in a study-style file with the image scale: linearity per chain, the notice register_needs_pair_items and no register output.",
+      "image": "human_skeletal_muscle_tem_3.jpg",
+      "name": "chain_only_notice"
+    },
+    {
+      "checks": [],
+      "description": "Shape (one with the M-line skipped), chain and pair items in one free save with click error and reference direction: every section of the results.",
+      "image": "human_skeletal_muscle_tem_1.jpg",
+      "name": "mixed_types"
+    }
+  ]
+}

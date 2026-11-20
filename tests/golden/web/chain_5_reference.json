@@ -1,0 +1,115 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "gui": {
+    "click_perp_ratio": 1.0,
+    "click_sigma_m": null,
+    "click_sigma_z": null,
+    "expected_direction_deg": 20.0,
+    "mode": "Myofibril Linearity",
+    "open_myofibril": false,
+    "pixel_size": 4.39,
+    "unit": "nm"
+  },
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "user"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "chain-5",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              458.09375,
+              385.15625
+            ],
+            [
+              343.875,
+              618.71875
+            ]
+          ],
+          [
+            [
+              764.3125,
+              528.265625
+            ],
+            [
+              639.9375,
+              756.59375
+            ]
+          ],
+          [
+            [
+              1055.125,
+              676.203125
+            ],
+            [
+              924.15625,
+              900.8125
+            ]
+          ],
+          [
+            [
+              1340.578125,
+              830.21875
+            ],
+            [
+              1230.265625,
+              1065.65625
+            ]
+          ],
+          [
+            [
+              1635.734375,
+              993.671875
+            ],
+            [
+              1505.53125,
+              1218.71875
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

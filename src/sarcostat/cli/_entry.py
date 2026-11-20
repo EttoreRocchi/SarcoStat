@@ -1,10 +1,11 @@
 """Console entry point of ``sarcostat``, importable with the standard library only.
 
 ``sarcostat --version`` and ``sarcostat version`` print the version without importing typer, so
-they work on a core-only install. Every other command runs the Typer application of
-:mod:`sarcostat.cli.app`. When the extra a command needs is not installed, one line names the
-install command and the exit status is 1: ``sim`` needs ``sarcostat[sim]``, every other command
-needs ``sarcostat[cli]``.
+they work on a core-only install. The ``gui`` command, with any options, prints the address of the
+web app (:data:`GUI_URL`), which replaces the desktop window, and exits 0, also on a core-only
+install. Every other command runs the Typer application of :mod:`sarcostat.cli.app`. When the
+extra a command needs is not installed, one line names the install command and the exit status
+is 1: ``sim`` needs ``sarcostat[sim]``, every other command needs ``sarcostat[cli]``.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from collections.abc import Sequence
 
 from sarcostat import __version__
 
+GUI_URL = "https://ettorerocchi.github.io/SarcoStat/"
 CLI_MODULES = ("typer", "rich")
 SIM_MODULES = ("typer", "rich", "yaml", "pandas", "matplotlib", "seaborn")
 CLI_HINT = 'sarcostat: this command needs the command-line extra: pip install "sarcostat[cli]"'
@@ -41,6 +43,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if args in (["--version"], ["version"]):
         print(f"sarcostat {__version__}")
+        return 0
+    if args and args[0] == "gui":
+        print(GUI_URL)
         return 0
     needs_sim = bool(args) and args[0] == "sim"
     if _missing(SIM_MODULES if needs_sim else CLI_MODULES):

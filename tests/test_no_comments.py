@@ -33,7 +33,7 @@ EXCLUDED_DIR_NAMES = frozenset(
         ".ruff_cache",
     }
 )
-EXCLUDED_PATHS = frozenset({"src/sarcostat/gui", "web/src/assets/fonts"})
+EXCLUDED_PATHS = frozenset({"web/src/assets/fonts"})
 
 PY_SUFFIXES = frozenset({".py"})
 JS_SUFFIXES = frozenset({".ts", ".js", ".mjs", ".cjs", ".mts", ".cts"})
@@ -423,7 +423,7 @@ def test_scan_covers_the_code_folders():
     relative = {path.relative_to(ROOT).as_posix() for path in scanned_files()}
     assert "tests/test_no_comments.py" in relative
     assert any(name.startswith("src/sarcostat/core/") for name in relative)
-    assert not any(name.startswith("src/sarcostat/gui/") for name in relative)
+    assert any(name.startswith("src/sarcostat/engine/") for name in relative)
     assert not any("/node_modules/" in name for name in relative)
     assert not any(name.endswith((".yml", ".yaml")) for name in relative if name.startswith("src/"))
     if (ROOT / ".github/workflows/ci.yml").is_file():

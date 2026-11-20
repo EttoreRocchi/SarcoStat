@@ -1,0 +1,380 @@
+{
+  "format": "sarcostat-results",
+  "format_version": "1.0",
+  "images": [
+    {
+      "chains": [
+        {
+          "branch_end": false,
+          "chain": 1,
+          "item_id": "chain-20",
+          "metrics": {
+            "circular_mean": -1.207074580588239,
+            "circular_std": 0.08175264423995944,
+            "curvature_per_unit": -2.383589692812956e-05,
+            "expected_direction": -1.0471975511965976,
+            "head_to_tail_distance": 8760.911340435276,
+            "linearity_ratio": 0.9966810981304557,
+            "lr_noise_floor": 0.3972601611170175,
+            "lr_uniformity_p": 6.466130883372629e-09,
+            "mean_vector_length": 0.9966638300032874,
+            "metadata": {
+              "angle_basis": "heading",
+              "conversion_factor": 6.62,
+              "unit": "nm"
+            },
+            "mvl_ci": [
+              0.9925823751357986,
+              0.9979499336521599
+            ],
+            "n_eff": 18.982480804015616,
+            "n_segments": 19,
+            "persistence_amplitude": 0.9996306228053459,
+            "persistence_length": 721226.4503757586,
+            "rayleigh_p": 1.2719201344900965e-13,
+            "rayleigh_z": 18.873437010699615,
+            "rho_squared_corrected": 0.9930046977765674,
+            "segments": [
+              {
+                "angle_absolute": -1.0876656027082228,
+                "angle_relative": 0.0,
+                "cumulative_angle": 0.0,
+                "end_point": [
+                  330.1875,
+                  1388.3515625
+                ],
+                "length": 445.2084161510962,
+                "segment_id": 0,
+                "start_point": [
+                  298.9453125,
+                  1447.90625
+                ]
+              },
+              {
+                "angle_absolute": -1.1000234210696833,
+                "angle_relative": -0.012357818361460104,
+                "cumulative_angle": -0.012357818361460104,
+                "end_point": [
+                  361.9921875,
+                  1325.859375
+                ],
+                "length": 464.1942699747516,
+                "segment_id": 1,
+                "start_point": [
+                  330.1875,
+                  1388.3515625
+                ]
+              },
+              {
+                "angle_absolute": -1.1000992013447133,
+                "angle_relative": -7.57802750293024e-05,
+                "cumulative_angle": -0.012433598636489407,
+                "end_point": [
+                  395.2578125,
+                  1260.484375
+                ],
+                "length": 485.589180811508,
+                "segment_id": 2,
+                "start_point": [
+                  361.9921875,
+                  1325.859375
+                ]
+              },
+              {
+                "angle_absolute": -1.0967042643401919,
+                "angle_relative": 0.0033949370045212035,
+                "cumulative_angle": -0.009038661631968203,
+                "end_point": [
+                  425.34375,
+                  1201.8515625
+                ],
+                "length": 436.266053266876,
+                "segment_id": 3,
+                "start_point": [
+                  395.2578125,
+                  1260.484375
+                ]
+              },
+              {
+                "angle_absolute": -1.1624029202409498,
+                "angle_relative": -0.06569865590075707,
+                "cumulative_angle": -0.07473731753272528,
+                "end_point": [
+                  453.3828125,
+                  1137.0546875
+                ],
+                "length": 467.3937552724685,
+                "segment_id": 4,
+                "start_point": [
+                  425.34375,
+                  1201.8515625
+                ]
+              },
+              {
+                "angle_absolute": -1.1345159144110137,
+                "angle_relative": 0.027887005829936307,
+                "cumulative_angle": -0.04685031170278897,
+                "end_point": [
+                  483.8671875,
+                  1071.671875
+                ],
+                "length": 477.56816224387205,
+                "segment_id": 5,
+                "start_point": [
+                  453.3828125,
+                  1137.0546875
+                ]
+              },
+              {
+                "angle_absolute": -1.195415750883755,
+                "angle_relative": -0.06089983647274089,
+                "cumulative_angle": -0.10775014817552986,
+                "end_point": [
+                  508.1484375,
+                  1010.0546875
+                ],
+                "length": 438.43480331252044,
+                "segment_id": 6,
+                "start_point": [
+                  483.8671875,
+                  1071.671875
+                ]
+              },
+              {
+                "angle_absolute": -1.1969831856649509,
+                "angle_relative": -0.0015674347811955869,
+                "cumulative_angle": -0.10931758295672545,
+                "end_point": [
+                  535.296875,
+                  940.84375
+                ],
+                "length": 492.1644566745151,
+                "segment_id": 7,
+                "start_point": [
+                  508.1484375,
+                  1010.0546875
+                ]
+              },
+              {
+                "angle_absolute": -1.140901108751203,
+                "angle_relative": 0.05608207691374778,
+                "cumulative_angle": -0.053235506042977665,
+                "end_point": [
+                  564.984375,
+                  876.09375
+                ],
+                "length": 471.55176624795126,
+                "segment_id": 8,
+                "start_point": [
+                  535.296875,
+                  940.84375
+                ]
+              },
+              {
+                "angle_absolute": -1.218081742026347,
+                "angle_relative": -0.07718063327514457,
+                "cumulative_angle": -0.13041613931812224,
+                "end_point": [
+                  588.6640625,
+                  811.765625
+                ],
+                "length": 453.7880961817475,
+                "segment_id": 9,
+                "start_point": [
+                  564.984375,
+                  876.09375
+                ]
+              },
+              {
+                "angle_absolute": -1.2785456380611913,
+                "angle_relative": -0.060463896034843145,
+                "cumulative_angle": -0.19088003535296538,
+                "end_point": [
+                  609.03125,
+                  744.0703125
+                ],
+                "length": 467.9866023857402,
+                "segment_id": 10,
+                "start_point": [
+                  588.6640625,
+                  811.765625
+                ]
+              },
+              {
+                "angle_absolute": -1.1764650769108735,
+                "angle_relative": 0.10208056115031772,
+                "cumulative_angle": -0.08879947420264767,
+                "end_point": [
+                  635.640625,
+                  680.125
+                ],
+                "length": 458.50665905947307,
+                "segment_id": 11,
+                "start_point": [
+                  609.03125,
+                  744.0703125
+                ]
+              },
+              {
+                "angle_absolute": -1.2584065372039488,
+                "angle_relative": -0.08194146029307525,
+                "cumulative_angle": -0.17074093449572292,
+                "end_point": [
+                  657.0546875,
+                  613.8203125
+                ],
+                "length": 461.2612330380256,
+                "segment_id": 12,
+                "start_point": [
+                  635.640625,
+                  680.125
+                ]
+              },
+              {
+                "angle_absolute": -1.2415610430648367,
+                "angle_relative": 0.01684549413911185,
+                "cumulative_angle": -0.15389544035661107,
+                "end_point": [
+                  679.359375,
+                  548.5390625
+                ],
+                "length": 456.6907981129892,
+                "segment_id": 13,
+                "start_point": [
+                  657.0546875,
+                  613.8203125
+                ]
+              },
+              {
+                "angle_absolute": -1.301459723824493,
+                "angle_relative": -0.05989868075965532,
+                "cumulative_angle": -0.2137941211162664,
+                "end_point": [
+                  698.15625,
+                  480.4453125
+                ],
+                "length": 467.640159601764,
+                "segment_id": 14,
+                "start_point": [
+                  679.359375,
+                  548.5390625
+                ]
+              },
+              {
+                "angle_absolute": -1.2863084610711852,
+                "angle_relative": 0.01515126275330747,
+                "cumulative_angle": -0.19864285836295892,
+                "end_point": [
+                  718.2578125,
+                  411.703125
+                ],
+                "length": 474.13072034910346,
+                "segment_id": 15,
+                "start_point": [
+                  698.15625,
+                  480.4453125
+                ]
+              },
+              {
+                "angle_absolute": -1.3561676628267967,
+                "angle_relative": -0.06985920175561233,
+                "cumulative_angle": -0.26850206011857125,
+                "end_point": [
+                  732.8203125,
+                  344.8984375
+                ],
+                "length": 452.63243328721046,
+                "segment_id": 16,
+                "start_point": [
+                  718.2578125,
+                  411.703125
+                ]
+              },
+              {
+                "angle_absolute": -1.3167843873962106,
+                "angle_relative": 0.03938327543058584,
+                "cumulative_angle": -0.2291187846879854,
+                "end_point": [
+                  750.3203125,
+                  277.4921875
+                ],
+                "length": 461.02264327567536,
+                "segment_id": 17,
+                "start_point": [
+                  732.8203125,
+                  344.8984375
+                ]
+              },
+              {
+                "angle_absolute": -1.2860447441645217,
+                "angle_relative": 0.030739643231688873,
+                "cumulative_angle": -0.19837914145629654,
+                "end_point": [
+                  769.7578125,
+                  211.0859375
+                ],
+                "length": 458.0545599619691,
+                "segment_id": 18,
+                "start_point": [
+                  750.3203125,
+                  277.4921875
+                ]
+              }
+            ],
+            "serial_dependence_p": 0.001,
+            "serial_dependence_statistic": 0.005324264280527569,
+            "tangent_correlation": [
+              0.9986023350519009,
+              0.99847460773411,
+              0.9982098047869705,
+              0.9972322646116469,
+              0.9962399266599349,
+              0.995562364390248,
+              0.9940562137867964,
+              0.9931504789220831,
+              0.9908113845006206,
+              0.9893570107788217,
+              0.9886518598154832,
+              0.9854215719968099,
+              0.9823084729003831,
+              0.9791142575188342,
+              0.9766133462473207,
+              0.974510142167667,
+              0.9783073916937384,
+              0.9803873051758741
+            ],
+            "timestamp": null,
+            "total_length": 8790.084769209258,
+            "turning_circular_std": 0.05172697926405943,
+            "turning_mean": -0.01102734497623123,
+            "turning_mvl": 0.9986630543173494,
+            "v_p_value": 6.577386413297859e-10,
+            "v_statistic": 18.69511163580607
+          },
+          "n_z_lines": 20,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        }
+      ],
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem1",
+      "notices": [],
+      "register": [],
+      "sarcomeres": [],
+      "settings": {
+        "click_perp_ratio": 1.0,
+        "click_sigma_m": null,
+        "click_sigma_z": null,
+        "pixel_size": 6.62,
+        "reference_direction_deg": -60.0,
+        "scale_source": "gui",
+        "unit": "nm"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "shape_summary": null,
+      "width_px": 2200
+    }
+  ]
+}

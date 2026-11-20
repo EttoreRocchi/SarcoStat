@@ -15,13 +15,13 @@ runs the other way. Pixel centres sit at integer coordinates, so a horizontal
 flip of a crop ``W`` pixels wide maps ``x`` to ``W - 1 - x``.
 
 This module is the only implementation of these transforms: the kit maker and
-the study-mode GUI both use it. Image transforms are numpy rotations and flips
+the study engine both use it. Image transforms are numpy rotations and flips
 (no interpolation), so they are lossless. Point transforms are exact integer
 maps; display clicks are rounded to :data:`CLICK_RESOLUTION` (an exact binary
 fraction of a pixel), on which grid every forward and inverse map is exact in
 floating point.
 
-The study-mode window reads only the files listed in the manifest
+A study session reads only the files listed in the manifest
 (:meth:`SessionKit.read_file`), after checking ``manifest.sha256``. A kit is
 read from a folder (:func:`load_session_kit`) or from the bytes of its files
 (:func:`load_session_kit_from_bytes`, for a browser) with the same checks.
@@ -30,7 +30,6 @@ read from a folder (:func:`load_session_kit`) or from the bytes of its files
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 import math
 import os
@@ -694,25 +693,6 @@ class SessionKit:
         if sha256_bytes(data) != expected:
             raise StudyError(f"SHA-256 of {relpath!r} does not match the manifest.")
         return data
-
-    def read_item_image(self, item: Mapping[str, Any]) -> np.ndarray:
-        """Decode the 8-bit greyscale image of ``item`` (a ``uint8`` array, rows are y)."""
-        from PIL import Image
-
-        data = self.read_file(str(item["kit_file"]))
-        with Image.open(io.BytesIO(data)) as img:
-            if img.mode != "L":
-                raise StudyError(
-                    f"{item['kit_file']!r} must be an 8-bit greyscale image, got mode {img.mode!r}."
-                )
-            array: np.ndarray = np.asarray(img, dtype=np.uint8).copy()
-        expected = DisplayMapping.from_item(item).display_size
-        if (array.shape[1], array.shape[0]) != expected:
-            raise StudyError(
-                f"{item['kit_file']!r} has size {array.shape[1]} x {array.shape[0]}; "
-                f"the manifest implies {expected[0]} x {expected[1]}."
-            )
-        return array
 
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"

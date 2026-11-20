@@ -7,11 +7,11 @@ graft docs
 graft examples
 
 prune paper
+prune web
 prune .claude
 prune .omc
 prune src/sarcostat/.omc
 prune src/sarcostat/core/.omc
-prune src/sarcostat/gui/.omc
 prune src/sarcostat/simulation/.omc
 prune src/sarcostat/simulation/chain/.omc
 prune src/sarcostat/simulation/rigor/.omc

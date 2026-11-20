@@ -429,16 +429,6 @@ class TestManifestValidation:
 
 
 class TestReadWhitelist:
-    def test_listed_kit_image_is_read_and_checked(self, tmp_path: Path) -> None:
-        pytest.importorskip("PIL")
-        kit_dir, manifest = _make_kit(tmp_path)
-        kit = load_session_kit(kit_dir)
-        item = kit.items[0]
-        image = kit.read_item_image(item)
-        assert image.dtype == np.uint8
-        mapping = DisplayMapping.from_item(item)
-        assert (image.shape[1], image.shape[0]) == mapping.display_size
-
     def test_unlisted_file_is_refused(self, tmp_path: Path) -> None:
         kit_dir, _ = _make_kit(tmp_path)
         (kit_dir / "targets.json").write_text("{}", encoding="utf-8")
@@ -446,15 +436,6 @@ class TestReadWhitelist:
         for rel in ("targets.json", "items/../targets.json", "../kit/targets.json", "/etc/passwd"):
             with pytest.raises(StudyError, match="not listed"):
                 kit.read_file(rel)
-
-    def test_modified_kit_image_is_refused(self, tmp_path: Path) -> None:
-        pytest.importorskip("PIL")
-        kit_dir, _ = _make_kit(tmp_path)
-        kit = load_session_kit(kit_dir)
-        path = kit_dir / kit.items[0]["kit_file"]
-        path.write_bytes(path.read_bytes() + b"\0")
-        with pytest.raises(StudyError, match="SHA-256"):
-            kit.read_item_image(kit.items[0])
 
     @pytest.mark.skipif(not hasattr(os, "symlink"), reason="symlinks unavailable")
     def test_symlink_out_of_the_kit_is_refused(self, tmp_path: Path) -> None:
@@ -470,21 +451,6 @@ class TestReadWhitelist:
         kit = load_session_kit(kit_dir)
         with pytest.raises(StudyError, match="outside"):
             kit.read_file(manifest["items"][0]["kit_file"])
-
-    def test_kit_image_must_be_8bit_grey_of_the_right_size(self, tmp_path: Path) -> None:
-        pytest.importorskip("PIL")
-        kit_dir, manifest = _make_kit(tmp_path)
-        for k, array in enumerate(
-            [np.zeros((30, 40, 3), dtype=np.uint8), np.zeros((31, 40), dtype=np.uint8)]
-        ):
-            data = png_bytes(array)
-            item = manifest["items"][0]
-            (kit_dir / item["kit_file"]).write_bytes(data)
-            item["kit_sha256"] = hashlib.sha256(data).hexdigest()
-            write_manifest(manifest, kit_dir)
-            kit = load_session_kit(kit_dir)
-            with pytest.raises(StudyError, match="8-bit" if k == 0 else "size"):
-                kit.read_item_image(kit.items[0])
 
 
 class TestExclusiveWrite:

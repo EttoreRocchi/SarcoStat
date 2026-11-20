@@ -1,7 +1,11 @@
 """Top-level Typer application for SarcoStat.
 
-The CLI exposes one subcommand group (``sim``) plus ``version`` and
-``gui``. Each ``sim`` subcommand is a thin wrapper around the
+The CLI exposes one subcommand group (``sim``) plus ``version``,
+``analyze`` and ``gui``. ``analyze`` reads an annotation file of format v1
+and prints its results through :mod:`sarcostat.analysis`,
+:mod:`sarcostat.export` and :mod:`sarcostat.engine.reports`, the path the
+web app uses. ``gui`` prints the address of the web app (the console entry
+answers it before Typer is loaded). Each ``sim`` subcommand is a thin wrapper around the
 corresponding pipeline / runner: it loads the YAML config (an invalid
 config exits with status 2 and a one-line message), builds the pipeline
 objects, runs them, persists the artifacts via
@@ -30,6 +34,7 @@ from rich.progress import (
 from rich.table import Table
 
 from sarcostat import __version__
+from sarcostat.cli._entry import GUI_URL
 
 app = typer.Typer(
     name="sarcostat",
@@ -107,42 +112,103 @@ def version_cmd() -> None:
     _CONSOLE.print(f"sarcostat [bold]{__version__}[/bold]")
 
 
-@app.command("gui")
-def gui_cmd(
-    study: Annotated[
+def _one_line(exc: BaseException | str) -> str:
+    """The message of ``exc`` on one line."""
+    return " ".join(str(exc).split()) or type(exc).__name__
+
+
+def _analyze_line(path: Path, message: str) -> str:
+    """``sarcostat analyze: <file name>: <message>`` (the name is not repeated)."""
+    if message.startswith(f"{path.name}: "):
+        message = message[len(path.name) + 2 :]
+    return f"sarcostat analyze: {path.name}: {message}"
+
+
+def _analyze_error(path: Path, message: str) -> typer.Exit:
+    """Print one line on standard error and return the exit with status 2."""
+    typer.echo(_analyze_line(path, message), err=True)
+    return typer.Exit(code=2)
+
+
+@app.command("analyze")
+def analyze_cmd(
+    path: Annotated[Path, typer.Argument(help="Annotation file of format v1 (.json).")],
+    as_json: Annotated[
+        bool, typer.Option("--json", help="Print the results JSON (sarcostat-results).")
+    ] = False,
+    as_csv: Annotated[bool, typer.Option("--csv", help="Print the results table (CSV).")] = False,
+    out: Annotated[
         Path | None,
         typer.Option(
-            "--study",
-            help="Open a blinded study session from this session-kit folder.",
-            exists=True,
-            file_okay=False,
+            "--out",
+            help="Write the results JSON and/or CSV and the provenance sidecar into this folder.",
         ),
     ] = None,
-    output: Annotated[
+    image_dir: Annotated[
         Path | None,
         typer.Option(
-            "--output",
-            help="Folder for the study autosave and session file (default: <kit>/output).",
-            file_okay=False,
+            "--image-dir",
+            help="Folder of the images, to check their SHA-256 against the file.",
         ),
     ] = None,
 ) -> None:
-    """Launch the interactive Tk annotation window, or a study session with --study."""
-    if study is None:
-        if output is not None:
-            raise typer.BadParameter("--output needs --study.", param_hint="'--output'")
-        from sarcostat.gui.gui import main as gui_main
+    """Analyse an annotation file: sentences by default, or the results as JSON or CSV."""
+    import warnings
 
-        gui_main()
+    from sarcostat.analysis import analyze_file
+    from sarcostat.export import results_csv, results_json, write_exports
+    from sarcostat.io.annotations import sha256_file
+
+    if as_json and as_csv and out is None:
+        raise _analyze_error(path, "choose --json or --csv, or write both with --out")
+    if not path.is_file():
+        raise _analyze_error(path, "no such file")
+    if image_dir is not None and not image_dir.is_dir():
+        raise _analyze_error(path, f"the image folder {image_dir.name} does not exist")
+    if out is not None and out.exists() and not out.is_dir():
+        raise _analyze_error(path, f"the output folder {out.name} is a file")
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        try:
+            results = analyze_file(path, image_dir=image_dir)
+        except (OSError, ValueError) as exc:
+            raise _analyze_error(path, _one_line(exc)) from None
+    for warning in caught:
+        typer.echo(_analyze_line(path, _one_line(warning.message)), err=True)
+    if out is not None:
+        kinds = [k for k, on in (("results_json", as_json), ("results_csv", as_csv)) if on]
+        try:
+            names = write_exports(
+                results,
+                out,
+                path.stem,
+                kinds or ("results_json", "results_csv"),
+                inputs=[(path.name, sha256_file(path))],
+            )
+        except (OSError, ValueError) as exc:
+            raise _analyze_error(path, _one_line(exc)) from None
+        for name in names:
+            typer.echo(name)
         return
-    from sarcostat.gui import study_app
-    from sarcostat.io.study import StudyError
+    if as_json:
+        typer.echo(results_json(results), nl=False)
+        return
+    if as_csv:
+        typer.echo(results_csv(results), nl=False)
+        return
+    from sarcostat.engine.reports import report_lines
 
-    try:
-        study_app.run_study(study, output)
-    except StudyError as exc:
-        _CONSOLE.print(f"Study session not opened: {exc}", style="red", markup=False)
-        raise typer.Exit(code=2) from exc
+    for line in report_lines(results):
+        typer.echo(line)
+
+
+@app.command(
+    "gui",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def gui_cmd(ctx: typer.Context) -> None:
+    """Print the address of the SarcoStat web app, which replaces the desktop window."""
+    typer.echo(GUI_URL)
 
 
 @sim_app.command("chain")

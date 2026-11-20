@@ -1,0 +1,355 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "gui": {
+    "click_perp_ratio": 1.0,
+    "click_sigma_m": null,
+    "click_sigma_z": 13.24,
+    "expected_direction_deg": 15.0,
+    "mode": "Myofibril Linearity",
+    "open_myofibril": false,
+    "pixel_size": 6.62,
+    "unit": "nm"
+  },
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem1",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "user"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2200
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "sarcomere-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "m": [
+          [
+            536.28125,
+            204.453125
+          ],
+          [
+            463.71875,
+            495.546875
+          ]
+        ],
+        "z1": [
+          [
+            327.09375,
+            196.09375
+          ],
+          [
+            275.078125,
+            404.71875
+          ]
+        ],
+        "z2": [
+          [
+            724.921875,
+            295.28125
+          ],
+          [
+            672.90625,
+            503.90625
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "sarcomere-2",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "z1": [
+          [
+            832.546875,
+            194.890625
+          ],
+          [
+            779.328125,
+            408.34375
+          ]
+        ],
+        "z2": [
+          [
+            1220.671875,
+            291.65625
+          ],
+          [
+            1167.453125,
+            505.109375
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": "M-line not identifiable",
+      "skipped": false,
+      "skipped_parts": [
+        "m_line"
+      ],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "myofibril-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              313.15625,
+              726.46875
+            ],
+            [
+              283.765625,
+              873.5625
+            ]
+          ],
+          [
+            [
+              543.765625,
+              781.390625
+            ],
+            [
+              506.421875,
+              926.671875
+            ]
+          ],
+          [
+            [
+              771.75,
+              839.234375
+            ],
+            [
+              726.03125,
+              982.09375
+            ]
+          ],
+          [
+            [
+              990.34375,
+              894.78125
+            ],
+            [
+              951.4375,
+              1039.65625
+            ]
+          ],
+          [
+            [
+              1216.328125,
+              950.390625
+            ],
+            [
+              1170.046875,
+              1093.0625
+            ]
+          ],
+          [
+            [
+              1436.96875,
+              1009.328125
+            ],
+            [
+              1393.5625,
+              1152.90625
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem1",
+      "item_id": "pair-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2200,
+        1611
+      ],
+      "points": {
+        "myofibrils": [
+          [
+            [
+              [
+                323.296875,
+                975.15625
+              ],
+              [
+                282.4375,
+                1119.484375
+              ]
+            ],
+            [
+              [
+                540.265625,
+                1035.296875
+              ],
+              [
+                505.875,
+                1181.296875
+              ]
+            ],
+            [
+              [
+                771.96875,
+                1087.890625
+              ],
+              [
+                725.734375,
+                1230.578125
+              ]
+            ],
+            [
+              [
+                985.5625,
+                1141.875
+              ],
+              [
+                952.40625,
+                1288.171875
+              ]
+            ],
+            [
+              [
+                1210.453125,
+                1196.71875
+              ],
+              [
+                1176.46875,
+                1342.828125
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                330.65625,
+                1178.328125
+              ],
+              [
+                295.25,
+                1324.09375
+              ]
+            ],
+            [
+              [
+                555.046875,
+                1234.421875
+              ],
+              [
+                518.34375,
+                1379.859375
+              ]
+            ],
+            [
+              [
+                781.75,
+                1289.75
+              ],
+              [
+                738.234375,
+                1433.296875
+              ]
+            ],
+            [
+              [
+                1002.125,
+                1342.46875
+              ],
+              [
+                955.828125,
+                1485.15625
+              ]
+            ],
+            [
+              [
+                1227.0,
+                1397.890625
+              ],
+              [
+                1185.8125,
+                1542.125
+              ]
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "pair"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

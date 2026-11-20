@@ -63,7 +63,7 @@ def test_version_needs_no_extra(monkeypatch, capsys, argv):
     assert capsys.readouterr().out == f"sarcostat {__version__}\n"
 
 
-@pytest.mark.parametrize("argv", [["analyze", "x"], ["gui"], [], ["--help"]])
+@pytest.mark.parametrize("argv", [["analyze", "x"], [], ["--help"]])
 def test_commands_without_the_cli_extra_name_it(monkeypatch, capsys, argv):
     monkeypatch.setitem(sys.modules, "typer", None)
     assert _entry.main(argv) == 1

@@ -1,0 +1,291 @@
+{
+  "format": "sarcostat-results",
+  "format_version": "1.0",
+  "images": [
+    {
+      "chains": [
+        {
+          "branch_end": false,
+          "chain": 1,
+          "item_id": "myofibril-1",
+          "metrics": {
+            "circular_mean": 0.5786812658870886,
+            "circular_std": 0.008787108985185244,
+            "curvature_per_unit": 5.534332881916856e-06,
+            "expected_direction": null,
+            "head_to_tail_distance": 3513.3002355169015,
+            "linearity_ratio": 0.9999615410597348,
+            "lr_noise_floor": 0.7740841322335797,
+            "lr_uniformity_p": 0.006743902240599876,
+            "mean_vector_length": 0.9999613941030681,
+            "metadata": {
+              "angle_basis": "heading",
+              "conversion_factor": 4.39,
+              "unit": "nm"
+            },
+            "mvl_ci": [
+              0.9996103035814056,
+              0.9999822722153673
+            ],
+            "n_eff": 4.999501097780297,
+            "n_segments": 5,
+            "persistence_amplitude": 0.9997682161769144,
+            "persistence_length": null,
+            "rayleigh_p": 0.0016342325895836898,
+            "rayleigh_z": 4.999613948482757,
+            "rho_squared_corrected": 0.9999038520995401,
+            "segments": [
+              {
+                "angle_absolute": 0.5759641482595584,
+                "angle_relative": 0.0,
+                "cumulative_angle": 0.0,
+                "end_point": [
+                  435.84375,
+                  387.453125
+                ],
+                "length": 713.5269000218842,
+                "segment_id": 0,
+                "start_point": [
+                  299.53125,
+                  298.9296875
+                ]
+              },
+              {
+                "angle_absolute": 0.5768239988294331,
+                "angle_relative": 0.0008598505698746983,
+                "cumulative_angle": 0.0008598505698746983,
+                "end_point": [
+                  568.5859375,
+                  473.8203125
+                ],
+                "length": 695.2265939532634,
+                "segment_id": 1,
+                "start_point": [
+                  435.84375,
+                  387.453125
+                ]
+              },
+              {
+                "angle_absolute": 0.5839369285878601,
+                "angle_relative": 0.007112929758426922,
+                "cumulative_angle": 0.00797278032830162,
+                "end_point": [
+                  702.8671875,
+                  562.5546875
+                ],
+                "length": 706.5751492143149,
+                "segment_id": 2,
+                "start_point": [
+                  568.5859375,
+                  473.8203125
+                ]
+              },
+              {
+                "angle_absolute": 0.5651614981390144,
+                "angle_relative": -0.01877543044884611,
+                "cumulative_angle": -0.010802650120544488,
+                "end_point": [
+                  838.109375,
+                  648.3203125
+                ],
+                "length": 703.0334069457643,
+                "segment_id": 3,
+                "start_point": [
+                  702.8671875,
+                  562.5546875
+                ]
+              },
+              {
+                "angle_absolute": 0.5915197162228487,
+                "angle_relative": 0.026358218083834206,
+                "cumulative_angle": 0.015555567963289718,
+                "end_point": [
+                  969.5390625,
+                  736.609375
+                ],
+                "length": 695.0733083822537,
+                "segment_id": 4,
+                "start_point": [
+                  838.109375,
+                  648.3203125
+                ]
+              }
+            ],
+            "serial_dependence_p": 0.847,
+            "serial_dependence_statistic": -5.25482457388593e-05,
+            "tangent_correlation": [
+              0.9998626806537396,
+              0.999957154056171,
+              0.9999168359155488,
+              0.9998790145923265
+            ],
+            "timestamp": null,
+            "total_length": 3513.4353585174804,
+            "turning_circular_std": 0.016110057017648283,
+            "turning_mean": 0.0038889041666265263,
+            "turning_mvl": 0.9998702414508129,
+            "v_p_value": null,
+            "v_statistic": null
+          },
+          "n_z_lines": 6,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        },
+        {
+          "branch_end": false,
+          "chain": 2,
+          "item_id": "myofibril-2",
+          "metrics": {
+            "circular_mean": 0.6294602525179658,
+            "circular_std": 0.01566690554289187,
+            "curvature_per_unit": -9.80213289295898e-06,
+            "expected_direction": null,
+            "head_to_tail_distance": 3512.7203139046637,
+            "linearity_ratio": 0.9998772436315828,
+            "lr_noise_floor": 0.7740746222287938,
+            "lr_uniformity_p": 0.006748759648956197,
+            "mean_vector_length": 0.9998772815658781,
+            "metadata": {
+              "angle_basis": "heading",
+              "conversion_factor": 4.39,
+              "unit": "nm"
+            },
+            "mvl_ci": [
+              0.998701457271014,
+              0.999944745954898
+            ],
+            "n_eff": 4.999623942710396,
+            "n_segments": 5,
+            "persistence_amplitude": 0.9992606376881427,
+            "persistence_length": null,
+            "rayleigh_p": 0.001637233559440408,
+            "rayleigh_z": 4.99877289095785,
+            "rho_squared_corrected": 0.9996931221447477,
+            "segments": [
+              {
+                "angle_absolute": 0.6487626796482759,
+                "angle_relative": 0.0,
+                "cumulative_angle": 0.0,
+                "end_point": [
+                  368.3359375,
+                  514.984375
+                ],
+                "length": 703.9874008661285,
+                "segment_id": 0,
+                "start_point": [
+                  240.5546875,
+                  418.09375
+                ]
+              },
+              {
+                "angle_absolute": 0.6054800873635815,
+                "angle_relative": -0.04328259228469378,
+                "cumulative_angle": -0.04328259228469378,
+                "end_point": [
+                  500.453125,
+                  606.4375
+                ],
+                "length": 705.3928896323511,
+                "segment_id": 1,
+                "start_point": [
+                  368.3359375,
+                  514.984375
+                ]
+              },
+              {
+                "angle_absolute": 0.6439275860649505,
+                "angle_relative": 0.038447498701368765,
+                "cumulative_angle": -0.004835093583325012,
+                "end_point": [
+                  626.4453125,
+                  701.015625
+                ],
+                "length": 691.603406645403,
+                "segment_id": 2,
+                "start_point": [
+                  500.453125,
+                  606.4375
+                ]
+              },
+              {
+                "angle_absolute": 0.6279092779144366,
+                "angle_relative": -0.01601830815051386,
+                "cumulative_angle": -0.020853401733838872,
+                "end_point": [
+                  755.8828125,
+                  794.9765625
+                ],
+                "length": 702.1629573755699,
+                "segment_id": 3,
+                "start_point": [
+                  626.4453125,
+                  701.015625
+                ]
+              },
+              {
+                "angle_absolute": 0.621220942806765,
+                "angle_relative": -0.006688335107671861,
+                "cumulative_angle": -0.027541736841510733,
+                "end_point": [
+                  887.3984375,
+                  889.109375
+                ],
+                "length": 710.0049211143352,
+                "segment_id": 4,
+                "start_point": [
+                  755.8828125,
+                  794.9765625
+                ]
+              }
+            ],
+            "serial_dependence_p": 0.897,
+            "serial_dependence_statistic": -0.00018742536682514466,
+            "tangent_correlation": [
+              0.9995434459009694,
+              0.9998263341534598,
+              0.9998293454951773,
+              0.9996207503400185
+            ],
+            "timestamp": null,
+            "total_length": 3513.1515756337876,
+            "turning_circular_std": 0.029425868912728706,
+            "turning_mean": -0.006887275723494124,
+            "turning_mvl": 0.9995671528247451,
+            "v_p_value": null,
+            "v_statistic": null
+          },
+          "n_z_lines": 6,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null
+        }
+      ],
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "notices": [
+        {
+          "code": "register_needs_pair_items",
+          "params": {
+            "n_chain_items": 2
+          }
+        }
+      ],
+      "register": [],
+      "sarcomeres": [],
+      "settings": {
+        "click_perp_ratio": 1.0,
+        "click_sigma_m": null,
+        "click_sigma_z": null,
+        "pixel_size": 4.39,
+        "reference_direction_deg": null,
+        "scale_source": "image",
+        "unit": "nm"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "shape_summary": null,
+      "width_px": 2400
+    }
+  ]
+}

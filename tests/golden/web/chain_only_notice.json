@@ -1,0 +1,201 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "scale_bar"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "myofibril-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              329.828125,
+              247.140625
+            ],
+            [
+              269.234375,
+              350.71875
+            ]
+          ],
+          [
+            [
+              469.84375,
+              338.015625
+            ],
+            [
+              401.84375,
+              436.890625
+            ]
+          ],
+          [
+            [
+              602.875,
+              424.578125
+            ],
+            [
+              534.296875,
+              523.0625
+            ]
+          ],
+          [
+            [
+              736.671875,
+              512.984375
+            ],
+            [
+              669.0625,
+              612.125
+            ]
+          ],
+          [
+            [
+              868.328125,
+              596.484375
+            ],
+            [
+              807.890625,
+              700.15625
+            ]
+          ],
+          [
+            [
+              999.84375,
+              684.828125
+            ],
+            [
+              939.234375,
+              788.390625
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "myofibril-2",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "z_lines": [
+          [
+            [
+              274.28125,
+              368.46875
+            ],
+            [
+              206.828125,
+              467.71875
+            ]
+          ],
+          [
+            [
+              404.796875,
+              467.328125
+            ],
+            [
+              331.875,
+              562.640625
+            ]
+          ],
+          [
+            [
+              535.1875,
+              557.515625
+            ],
+            [
+              465.71875,
+              655.359375
+            ]
+          ],
+          [
+            [
+              661.75,
+              652.5
+            ],
+            [
+              591.140625,
+              749.53125
+            ]
+          ],
+          [
+            [
+              792.15625,
+              747.1875
+            ],
+            [
+              719.609375,
+              842.765625
+            ]
+          ],
+          [
+            [
+              923.265625,
+              841.015625
+            ],
+            [
+              851.53125,
+              937.203125
+            ]
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "chain"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}

@@ -1,0 +1,488 @@
+{
+  "format": "sarcostat-results",
+  "format_version": "1.0",
+  "images": [
+    {
+      "chains": [],
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "notices": [],
+      "register": [],
+      "sarcomeres": [
+        {
+          "class_stability": {
+            "class_frequencies": {
+              "barrel": 1.0,
+              "hourglass": 0.0,
+              "rectangular": 0.0,
+              "square": 0.0
+            },
+            "n_draws": 2000,
+            "reference_class": "barrel",
+            "sd_aspect_ratio": 0.020667584819931174,
+            "sd_curviness": 0.007834303487574917,
+            "sd_shape_index": 0.008347951983046428,
+            "stability": 1.0
+          },
+          "geometry": {
+            "aspect_ratio": 1.8717822724122009,
+            "curviness": 1.3659504610570856,
+            "m_line_length": 1319.7255853658326,
+            "m_line_points": [
+              [
+                1252.828125,
+                659.5625
+              ],
+              [
+                1146.125,
+                940.609375
+              ]
+            ],
+            "midpoint_z1": [
+              1007.53125,
+              727.203125
+            ],
+            "midpoint_z2": [
+              1391.421875,
+              872.96875
+            ],
+            "sarcomere_id": 1,
+            "sarcomere_length": 1802.6797717992913,
+            "shape_classification": "barrel",
+            "shape_index": 0.7297592680460424,
+            "unit": "nm",
+            "z_line_1_length": 963.0819771982049,
+            "z_line_1_points": [
+              [
+                1046.46875,
+                624.65625
+              ],
+              [
+                968.59375,
+                829.75
+              ]
+            ],
+            "z_line_2_length": 963.0819771982049,
+            "z_line_2_points": [
+              [
+                1430.359375,
+                770.421875
+              ],
+              [
+                1352.484375,
+                975.515625
+              ]
+            ]
+          },
+          "item_id": "repeat-1",
+          "sarcomere_id": 1,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null,
+          "uncertainty": {
+            "aspect_ratio": 1.8717822724122009,
+            "curviness": 1.3659504610570856,
+            "shape_index": 0.7297592680460424,
+            "sigma_m_along": 4.341693760048934,
+            "sigma_m_perp": 2.7944173073799976,
+            "sigma_z_along": 10.06348794980484,
+            "sigma_z_perp": 6.477100056736323,
+            "u_aspect_ratio": 0.02068271457579576,
+            "u_curviness": 0.008029663563580097,
+            "u_shape_index": 0.008347153388226905,
+            "unit": "nm"
+          }
+        },
+        {
+          "class_stability": {
+            "class_frequencies": {
+              "barrel": 1.0,
+              "hourglass": 0.0,
+              "rectangular": 0.0,
+              "square": 0.0
+            },
+            "n_draws": 2000,
+            "reference_class": "barrel",
+            "sd_aspect_ratio": 0.021257742946925607,
+            "sd_curviness": 0.008045778084037749,
+            "sd_shape_index": 0.008397855108913192,
+            "stability": 1.0
+          },
+          "geometry": {
+            "aspect_ratio": 1.890221561117421,
+            "curviness": 1.3641455948132204,
+            "m_line_length": 1325.9352531183272,
+            "m_line_points": [
+              [
+                1148.0625,
+                940.84375
+              ],
+              [
+                1252.453125,
+                657.421875
+              ]
+            ],
+            "midpoint_z1": [
+              1393.5625,
+              870.3359375
+            ],
+            "midpoint_z2": [
+              1006.9375,
+              727.921875
+            ],
+            "sarcomere_id": 2,
+            "sarcomere_length": 1808.7687345489182,
+            "shape_classification": "barrel",
+            "shape_index": 0.7216855541563042,
+            "unit": "nm",
+            "z_line_1_length": 956.940500809214,
+            "z_line_1_points": [
+              [
+                1355.890625,
+                972.609375
+              ],
+              [
+                1431.234375,
+                768.0625
+              ]
+            ],
+            "z_line_2_length": 956.8761350349448,
+            "z_line_2_points": [
+              [
+                969.265625,
+                830.1875
+              ],
+              [
+                1044.609375,
+                625.65625
+              ]
+            ]
+          },
+          "item_id": "repeat-2",
+          "sarcomere_id": 2,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null,
+          "uncertainty": {
+            "aspect_ratio": 1.890221561117421,
+            "curviness": 1.3641455948132204,
+            "shape_index": 0.7216855541563042,
+            "sigma_m_along": 4.341693760048934,
+            "sigma_m_perp": 2.7944173073799976,
+            "sigma_z_along": 10.06348794980484,
+            "sigma_z_perp": 6.477100056736323,
+            "u_aspect_ratio": 0.020999628815727554,
+            "u_curviness": 0.007985445461161577,
+            "u_shape_index": 0.008292924562094451,
+            "unit": "nm"
+          }
+        },
+        {
+          "class_stability": {
+            "class_frequencies": {
+              "barrel": 1.0,
+              "hourglass": 0.0,
+              "rectangular": 0.0,
+              "square": 0.0
+            },
+            "n_draws": 2000,
+            "reference_class": "barrel",
+            "sd_aspect_ratio": 0.020576224677995074,
+            "sd_curviness": 0.008091118643853831,
+            "sd_shape_index": 0.008358905064382643,
+            "stability": 1.0
+          },
+          "geometry": {
+            "aspect_ratio": 1.8613409989195948,
+            "curviness": 1.3668350408746037,
+            "m_line_length": 1316.271883280704,
+            "m_line_points": [
+              [
+                1255.171875,
+                660.265625
+              ],
+              [
+                1143.859375,
+                938.671875
+              ]
+            ],
+            "midpoint_z1": [
+              1009.25,
+              723.390625
+            ],
+            "midpoint_z2": [
+              1389.78125,
+              875.546875
+            ],
+            "sarcomere_id": 3,
+            "sarcomere_length": 1799.1265333860729,
+            "shape_classification": "barrel",
+            "shape_index": 0.7343281223956146,
+            "unit": "nm",
+            "z_line_1_length": 966.575460611659,
+            "z_line_1_points": [
+              [
+                1050.125,
+                621.171875
+              ],
+              [
+                968.375,
+                825.609375
+              ]
+            ],
+            "z_line_2_length": 966.575460611659,
+            "z_line_2_points": [
+              [
+                1430.65625,
+                773.328125
+              ],
+              [
+                1348.90625,
+                977.765625
+              ]
+            ]
+          },
+          "item_id": "repeat-3",
+          "sarcomere_id": 3,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null,
+          "uncertainty": {
+            "aspect_ratio": 1.8613409989195948,
+            "curviness": 1.3668350408746037,
+            "shape_index": 0.7343281223956146,
+            "sigma_m_along": 4.341693760048934,
+            "sigma_m_perp": 2.7944173073799976,
+            "sigma_z_along": 10.06348794980484,
+            "sigma_z_perp": 6.477100056736323,
+            "u_aspect_ratio": 0.02050519026438415,
+            "u_curviness": 0.008053998435425602,
+            "u_shape_index": 0.008377746677277417,
+            "unit": "nm"
+          }
+        },
+        {
+          "class_stability": {
+            "class_frequencies": {
+              "barrel": 1.0,
+              "hourglass": 0.0,
+              "rectangular": 0.0,
+              "square": 0.0
+            },
+            "n_draws": 2000,
+            "reference_class": "barrel",
+            "sd_aspect_ratio": 0.020210315040338784,
+            "sd_curviness": 0.00812118279095344,
+            "sd_shape_index": 0.008557289936716311,
+            "stability": 1.0
+          },
+          "geometry": {
+            "aspect_ratio": 1.8366209276769068,
+            "curviness": 1.369272988372546,
+            "m_line_length": 1307.7530893105431,
+            "m_line_points": [
+              [
+                1146.75,
+                938.796875
+              ],
+              [
+                1254.59375,
+                661.109375
+              ]
+            ],
+            "midpoint_z1": [
+              1390.7890625,
+              873.78125
+            ],
+            "midpoint_z2": [
+              1010.5546875,
+              726.125
+            ],
+            "sarcomere_id": 4,
+            "sarcomere_length": 1790.6709806536765,
+            "shape_classification": "barrel",
+            "shape_index": 0.7455392496831141,
+            "unit": "nm",
+            "z_line_1_length": 974.9812569753568,
+            "z_line_1_points": [
+              [
+                1350.59375,
+                977.296875
+              ],
+              [
+                1430.984375,
+                770.265625
+              ]
+            ],
+            "z_line_2_length": 974.9812569753568,
+            "z_line_2_points": [
+              [
+                970.359375,
+                829.640625
+              ],
+              [
+                1050.75,
+                622.609375
+              ]
+            ]
+          },
+          "item_id": "repeat-4",
+          "sarcomere_id": 4,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null,
+          "uncertainty": {
+            "aspect_ratio": 1.8366209276769068,
+            "curviness": 1.369272988372546,
+            "shape_index": 0.7455392496831141,
+            "sigma_m_along": 4.341693760048934,
+            "sigma_m_perp": 2.7944173073799976,
+            "sigma_z_along": 10.06348794980484,
+            "sigma_z_perp": 6.477100056736323,
+            "u_aspect_ratio": 0.02008743369144523,
+            "u_curviness": 0.00811552737257908,
+            "u_shape_index": 0.008453978702100485,
+            "unit": "nm"
+          }
+        },
+        {
+          "class_stability": {
+            "class_frequencies": {
+              "barrel": 1.0,
+              "hourglass": 0.0,
+              "rectangular": 0.0,
+              "square": 0.0
+            },
+            "n_draws": 2000,
+            "reference_class": "barrel",
+            "sd_aspect_ratio": 0.020842346031157474,
+            "sd_curviness": 0.008136152636394592,
+            "sd_shape_index": 0.008422204748007981,
+            "stability": 1.0
+          },
+          "geometry": {
+            "aspect_ratio": 1.8825982609867833,
+            "curviness": 1.3649735951573634,
+            "m_line_length": 1323.2935528967894,
+            "m_line_points": [
+              [
+                1254.375,
+                660.0625
+              ],
+              [
+                1146.171875,
+                941.40625
+              ]
+            ],
+            "midpoint_z1": [
+              1008.2578125,
+              726.8828125
+            ],
+            "midpoint_z2": [
+              1392.28125,
+              874.5859375
+            ],
+            "sarcomere_id": 5,
+            "sarcomere_length": 1806.2607583460913,
+            "shape_classification": "barrel",
+            "shape_index": 0.7250477297487242,
+            "unit": "nm",
+            "z_line_1_length": 959.4386737189552,
+            "z_line_1_points": [
+              [
+                1047.484375,
+                624.890625
+              ],
+              [
+                969.03125,
+                828.875
+              ]
+            ],
+            "z_line_2_length": 959.4632989189256,
+            "z_line_2_points": [
+              [
+                1431.515625,
+                772.59375
+              ],
+              [
+                1353.046875,
+                976.578125
+              ]
+            ]
+          },
+          "item_id": "repeat-5",
+          "sarcomere_id": 5,
+          "skip_reason": null,
+          "skipped": false,
+          "target_id": null,
+          "uncertainty": {
+            "aspect_ratio": 1.8825982609867833,
+            "curviness": 1.3649735951573634,
+            "shape_index": 0.7250477297487242,
+            "sigma_m_along": 4.341693760048934,
+            "sigma_m_perp": 2.7944173073799976,
+            "sigma_z_along": 10.06348794980484,
+            "sigma_z_perp": 6.477100056736323,
+            "u_aspect_ratio": 0.020868301352751327,
+            "u_curviness": 0.008004426425781905,
+            "u_shape_index": 0.008315778855638762,
+            "unit": "nm"
+          }
+        }
+      ],
+      "settings": {
+        "click_perp_ratio": 0.6436237703113594,
+        "click_sigma_m": 4.341693760048934,
+        "click_sigma_z": 10.06348794980484,
+        "pixel_size": 4.39,
+        "reference_direction_deg": null,
+        "scale_source": "gui",
+        "unit": "nm"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "shape_summary": {
+        "chain": {
+          "alpha_angles": [
+            0.009960679301926234,
+            0.027449420596253216,
+            0.009973588586943638,
+            0.003227427742050981
+          ],
+          "alpha_angles_degrees": [
+            0.5707048850836882,
+            1.5727359502447849,
+            0.571444532631717,
+            0.18491798830295814
+          ],
+          "alpha_mean": 0.012652779056793517,
+          "alpha_mean_degrees": 0.7249508390657871,
+          "alpha_std": 0.010363450373266522,
+          "alpha_std_degrees": 0.5937819675814493,
+          "dominant_shape": "barrel",
+          "mean_aspect_ratio": 1.8685128042225814,
+          "mean_curviness": 1.366235536054964,
+          "mean_shape_index": 0.7312719848059599,
+          "n_sarcomeres": 5,
+          "std_aspect_ratio": 0.02090984350328138,
+          "std_curviness": 0.0019765588523839336,
+          "std_shape_index": 0.009298173740790405,
+          "unit": "nm"
+        },
+        "z_line_alignment": {
+          "h_mean": 1803.1758406523843,
+          "h_std": 4.191396945941243,
+          "h_values": [
+            1807.362284061144,
+            1806.11813678365,
+            1800.3566374482368,
+            1798.8663043165063
+          ],
+          "n_measurements": 4,
+          "unit": "nm"
+        }
+      },
+      "width_px": 2400
+    }
+  ]
+}

@@ -1,0 +1,309 @@
+{
+  "annotator_id": null,
+  "created_utc": "2026-11-20T00:00:00Z",
+  "format": "sarcostat-annotations",
+  "format_version": "1.0",
+  "gui": {
+    "click_perp_ratio": 0.6436237703113594,
+    "click_sigma_m": 4.341693760048934,
+    "click_sigma_z": 10.06348794980484,
+    "expected_direction_deg": null,
+    "mode": "Single Sarcomere",
+    "open_myofibril": false,
+    "pixel_size": 4.39,
+    "unit": "nm"
+  },
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "user"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "repeat-1",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1252.828125,
+            659.5625
+          ],
+          [
+            1146.125,
+            940.609375
+          ]
+        ],
+        "z1": [
+          [
+            1046.46875,
+            624.65625
+          ],
+          [
+            968.59375,
+            829.75
+          ]
+        ],
+        "z2": [
+          [
+            1430.359375,
+            770.421875
+          ],
+          [
+            1352.484375,
+            975.515625
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "repeat-2",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1148.0625,
+            940.84375
+          ],
+          [
+            1252.453125,
+            657.421875
+          ]
+        ],
+        "z1": [
+          [
+            1355.890625,
+            972.609375
+          ],
+          [
+            1431.234375,
+            768.0625
+          ]
+        ],
+        "z2": [
+          [
+            969.265625,
+            830.1875
+          ],
+          [
+            1044.609375,
+            625.65625
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "repeat-3",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1255.171875,
+            660.265625
+          ],
+          [
+            1143.859375,
+            938.671875
+          ]
+        ],
+        "z1": [
+          [
+            1050.125,
+            621.171875
+          ],
+          [
+            968.375,
+            825.609375
+          ]
+        ],
+        "z2": [
+          [
+            1430.65625,
+            773.328125
+          ],
+          [
+            1348.90625,
+            977.765625
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "repeat-4",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1146.75,
+            938.796875
+          ],
+          [
+            1254.59375,
+            661.109375
+          ]
+        ],
+        "z1": [
+          [
+            1350.59375,
+            977.296875
+          ],
+          [
+            1430.984375,
+            770.265625
+          ]
+        ],
+        "z2": [
+          [
+            970.359375,
+            829.640625
+          ],
+          [
+            1050.75,
+            622.609375
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    },
+    {
+      "active_seconds": null,
+      "display_transform": "identity",
+      "finished_utc": null,
+      "image_id": "tem3",
+      "item_id": "repeat-5",
+      "kit_crop_offset": [
+        0,
+        0
+      ],
+      "kit_crop_size": [
+        2400,
+        1745
+      ],
+      "points": {
+        "m": [
+          [
+            1254.375,
+            660.0625
+          ],
+          [
+            1146.171875,
+            941.40625
+          ]
+        ],
+        "z1": [
+          [
+            1047.484375,
+            624.890625
+          ],
+          [
+            969.03125,
+            828.875
+          ]
+        ],
+        "z2": [
+          [
+            1431.515625,
+            772.59375
+          ],
+          [
+            1353.046875,
+            976.578125
+          ]
+        ]
+      },
+      "raw_clicks": [],
+      "skip_reason": null,
+      "skipped": false,
+      "skipped_parts": [],
+      "started_utc": null,
+      "target_id": null,
+      "type": "shape"
+    }
+  ],
+  "sarcostat_version": "0.2.0",
+  "session_id": null,
+  "source_digest": "c1cc8884079fad354701efc732e0320b8e781541165a30893c2a66dcc7de5d03",
+  "study_id": null
+}
