@@ -49,6 +49,7 @@ class TestSourceDigest:
             assert parts[0] not in ("tests", "docs", "paper"), rel
             assert re.search(r"(\.py|\.yaml|^io/[^/]+\.json|^gui/[^/]+\.png|py\.typed)$", rel), rel
 
+    @pytest.mark.needs_cpython(reason="runs sha256sum in a subprocess")
     def test_matches_sha256sum_recipe(self):
         """The digest is the SHA-256 of what ``sha256sum`` prints for the files, sorted by path."""
         sha256sum = shutil.which("sha256sum")
@@ -60,6 +61,7 @@ class TestSourceDigest:
         ).stdout
         assert hashlib.sha256(listing).hexdigest() == source_digest()
 
+    @pytest.mark.needs_cpython(reason="runs bash, find, sort, xargs and sha256sum in a subprocess")
     def test_shell_recipe_in_the_docstring(self):
         """The find/sha256sum pipeline documented in the module gives the same digest."""
         if not all(shutil.which(t) for t in ("bash", "find", "sort", "xargs", "sha256sum")):
@@ -128,6 +130,7 @@ class TestSourceDigest:
         with pytest.raises(ValueError, match="__init__.py"):
             source_digest(tmp_path)
 
+    @pytest.mark.needs_cpython(reason="runs a subprocess; Emscripten has no processes")
     def test_computing_imports_nothing_and_survives_importing_everything(self):
         code = (
             "import sys, pkgutil, importlib\n"

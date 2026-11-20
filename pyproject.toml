@@ -35,7 +35,7 @@ classifiers = [
 dynamic = ["version", "dependencies", "optional-dependencies"]
 
 [project.scripts]
-sarcostat = "sarcostat.cli.app:app"
+sarcostat = "sarcostat.cli._entry:main"
 
 [project.urls]
 Homepage = "https://github.com/EttoreRocchi/SarcoStat"
@@ -46,7 +46,11 @@ Changelog = "https://github.com/EttoreRocchi/SarcoStat/blob/main/CHANGELOG.md"
 [tool.setuptools.dynamic]
 version = {attr = "sarcostat.__version__"}
 dependencies = {file = ["requirements.txt"]}
-optional-dependencies = {dev = {file = ["requirements-dev.txt"]}}
+
+[tool.setuptools.dynamic.optional-dependencies]
+cli = {file = ["requirements-cli.txt"]}
+sim = {file = ["requirements-cli.txt", "requirements-sim.txt"]}
+dev = {file = ["requirements-dev.txt"]}
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -89,6 +93,11 @@ warn_unused_configs = true
 ignore_missing_imports = true
 disallow_untyped_defs = false
 check_untyped_defs = true
+exclude = ["src/sarcostat/gui/"]
+
+[[tool.mypy.overrides]]
+module = ["sarcostat.gui", "sarcostat.gui.*"]
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -98,6 +107,8 @@ python_functions = "test_*"
 addopts = "-v --tb=short"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "needs_cpython: needs CPython-only facilities; deselected in the Pyodide test run",
+    "needs_sim: needs the [sim] extra (pandas, matplotlib, seaborn, pyyaml)",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

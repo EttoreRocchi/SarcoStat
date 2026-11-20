@@ -517,6 +517,7 @@ def _slots(node):
 
 
 class TestIsolation:
+    @pytest.mark.needs_cpython(reason="runs a subprocess; Emscripten has no processes")
     def test_runtime_does_not_import_jsonschema(self):
         code = (
             "import sys, sarcostat.io.annotations as a; "
@@ -526,6 +527,7 @@ class TestIsolation:
         )
         subprocess.run([sys.executable, "-c", code], check=True)
 
+    @pytest.mark.needs_cpython(reason="runs a subprocess; Emscripten has no processes")
     def test_package_import_is_light(self):
         code = (
             "import sys, sarcostat.io; "

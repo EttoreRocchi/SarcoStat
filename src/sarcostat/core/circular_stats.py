@@ -23,8 +23,8 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 import numpy as np
-import pingouin as pg
 
+from . import _circular
 from . import chain_statistics as _chain
 from ._interpretation import interpret_rayleigh_test, interpret_v_test
 
@@ -86,8 +86,9 @@ def to_minuspi_pi(angles: np.ndarray) -> np.ndarray:
 def _finite_angles(angles: np.ndarray) -> np.ndarray:
     """Return ``angles`` as a 1-D float array, rejecting NaN and inf.
 
-    pingouin silently drops NaN in some circular routines but not in
-    others, so a single non-finite angle would otherwise give mutually
+    The circular routines in :mod:`sarcostat.core._circular` drop NaN from
+    the resultant sums but not from the sample size n of the Rayleigh and
+    V tests, so a single non-finite angle would otherwise give mutually
     inconsistent statistics (e.g. a Rayleigh Z computed with the wrong n).
 
     Raises
@@ -127,7 +128,7 @@ def calculate_linearity_ratio(head_to_tail: float, total_length: float) -> float
 
 
 def calculate_mean_vector_length(angles: np.ndarray) -> float:
-    """Compute the mean vector length R using pingouin.
+    """Compute the mean vector length R = |sum_j exp(i * a_j)| / n.
 
     Parameters
     ----------
@@ -142,7 +143,7 @@ def calculate_mean_vector_length(angles: np.ndarray) -> float:
     angles = _finite_angles(angles)
     if angles.size == 0:
         return float("nan")
-    return float(pg.circ_r(to_minuspi_pi(angles)))
+    return float(_circular.circ_r(to_minuspi_pi(angles)))
 
 
 def perform_rayleigh_test(angles: np.ndarray) -> tuple[float, float]:
@@ -161,7 +162,7 @@ def perform_rayleigh_test(angles: np.ndarray) -> tuple[float, float]:
     angles = _finite_angles(angles)
     if angles.size == 0:
         return 0.0, 1.0
-    z_stat, p_val = pg.circ_rayleigh(to_minuspi_pi(angles))
+    z_stat, p_val = _circular.circ_rayleigh(to_minuspi_pi(angles))
     return float(z_stat), float(p_val)
 
 
@@ -192,7 +193,7 @@ def perform_v_test(angles: np.ndarray, expected_dir: float = 0.0) -> tuple[float
         raise ValueError("expected_dir must be finite")
     ang = to_minuspi_pi(angles)
     mu0 = to_minuspi_pi(np.array([expected_dir]))[0]
-    v_stat, p_val = pg.circ_vtest(ang, dir=mu0)
+    v_stat, p_val = _circular.circ_vtest(ang, mu0)
     return float(v_stat), float(p_val)
 
 
@@ -212,7 +213,7 @@ def calculate_circular_mean(angles: np.ndarray) -> float:
     angles = _finite_angles(angles)
     if angles.size == 0:
         return 0.0
-    return float(pg.circ_mean(to_minuspi_pi(angles)))
+    return float(_circular.circ_mean(to_minuspi_pi(angles)))
 
 
 def calculate_circular_std(angles: np.ndarray) -> float:
@@ -412,7 +413,10 @@ def bootstrap_circular_mean_ci(
     ang = to_minuspi_pi(angles)
 
     bootstrap_means = np.array(
-        [float(pg.circ_mean(rng.choice(ang, size=n, replace=True))) for _ in range(n_bootstrap)]
+        [
+            float(_circular.circ_mean(rng.choice(ang, size=n, replace=True)))
+            for _ in range(n_bootstrap)
+        ]
     )
 
     mean = calculate_circular_mean(angles)
@@ -480,7 +484,7 @@ def bootstrap_mvl_ci(
     rng = np.random.default_rng(seed)
     ang = to_minuspi_pi(angles)
     bootstrap_mvls = np.array(
-        [float(pg.circ_r(rng.choice(ang, size=n, replace=True))) for _ in range(n_bootstrap)]
+        [float(_circular.circ_r(rng.choice(ang, size=n, replace=True))) for _ in range(n_bootstrap)]
     )
 
     alpha = 1.0 - confidence

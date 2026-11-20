@@ -6,7 +6,7 @@ single-sarcomere morphometry (geometry, alpha angle, shape classification,
 Z-line alignment), chain statistics of traced myofibrils (effective sample
 size, bias correction, turning angles, persistence length), the Z-line
 register between adjacent myofibrils, and the annotation uncertainty of the
-shape indices. It depends only on numpy and pingouin; it has no GUI,
+shape indices. It depends only on numpy and scipy; it has no GUI,
 plotting, or I/O dependencies.
 """
 

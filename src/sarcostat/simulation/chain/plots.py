@@ -20,8 +20,9 @@ from typing import Protocol, runtime_checkable
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pingouin as pg
+from matplotlib.patches import Circle
 
+from sarcostat.core import _circular
 from sarcostat.core.circular_stats import to_minuspi_pi
 
 _BOX_COLORS: dict[str, str] = {
@@ -152,6 +153,45 @@ class BoxplotPlotter:
         return fig
 
 
+def _draw_circular_mean(
+    ax: plt.Axes, angles: np.ndarray, mean_angle: float, r_length: float
+) -> None:
+    """Draw the unit circle, each angle as a marker on it and the mean resultant vector."""
+    ax.add_patch(Circle((0, 0), 1, edgecolor="k", facecolor="none", linewidth=2))
+    ax.axvline(0, lw=1, ls=":", color="slategrey")
+    ax.axhline(0, lw=1, ls=":", color="slategrey")
+    ax.plot(
+        np.cos(angles),
+        np.sin(angles),
+        ls="None",
+        color="tab:blue",
+        marker="o",
+        mfc="none",
+        ms=5,
+        alpha=0.7,
+    )
+    ax.arrow(
+        0,
+        0,
+        r_length * np.cos(mean_angle),
+        r_length * np.sin(mean_angle),
+        width=0.01,
+        head_width=0.1,
+        head_length=0.1,
+        fc="tab:red",
+        ec="tab:red",
+    )
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for side in ("top", "right", "left", "bottom"):
+        ax.spines[side].set_visible(False)
+    ax.text(1.2, 0, "0", verticalalignment="center")
+    ax.text(-1.3, 0, r"$\pi$", verticalalignment="center")
+    ax.text(0, 1.2, r"$+\pi/2$", horizontalalignment="center")
+    ax.text(0, -1.3, r"$-\pi/2$", horizontalalignment="center")
+    ax.set_aspect("equal")
+
+
 @dataclass(frozen=True)
 class PolarPlotter:
     """Single-row polar plot of step-angle distributions per kappa."""
@@ -180,9 +220,9 @@ class PolarPlotter:
             angles_array = np.asarray(results["angles"][k][n_repr])
             if angles_array.size > 0:
                 ang = to_minuspi_pi(angles_array)
-                pg.plot_circmean(ang, ax=ax, kwargs_markers={"ms": 5, "alpha": 0.7})
-                mean_angle = float(pg.circ_mean(ang))
-                r_length = float(pg.circ_r(ang))
+                mean_angle = float(_circular.circ_mean(ang))
+                r_length = float(_circular.circ_r(ang))
+                _draw_circular_mean(ax, ang, mean_angle, r_length)
                 ax.set_title(
                     f"kappa = {k}\nMean: {np.degrees(mean_angle):.1f} deg, R = {r_length:.3f}\n",
                     fontsize=10,

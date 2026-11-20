@@ -18,8 +18,8 @@ help:  ## Show this help message
 
 # Installation
 
-install:  ## Install package with development dependencies
-	@pip install -e ".[dev]"
+install:  ## Install package with development and simulation dependencies
+	@pip install -e ".[dev,sim]"
 
 # Code quality
 

@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Annotated, Any, TypeVar
 
 import typer
-import yaml
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import (
@@ -79,6 +78,8 @@ def _console_handler() -> logging.Handler:
 
 def _load_config(loader: Callable[[Path], C], path: Path) -> C:
     """Run a config loader, turning validation errors into a clean ``--config`` error."""
+    import yaml
+
     try:
         return loader(path)
     except (ValueError, TypeError, KeyError, yaml.YAMLError) as exc:

@@ -6,37 +6,77 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
+  resolve:
+    name: resolve numpy versions
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.10
+            3.11
+            3.12
+            3.13
+
+      - name: Resolve the numpy floor and the newest installable numpy per Python
+        id: matrix
+        run: |
+          set -euo pipefail
+          resolve() {
+            local python=$1
+            shift
+            "$python" -m pip install --quiet --disable-pip-version-check --upgrade pip
+            "$python" -m pip install --quiet --disable-pip-version-check --dry-run --ignore-installed --report report.json "$@" > /dev/null
+            "$python" -c "import json; print(next(i['metadata']['version'] for i in json.load(open('report.json'))['install'] if i['metadata']['name'].lower() == 'numpy'))"
+          }
+          items=""
+          for py in 3.10 3.11 3.12 3.13; do
+            newest=$(resolve "python$py" ".[dev,sim]")
+            items="$items{\"python\":\"$py\",\"numpy\":\"$newest\"},"
+            if [ "$py" != "3.13" ]; then
+              floor=$(resolve "python$py" ".[dev,sim]" "numpy==1.26.*")
+              items="$items{\"python\":\"$py\",\"numpy\":\"$floor\"},"
+            fi
+          done
+          matrix="{\"include\":[${items%,}]}"
+          echo "$matrix"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   test:
+    name: test (Python ${{ matrix.python }}, numpy ${{ matrix.numpy }})
+    needs: resolve
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+      matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install -e .
+          python -m pip install -e ".[dev,sim]" "numpy==${{ matrix.numpy }}"
+          python -c "import numpy, scipy; print('numpy', numpy.__version__, 'scipy', scipy.__version__)"
 
-      - name: Run type checking
-        run: |
-          pip install mypy types-PyYAML
-          mypy src/sarcostat --ignore-missing-imports || true
+      - name: Type check
+        run: python -m mypy src/sarcostat
 
       - name: Run tests
-        run: |
-          pytest tests/ -v -W ignore::UserWarning
+        run: python -m pytest tests/ -W ignore::UserWarning
 
   lint:
     runs-on: ubuntu-latest
@@ -48,10 +88,74 @@ jobs:
           python-version: "3.11"
 
       - name: Install linting tools
-        run: pip install -r requirements-dev.txt
+        run: python -m pip install "$(grep -E '^ruff' requirements-dev.txt)"
 
       - name: Check code style
         run: ruff check .
 
       - name: Check formatting
         run: ruff format --check .
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python -m build
+          twine check --strict dist/*
+          sha256sum dist/*
+
+      - name: Check distribution contents
+        run: |
+          python -m zipfile -l dist/*.whl > wheel.txt
+          tar -tzf dist/*.tar.gz > sdist.txt
+          for f in sarcostat/py.typed sarcostat/simulation/config.yaml \
+                   sarcostat/simulation/sarcomere_config.yaml sarcostat/gui/logo.png \
+                   sarcostat/io/annotation-v1.schema.json sarcostat/cli/_entry.py; do
+            grep -q "$f" wheel.txt || { echo "missing from wheel: $f"; exit 1; }
+          done
+          for f in requirements.txt requirements-cli.txt requirements-sim.txt requirements-dev.txt; do
+            grep -q "/$f" sdist.txt || { echo "missing from sdist: $f"; exit 1; }
+          done
+          if grep -E '(^|/)(\.omc|paper|web)/' wheel.txt sdist.txt; then
+            echo "unexpected folder in the distributions"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  install:
+    name: install (Python ${{ matrix.python }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Core-only, [cli] and [sim] installs
+        env:
+          PYTHON: python
+          SMOKE_CONFIG: examples/configs/config_sarc_minimal.yaml
+        run: bash tools/check_install.sh dist/*.whl "$RUNNER_TEMP/check_install"

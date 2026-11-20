@@ -1,12 +1,10 @@
-"""Typer/rich command-line interface for SarcoStat.
+"""Command-line interface of SarcoStat.
 
-The package exposes a single :data:`app` object configured with:
-
-- ``sarcostat sim chain | sarc | coverage | mde`` - simulation suite.
-- ``sarcostat gui`` - launch the interactive Tk annotation window.
-- ``sarcostat version`` - prints the installed package version.
+The console script ``sarcostat`` starts in :mod:`sarcostat.cli._entry`, which needs only the
+standard library: ``sarcostat --version`` works on a core-only install. Every other command
+runs the Typer application in :mod:`sarcostat.cli.app`, which needs the ``[cli]`` extra
+(``sim`` needs ``[sim]``). Nothing is imported here, so importing :mod:`sarcostat.cli` loads
+neither typer nor rich.
 """
 
-from .app import app
-
-__all__ = ["app"]
+__all__: list[str] = []

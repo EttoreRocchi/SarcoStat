@@ -152,22 +152,29 @@ class TestStatisticalTests:
         assert v == 0.0
         assert p == 1.0
 
-    def test_pingouin_rayleigh_z_convention(self):
+    def test_rayleigh_z_convention(self):
         """Regression guard: Rayleigh effect-size recovery R = sqrt(z/n)
-        relies on pingouin returning z = n * R^2. If a future pingouin
-        release changes the convention, this test fails immediately
-        instead of letting the silent corruption propagate to the
+        relies on the Rayleigh test returning z = n * R^2. If the
+        convention changes, this test fails immediately instead of
+        letting the silent corruption propagate to the
         :class:`RayleighInterpreter`.
         """
-        import pingouin as pg
-
-        from sarcostat.core.circular_stats import calculate_mean_vector_length
-
         rng = np.random.default_rng(0)
         angles = rng.vonmises(mu=0.0, kappa=4.0, size=200)
-        z, _ = pg.circ_rayleigh(angles)
+        z, _ = perform_rayleigh_test(angles)
         r = calculate_mean_vector_length(angles)
         assert np.isclose(z, len(angles) * r**2, rtol=1e-10)
+        assert np.isclose(np.sqrt(z / len(angles)), r, rtol=1e-10)
+
+    @pytest.mark.needs_cpython(reason="compares with pingouin, a CPython-only dev dependency")
+    def test_rayleigh_z_convention_matches_pingouin(self):
+        """Cross-check of z = n * R^2 against pingouin where it is installed."""
+        pg = pytest.importorskip("pingouin")
+        rng = np.random.default_rng(0)
+        angles = rng.vonmises(mu=0.0, kappa=4.0, size=200)
+        z_ref, _ = pg.circ_rayleigh(angles)
+        z, _ = perform_rayleigh_test(angles)
+        assert np.isclose(z, z_ref, rtol=1e-10)
 
 
 class TestSequenceAnalysis:
