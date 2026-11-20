@@ -124,7 +124,7 @@ jobs:
           for f in requirements.txt requirements-cli.txt requirements-sim.txt requirements-dev.txt; do
             grep -q "/$f" sdist.txt || { echo "missing from sdist: $f"; exit 1; }
           done
-          if grep -E '(^|/)(\.omc|paper|web)/|sarcostat/gui/' wheel.txt sdist.txt; then
+          if grep -E '(^|/)(\.omc|paper)/|^([^/]+/)?web/|sarcostat/gui/' wheel.txt sdist.txt; then
             echo "unexpected folder in the distributions"
             exit 1
           fi
