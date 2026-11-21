@@ -1,0 +1,31 @@
+{
+  "name": "sarcostat-web",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:unit": "vitest run --config vitest.config.ts --configLoader runner",
+    "build": "node scripts/build_app.mjs",
+    "serve": "node scripts/serve.mjs",
+    "test:e2e": "env -u DISPLAY -u WAYLAND_DISPLAY PLAYWRIGHT_HTML_OPEN=never PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 playwright test --config playwright.config.ts --project=chromium",
+    "test:shots": "env -u DISPLAY -u WAYLAND_DISPLAY PLAYWRIGHT_HTML_OPEN=never PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 playwright test --config playwright.config.ts --project=shots",
+    "pyodide:test-subset": "node scripts/pyodide_subset.mjs --list pyodide-test-files.sha256 --download https://cdn.jsdelivr.net/pyodide/v314.0.8/full/",
+    "pyodide:site-subset": "node scripts/pyodide_subset.mjs --site --download https://cdn.jsdelivr.net/pyodide/v314.0.8/full/",
+    "test:pyodide": "node tests/pyodide/run_pytest.mjs"
+  },
+  "dependencies": {
+    "geotiff": "3.0.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.19.2",
+    "fake-indexeddb": "6.2.8",
+    "pyodide": "314.0.8",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}

@@ -211,3 +211,8 @@ simulation_*/
 /outputs/
 /paper/
 TODO.md
+/web/node_modules/
+/web/dist/
+/web/.cache/
+/web/test-results/
+/web/playwright-report/

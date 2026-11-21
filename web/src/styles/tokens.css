@@ -1,0 +1,121 @@
+:root {
+  color-scheme: dark;
+
+  --bg-0: #080D12;
+  --bg-1: #0D141B;
+  --bg-2: #131D26;
+  --bg-3: #1A2632;
+  --bg-4: #22313F;
+  --bg-float: rgba(11, 16, 21, .88);
+  --bg-tag: rgba(8, 13, 18, .84);
+  --scrim: rgba(3, 7, 10, .62);
+  --selection: rgba(64, 160, 208, .35);
+  --line: #1E2B37;
+  --line-2: #2B3C4C;
+  --stage: #141414;
+
+  --tx-1: #E8EEF3;
+  --tx-2: #AAB8C4;
+  --tx-3: #8494A3;
+
+  --brand: #40A0D0;
+  --brand-2: #1070B0;
+  --brand-ink: #03121C;
+  --navy: #003050;
+  --mark-ring: #DCE8F1;
+  --mark-mid: #3F96D1;
+  --mark-light: #40A0D0;
+
+  --m-home: #40A0D0;
+  --m-shape: #56B4E9;
+  --m-straight: #2CC79F;
+  --m-register: #E59CC7;
+  --m-planner: #EDAF3C;
+  --m-study: #A9C7DD;
+  --accent: var(--m-home);
+
+  --ok: #5DD3A9;
+  --danger: #FF9B8A;
+  --unsaved: #EDAF3C;
+  --unsaved-glow: rgba(237, 175, 60, .18);
+  --note-bg: rgba(237, 175, 60, .08);
+  --note-line: rgba(237, 175, 60, .28);
+
+  --lm-z: #56B4E9;
+  --lm-m: #E69F00;
+  --lm-chain: #17C495;
+  --lm-f1: #56B4E9;
+  --lm-f2: #F58A45;
+  --lm-link: #F0E442;
+  --lm-target: #FFFFFF;
+  --lm-ink: #04121B;
+  --halo: rgba(0, 0, 0, .62);
+  --halo-width: 5.5px;
+
+  --f-display: "Barlow Semi Condensed", "SarcoStat Fallback Sans", sans-serif;
+  --f-body: "Atkinson Hyperlegible Next", "SarcoStat Fallback Sans", sans-serif;
+  --f-num: "Atkinson Hyperlegible Mono", "SarcoStat Fallback Mono", monospace;
+
+  --fs-2xs: 10.5px;
+  --fs-xs: 11.5px;
+  --fs-sm: 12.5px;
+  --fs-md: 13.5px;
+  --fs-base: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 19px;
+  --fs-2xl: 22px;
+  --fs-3xl: 34px;
+  --fs-4xl: 44px;
+  --lh-tight: 1.1;
+  --lh-snug: 1.3;
+  --lh-body: 1.45;
+  --track-label: .08em;
+  --track-eyebrow: .09em;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  --r-1: 3px;
+  --r-2: 5px;
+  --r-3: 8px;
+  --r-4: 10px;
+
+  --e-1: inset 0 1px 0 rgba(255, 255, 255, .03);
+  --e-2: 0 12px 32px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .05);
+  --e-2-blur: blur(10px);
+  --e-3: 0 24px 64px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 255, 255, .07);
+
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  --focus-ring: var(--focus-width) solid var(--brand);
+
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 240ms;
+  --dur-settle: 150ms;
+  --delay-tip: 300ms;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  --rail-w: 80px;
+  --topbar-h: 52px;
+  --panel-w: 384px;
+  --statusline-h: 28px;
+  --tabs-h: 42px;
+  --study-header-h: 56px;
+  --study-item: 640px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0s;
+    --dur-2: 0s;
+    --dur-3: 0s;
+    --dur-settle: 0s;
+    --delay-tip: 0s;
+  }
+}

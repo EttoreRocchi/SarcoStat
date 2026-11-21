@@ -1,0 +1,27 @@
+[data-mode="home"] {
+  --accent: var(--m-home);
+}
+
+[data-mode="shape"] {
+  --accent: var(--m-shape);
+}
+
+[data-mode="straightness"] {
+  --accent: var(--m-straight);
+}
+
+[data-mode="register"] {
+  --accent: var(--m-register);
+}
+
+[data-mode="planner"] {
+  --accent: var(--m-planner);
+}
+
+[data-mode="study"] {
+  --accent: var(--m-study);
+}
+
+.u-accent {
+  color: var(--accent);
+}

@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "name": "pyodide/pyodide.asm.mjs (Pyodide 314.0.8)",
+      "reason": "Emscripten runtime of the pinned Pyodide: its https:// and ws:// strings belong to the socket and Node code paths, which the worker never uses; every network request is refused by the worker guard and the document CSP.",
+      "sha256": "22514b8be6980e28a02c8b1d6387ce8dfe666fc4edf8d547cff5dce29ff4d972"
+    },
+    {
+      "name": "pyodide/pyodide.mjs (Pyodide 314.0.8)",
+      "reason": "Loader of the pinned Pyodide: its only URL is the jsDelivr default of indexURL, never reached because the worker passes indexURL, lockFileURL and packageBaseUrl pointing at the version folder's pyodide/.",
+      "sha256": "1bb8cc14f9405aaa7cd4e00c12edd0a8539de9cc026618d6ee5a9663f367dc70"
+    }
+  ],
+  "format": "sarcostat-site-allowlist",
+  "format_version": 1
+}

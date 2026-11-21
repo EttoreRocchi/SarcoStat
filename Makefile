@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 .PHONY: help install lint lint-fix format format-check typecheck check pre-commit \
-        test clean build-check publish publish-test smoke
+        test clean build-check publish publish-test smoke site
 
 # Colours
 BOLD  := \033[1m
@@ -10,6 +10,7 @@ CYAN  := \033[36m
 # Paths
 SRC   := src/sarcostat
 TESTS := tests
+PYTHON ?= python
 
 help:  ## Show this help message
 	@printf "$(BOLD)SarcoStat - available targets$(RESET)\n\n"
@@ -71,3 +72,17 @@ publish: build-check  ## Build and publish package to PyPI
 
 publish-test: build-check  ## Build and publish package to TestPyPI
 	@twine upload --repository testpypi dist/*
+
+site:  ## Build the web version folder OUT/v<version> from a fresh wheel (OUT=web/dist/<lane>/site)
+	@test -n "$(OUT)" || { echo "make site: give OUT=web/dist/<lane>/site"; exit 2; }
+	@set -e; \
+	epoch="$${SOURCE_DATE_EPOCH:-$$(git log -1 --format=%ct HEAD)}"; \
+	wheels="$(patsubst %/,%,$(OUT))-wheel"; \
+	rm -rf "$$wheels" build/; \
+	SOURCE_DATE_EPOCH="$$epoch" $(PYTHON) -m build --wheel --outdir "$$wheels" .; \
+	rm -rf build/; \
+	set -- "$$wheels"/sarcostat-*-py3-none-any.whl; \
+	test "$$#" -eq 1 && test -f "$$1" || { echo "make site: expected one wheel in $$wheels"; exit 1; }; \
+	commit=""; \
+	rev="$$(git rev-parse HEAD 2>/dev/null)" && test -z "$$(git status --porcelain 2>/dev/null)" && commit="--commit $$rev" || true; \
+	SOURCE_DATE_EPOCH="$$epoch" PYTHON="$(PYTHON)" node web/scripts/build_site.mjs --out "$(OUT)" --wheel "$$1" $$commit
