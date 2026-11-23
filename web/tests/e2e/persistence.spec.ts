@@ -25,10 +25,10 @@ const t = en.study;
 const DEMO = readManifest(DEMO_KIT);
 
 function stubPersistence(value: boolean): void {
-  const storage = navigator.storage as StorageManager | undefined;
-  if (storage !== undefined) {
-    Object.defineProperty(storage, "persist", { value: async () => value, configurable: true });
-    Object.defineProperty(storage, "persisted", { value: async () => value, configurable: true });
+  const manager = (globalThis as unknown as { StorageManager?: { prototype: object } }).StorageManager;
+  if (manager !== undefined) {
+    Object.defineProperty(manager.prototype, "persist", { value: async () => value, configurable: true, writable: true });
+    Object.defineProperty(manager.prototype, "persisted", { value: async () => value, configurable: true, writable: true });
   }
 }
 

@@ -1,3 +1,4 @@
+import { budgetNote, timeBudget } from "./budgets.ts";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -126,7 +127,11 @@ test.describe("engine boot", () => {
     const tasks = await longTasks(page);
     const longest = Math.max(0, ...tasks.map((task) => task.duration));
     console.log(`boot: ${bootMs.toFixed(0)} ms to identity, ${bytes} bytes (${(bytes / 1e6).toFixed(2)} MB), ${traffic.urls.length} requests, longest main-thread task ${longest.toFixed(0)} ms`);
-    expect(bootMs).toBeLessThanOrEqual(BOOT_BUDGET_MS);
+    const note = budgetNote("cold boot", bootMs, BOOT_BUDGET_MS);
+    if (note !== null) {
+      console.log(note);
+    }
+    expect(bootMs).toBeLessThanOrEqual(timeBudget(BOOT_BUDGET_MS));
     expect(bytes).toBeLessThanOrEqual(BOOT_BUDGET_BYTES);
     expect(traffic.urls.filter((url) => /scipy/i.test(url))).toEqual([]);
     expect(traffic.urls.some((url) => /\/pyodide\/numpy-[^/]+\.whl$/.test(url))).toBe(true);

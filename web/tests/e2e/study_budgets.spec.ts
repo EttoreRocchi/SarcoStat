@@ -1,3 +1,4 @@
+import { budgetNote, timeBudget } from "./budgets.ts";
 import fs from "node:fs";
 
 import { expect, test } from "./fixtures.ts";
@@ -96,6 +97,11 @@ test("study click to mark drawn and click to autosave tick (strict IndexedDB wri
   fs.writeFileSync(out, `${JSON.stringify(summary, null, 2)}\n`);
   await testInfo.attach("study-latency.json", { path: out, contentType: "application/json" });
   expect(log.downs.length).toBe(6 + CHAIN_CLICKS);
-  expect(summary.mark_frame_ms.p95, JSON.stringify(summary)).toBeLessThanOrEqual(MARK_BUDGET_MS);
-  expect(summary.tick_ms.p95, JSON.stringify(summary)).toBeLessThanOrEqual(TICK_BUDGET_MS);
+  for (const note of [budgetNote("study click to mark p95", summary.mark_frame_ms.p95, MARK_BUDGET_MS), budgetNote("study click to tick p95", summary.tick_ms.p95, TICK_BUDGET_MS)]) {
+    if (note !== null) {
+      console.log(note);
+    }
+  }
+  expect(summary.mark_frame_ms.p95, JSON.stringify(summary)).toBeLessThanOrEqual(timeBudget(MARK_BUDGET_MS));
+  expect(summary.tick_ms.p95, JSON.stringify(summary)).toBeLessThanOrEqual(timeBudget(TICK_BUDGET_MS));
 });

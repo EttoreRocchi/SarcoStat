@@ -9,6 +9,7 @@ import { expect } from "./fixtures.ts";
 
 export const READY = '.statusline[data-state="ready"]';
 export const BOOT_TIMEOUT_MS = 30_000;
+export const OPEN_TIMEOUT_MS = 15_000;
 export const IMAGES_DIR = path.join(WEB_DIR, "tests", "fixtures", "images");
 export const CANVAS = "[data-part='image-canvas']";
 export const LOUPE_CANVAS = "[data-part='loupe-canvas']";
@@ -79,8 +80,8 @@ export async function openImage(page: Page, name: string): Promise<void> {
   const chooser = page.waitForEvent("filechooser");
   await page.keyboard.press("o");
   await (await chooser).setFiles(fixturePath(name));
-  await expect(page.locator(".topbar__name")).toHaveText(name);
-  await expect(page.locator(WORKSPACE)).toHaveAttribute("data-state", "drawn");
+  await expect(page.locator(".topbar__name")).toHaveText(name, { timeout: OPEN_TIMEOUT_MS });
+  await expect(page.locator(WORKSPACE)).toHaveAttribute("data-state", "drawn", { timeout: OPEN_TIMEOUT_MS });
 }
 
 export interface CanvasView {

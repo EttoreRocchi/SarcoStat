@@ -559,12 +559,12 @@ export function installStorageLog(): void {
     }
     click.call(this);
   };
-  const locks = (navigator as Navigator & { locks?: LockManager }).locks;
-  if (locks !== undefined) {
-    const request = locks.request.bind(locks) as (...args: unknown[]) => Promise<unknown>;
-    (locks as unknown as { request: (...args: unknown[]) => Promise<unknown> }).request = (...args: unknown[]) => {
+  const manager = (globalThis as unknown as { LockManager?: { prototype: { request: (...args: unknown[]) => Promise<unknown> } } }).LockManager;
+  if (manager !== undefined) {
+    const request = manager.prototype.request;
+    manager.prototype.request = function spied(this: unknown, ...args: unknown[]): Promise<unknown> {
       log.push(`lock ${String(args[0])} ${JSON.stringify(typeof args[1] === "object" ? args[1] : {})}`);
-      return request(...args);
+      return request.apply(this, args);
     };
   }
 }

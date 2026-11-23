@@ -384,8 +384,8 @@ jobs:
           mkdir -p web/dist/ci/site
           unzip -q "site/sarcostat-web-$VERSION.zip" -d web/dist/ci/site
           cmp site/BUILD.json "web/dist/ci/site/v$VERSION/BUILD.json"
-          python -m pip install "sarcostat[cli] @ file://$PWD/dist/sarcostat-$VERSION-py3-none-any.whl"
-          python -c "import sarcostat, numpy, scipy, typer; print('sarcostat', sarcostat.__version__, 'numpy', numpy.__version__, 'scipy', scipy.__version__)"
+          python -m pip install build "sarcostat[cli] @ file://$PWD/dist/sarcostat-$VERSION-py3-none-any.whl"
+          python -c "import build, sarcostat, numpy, scipy, typer; print('sarcostat', sarcostat.__version__, 'numpy', numpy.__version__, 'scipy', scipy.__version__)"
 
       - name: V-E2E
         working-directory: web

@@ -23,14 +23,22 @@ export function hasWebLocks(nav: Navigator): boolean {
   return typeof locks === "object" && locks !== null && typeof locks.request === "function";
 }
 
-export async function requestPersistence(nav: Navigator): Promise<boolean> {
+export const PERSIST_WAIT_MS = 3_000;
+
+export async function requestPersistence(nav: Navigator, waitMs: number = PERSIST_WAIT_MS): Promise<boolean> {
   const storage = (nav as Navigator & { storage?: StorageManager }).storage;
   if (storage === undefined || typeof storage.persisted !== "function") {
     return false;
   }
   try {
     if (typeof storage.persist === "function") {
-      await storage.persist();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const asked = storage.persist().catch(() => false);
+      const waited = new Promise<boolean>((resolve) => {
+        timer = setTimeout(() => resolve(false), waitMs);
+      });
+      await Promise.race([asked, waited]);
+      clearTimeout(timer);
     }
     return (await storage.persisted()) === true;
   } catch {

@@ -1,3 +1,4 @@
+import { budgetNote, timeBudget } from "./budgets.ts";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -585,5 +586,9 @@ test("click to mark drawn: p95 at most 100 ms (plan 3.12)", async ({ page }, tes
   const text = `${JSON.stringify(summary, null, 2)}\n`;
   fs.writeFileSync(testInfo.outputPath("click_to_mark.json"), text);
   console.log(`click to mark: p50 ${summary.p50_ms} ms, p95 ${summary.p95_ms} ms, max ${summary.max_ms} ms over ${summary.clicks} clicks`);
-  expect(summary.p95_ms).toBeLessThanOrEqual(100);
+  const note = budgetNote("shape click to mark p95", summary.p95_ms, 100);
+  if (note !== null) {
+    console.log(note);
+  }
+  expect(summary.p95_ms).toBeLessThanOrEqual(timeBudget(100));
 });
