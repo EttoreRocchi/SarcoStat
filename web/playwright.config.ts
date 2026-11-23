@@ -30,8 +30,8 @@ export function makeConfig(env: Env): PlaywrightTestConfig {
   ];
   if (env.CI) {
     projects.push(
-      { name: "firefox", testMatch: CROSS_BROWSER_SPECS, use: { browserName: "firefox" } },
-      { name: "webkit", testMatch: CROSS_BROWSER_SPECS, use: { browserName: "webkit" } },
+      { name: "firefox", testMatch: CROSS_BROWSER_SPECS, use: { browserName: "firefox", launchOptions: { args: [] } } },
+      { name: "webkit", testMatch: CROSS_BROWSER_SPECS, use: { browserName: "webkit", launchOptions: { args: [] } } },
     );
   }
   return {

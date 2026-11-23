@@ -10,10 +10,7 @@ import { HOST, startServer } from "../../scripts/serve.mjs";
 
 const BANNED = ["--" + "headed", "--" + "ui", "--" + "debug", "PW" + "DEBUG", "show" + "-report", "code" + "gen", "headless: " + "false"];
 
-const RUNNERS = [
-  path.join(WEB_DIR, "tests", "e2e", "study_runner.mjs"),
-  path.resolve(process.env.SARCOSTAT_PAPER_DIR ?? path.join(WEB_DIR, "..", "..", "SarcoStat-paper"), "scripts", "web_study_screenshot.mjs"),
-];
+const RUNNERS = [path.join(WEB_DIR, "tests", "e2e", "study_runner.mjs")];
 
 function filesUnder(dir: string, exts: string[]): string[] {
   if (!fs.existsSync(dir)) {
@@ -58,6 +55,9 @@ describe("Playwright configuration", () => {
     const ci = makeConfig({ CI: "true" });
     const extra = (ci.projects ?? []).filter((p) => p.use?.browserName !== "chromium");
     expect(extra.map((p) => p.use?.browserName).sort()).toEqual(["firefox", "webkit"]);
+    for (const project of extra) {
+      expect(project.use?.launchOptions?.args, `${project.name} gets no Chromium-only flag`).toEqual([]);
+    }
     for (const project of extra) {
       expect(project.testMatch).toBe(CROSS_BROWSER_SPECS);
     }
