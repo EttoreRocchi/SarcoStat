@@ -10,6 +10,7 @@ import { expect } from "./fixtures.ts";
 export const READY = '.statusline[data-state="ready"]';
 export const BOOT_TIMEOUT_MS = 30_000;
 export const OPEN_TIMEOUT_MS = 15_000;
+export const SCIPY_TIMEOUT_MS = 30_000;
 export const IMAGES_DIR = path.join(WEB_DIR, "tests", "fixtures", "images");
 export const CANVAS = "[data-part='image-canvas']";
 export const LOUPE_CANVAS = "[data-part='loupe-canvas']";

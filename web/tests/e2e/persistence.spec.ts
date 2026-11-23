@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { Page } from "@playwright/test";
+
 import { en } from "../../src/strings/en.ts";
 import { expect, test } from "./fixtures.ts";
 import {
@@ -14,6 +16,7 @@ import {
   pixelCentre,
   readManifest,
   readStudyDb,
+  reloadApp,
   sha256,
   startSession,
   storageLog,
@@ -25,11 +28,13 @@ const t = en.study;
 const DEMO = readManifest(DEMO_KIT);
 
 function stubPersistence(value: boolean): void {
-  const manager = (globalThis as unknown as { StorageManager?: { prototype: object } }).StorageManager;
-  if (manager !== undefined) {
-    Object.defineProperty(manager.prototype, "persist", { value: async () => value, configurable: true, writable: true });
-    Object.defineProperty(manager.prototype, "persisted", { value: async () => value, configurable: true, writable: true });
-  }
+  const answer = async (): Promise<boolean> => value;
+  const storage = { persist: answer, persisted: answer };
+  Object.defineProperty(navigator, "storage", { configurable: true, get: () => storage });
+}
+
+function stubbedPersisted(page: Page): Promise<boolean> {
+  return page.evaluate(() => navigator.storage.persisted());
 }
 
 test.describe("study storage in this browser", () => {
@@ -49,7 +54,7 @@ test.describe("study storage in this browser", () => {
     expect(log.filter((entry) => entry.startsWith("open "))).toEqual(log.filter((entry) => entry.startsWith("open ")).map(() => "open sarcostat-study-v1 1"));
     expect(log.filter((entry) => entry.startsWith("delete "))).toEqual([]);
     expect(log.filter((entry) => entry.startsWith("lock "))).toEqual([`lock sarcostat-study-v1:${DEMO.study_id}/${DEMO.annotator_id}/${DEMO.session_id}/${manifest} {"ifAvailable":true}`]);
-    await page.reload();
+    await reloadApp(page);
     await enterStudy(page);
     await checkBrowser(page);
     await openKit(page, DEMO_KIT);
@@ -61,6 +66,7 @@ test.describe("study storage in this browser", () => {
     test.setTimeout(120_000);
     await page.addInitScript(stubPersistence, false);
     await enterStudy(page);
+    expect(await stubbedPersisted(page), "stubbed navigator.storage.persisted()").toBe(false);
     await checkBrowser(page);
     const row = page.locator("[data-part='readiness'] [data-check='persisted']");
     await expect(row).toHaveAttribute("data-state", "warn");
@@ -72,6 +78,7 @@ test.describe("study storage in this browser", () => {
     test.setTimeout(120_000);
     await page.addInitScript(stubPersistence, true);
     await enterStudy(page);
+    expect(await stubbedPersisted(page), "stubbed navigator.storage.persisted()").toBe(true);
     await checkBrowser(page);
     const row = page.locator("[data-part='readiness'] [data-check='persisted']");
     await expect(row).toHaveAttribute("data-state", "pass");

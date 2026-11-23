@@ -11,6 +11,7 @@ import {
   openKit,
   pixelCentre,
   readStudyDb,
+  reloadApp,
   studyView,
   studyWorker,
   STUDY_OVERLAY,
@@ -50,7 +51,7 @@ test("a study worker stopped mid-item shows the Reload to resume screen; after t
   expect((await readStudyDb(page))?.records[0]).toEqual(acknowledged);
   expect((await recorder.calls("app")).filter((call) => call.cmd === "study.click")).toHaveLength(3);
 
-  await page.reload();
+  await reloadApp(page);
   await enterStudy(page);
   await checkBrowser(page);
   await openKit(page, DEMO_KIT);

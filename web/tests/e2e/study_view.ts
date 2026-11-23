@@ -115,6 +115,11 @@ export async function enterStudy(page: Page): Promise<void> {
   await expect(page.locator("[data-part='study-start']")).toBeVisible();
 }
 
+export async function reloadApp(page: Page): Promise<void> {
+  await page.reload();
+  await expect(page.locator(READY)).toBeVisible({ timeout: BOOT_TIMEOUT_MS });
+}
+
 export async function checkBrowser(page: Page): Promise<void> {
   await page.locator("[data-part='study-start'] [data-action='check']").click();
   await expect(page.locator("[data-part='study-start'] [data-action='open-kit']")).not.toHaveAttribute("aria-disabled", "true", { timeout: BOOT_TIMEOUT_MS });

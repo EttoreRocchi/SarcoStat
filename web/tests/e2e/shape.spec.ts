@@ -24,6 +24,7 @@ import {
   placeSarcomere,
   PLOTS_PANEL,
   RESULTS_PANEL,
+  SCIPY_TIMEOUT_MS,
   selectTab,
   WORKSPACE,
 } from "./workspace_view.ts";
@@ -465,7 +466,7 @@ test.describe("shape mode (M4-1)", () => {
     expect(line).toContain("Straightness and Register");
     await expect.poll(() => new URL(page.url()).hash).toBe("#/shape");
     await expect(page.locator(`${ITEMS_PANEL} .items__row--kept`)).toHaveCount((JSON.parse(input) as { items: { type: string }[] }).items.filter((item) => item.type !== "shape").length);
-    await expect(page.locator(`${RESULTS_PANEL} [data-part='results-title']`)).toBeVisible();
+    await expect(page.locator(`${RESULTS_PANEL} [data-part='results-title']`)).toBeVisible({ timeout: SCIPY_TIMEOUT_MS });
     const all = await appCommands(recorder);
     const commands = all.slice(all.indexOf("doc.load_v1"));
     expect(commands.slice(0, 3)).toEqual(["doc.load_v1", "sys.load_scipy", "results.get"]);
@@ -487,7 +488,7 @@ test.describe("shape mode (M4-1)", () => {
   test("absent modes: a chain-only file opens Home with the same line", async ({ page }) => {
     await bootShape(page);
     await openPayload(page, jsonPayload("chain_only_notice.json", goldenText("chain_only_notice")));
-    await expect.poll(() => new URL(page.url()).hash).toBe("#/");
+    await expect.poll(() => new URL(page.url()).hash, { timeout: SCIPY_TIMEOUT_MS }).toBe("#/");
     await expect(page.locator(".home [data-part='absent-modes']")).toHaveText(fill(en.absent.itemsOne, { mode: en.modes.straightness.short, kind: en.absent.kinds.chain }));
   });
 
