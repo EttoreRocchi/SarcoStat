@@ -1,17 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg">
-  <symbol id="mark" viewBox="0 0 48 48">
-    <path d="M34.6 7.04 A20 20 0 1 0 35.47 40.38" fill="none" stroke="var(--mark-ring, #003050)" stroke-width="3.4" stroke-linecap="round"/>
-    <path d="M35.47 40.38 A20 20 0 0 0 42.54 16.51" fill="none" stroke="var(--mark-light, #40A0D0)" stroke-width="3.4" stroke-linecap="round"/>
-    <path d="M37.2 29.5 A11.5 11.5 0 0 1 27 37.8" fill="none" stroke="var(--mark-light, #40A0D0)" stroke-width="1.6" stroke-dasharray="2.2 2.4" stroke-linecap="round"/>
-    <line x1="11.5" y1="15.5" x2="22" y2="15.5" stroke="var(--mark-mid, #1070B0)" stroke-width="2.4" stroke-linecap="round"/>
-    <line x1="11.5" y1="24.5" x2="20.5" y2="24.5" stroke="var(--mark-mid, #1070B0)" stroke-width="2.4" stroke-linecap="round"/>
-    <line x1="11.5" y1="33.5" x2="22" y2="33.5" stroke="var(--mark-mid, #1070B0)" stroke-width="2.4" stroke-linecap="round"/>
-    <line x1="14" y1="20" x2="19.5" y2="20" stroke="var(--mark-light, #40A0D0)" stroke-width="2.2" stroke-linecap="round"/>
-    <line x1="14" y1="29" x2="19.5" y2="29" stroke="var(--mark-light, #40A0D0)" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M10.5 12.8 L13.6 15.5 L10.5 18.2 Z M10.5 21.8 L13.6 24.5 L10.5 27.2 Z M10.5 30.8 L13.6 33.5 L10.5 36.2 Z" fill="var(--mark-ring, #003050)"/>
-    <line x1="26.2" y1="25.6" x2="35.6" y2="15.4" stroke="var(--mark-ring, #003050)" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M32.4 12.6 L40.2 10.4 L38 18.2 Z" fill="var(--mark-ring, #003050)"/>
-    <circle cx="26" cy="26" r="2.9" fill="var(--mark-ring, #003050)"/>
+  <symbol id="mark" viewBox="0 0 24 24" fill="none">
+    <path d="M15.16 3.31A9.25 9.25 0 1 0 16.62 20.01" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M16.62 20.01A9.25 9.25 0 0 0 20.69 8.84" stroke="#5DB4EA" stroke-width="2" stroke-linecap="round"/>
+    <path d="M6.5 8H11" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M5.5 12H9.25" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M6.5 16H11" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M12 12L15.49 8.51" stroke="#5DB4EA" stroke-width="1.75" stroke-linecap="round"/>
+    <path d="M18.54 5.46L13.59 7.01L16.99 10.41Z" fill="#5DB4EA" stroke="#5DB4EA" stroke-width="0.35" stroke-linejoin="round"/>
+    <circle cx="12" cy="12" r="1.9" fill="#5DB4EA"/>
   </symbol>
 
   <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">

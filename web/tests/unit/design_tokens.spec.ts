@@ -309,10 +309,15 @@ describe("components.css", () => {
 });
 
 describe("app.css", () => {
-  it("imports the design stylesheets in cascade order and nothing else", () => {
+  it("imports the design stylesheets in cascade order, then only the mode stylesheets of M4, and nothing else", () => {
     const css = read("app.css").trim();
     const imports = [...css.matchAll(/@import\s+"([^"]+)";/g)].map((m) => m[1]);
-    expect(imports).toEqual(["./fonts.css", "./tokens.css", "./base.css", "./components.css", "./modes.css"]);
+    expect(imports.slice(0, 5)).toEqual(["./fonts.css", "./tokens.css", "./base.css", "./components.css", "./modes.css"]);
+    const extra = imports.slice(5);
+    expect(new Set(extra).size).toBe(extra.length);
+    for (const name of extra) {
+      expect(["./results.css", "./study.css"]).toContain(name);
+    }
     expect(css.replace(/@import\s+"[^"]+";/g, "").trim()).toBe("");
   });
 });
@@ -329,6 +334,37 @@ describe("icons.svg", () => {
   it("has no script, style, event handler, link or URL other than the SVG namespace", () => {
     expect(svg).not.toMatch(/<script|<style|<foreignObject|\son\w+=|\sstyle=|href=|<image/i);
     const urls = [...svg.matchAll(/[a-z][a-z0-9+.-]*:\/\/[^\s"']+/gi)].map((m) => m[0]);
+    expect(urls).toEqual(["http://www.w3.org/2000/svg"]);
+  });
+  it("draws the compact logo mark (s tier, 24-unit grid, for 24-47 px) in fixed dark-chrome colours, with no CSS variable inside the symbol", () => {
+    const mark = svg.slice(svg.indexOf('<symbol id="mark"'), svg.indexOf("</symbol>") + "</symbol>".length);
+    expect(mark).toMatch(/viewBox="0 0 24 24"/);
+    expect(mark).not.toMatch(/var\(|currentColor/);
+    const colours = new Set([...mark.matchAll(/(?:stroke|fill)="(#[0-9A-F]{6})"/g)].map((m) => m[1]));
+    expect([...colours].sort()).toEqual(["#5DB4EA", "#DCE8F1"]);
+  });
+});
+
+describe("favicons", () => {
+  const html = fs.readFileSync(path.join(WEB_DIR, "index.html"), "utf8");
+  const links = [...html.matchAll(/<link rel="(icon|apple-touch-icon)" href="([^"]+)"/g)].map((m): [string, string] => [m[1] ?? "", m[2] ?? ""]);
+
+  it("are linked from index.html as an adaptive SVG, a 32 px PNG and a 180 px touch icon", () => {
+    expect(links).toEqual([
+      ["icon", "./src/assets/logo/favicon.svg"],
+      ["icon", "./src/assets/logo/favicon-32.png"],
+      ["apple-touch-icon", "./src/assets/logo/apple-touch-icon-180.png"],
+    ]);
+    for (const [, href] of links) {
+      expect(fs.existsSync(path.join(WEB_DIR, href))).toBe(true);
+    }
+  });
+
+  it("switch between the light and the dark mark with the colour scheme and load nothing", () => {
+    const icon = fs.readFileSync(path.join(WEB_DIR, "src", "assets", "logo", "favicon.svg"), "utf8");
+    expect(icon).toMatch(/@media \(prefers-color-scheme:dark\)/);
+    expect(icon).not.toMatch(/<script|<foreignObject|\son\w+=|href=|<image/i);
+    const urls = [...icon.matchAll(/[a-z][a-z0-9+.-]*:\/\/[^\s"']+/gi)].map((m) => m[0]);
     expect(urls).toEqual(["http://www.w3.org/2000/svg"]);
   });
 });
