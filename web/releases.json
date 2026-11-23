@@ -1,5 +1,11 @@
 {
   "format": "sarcostat-releases",
   "format_version": 1,
-  "releases": []
+  "releases": [
+    {
+      "version": "0.2.0b1",
+      "build_json_sha256": "f0beca4e773e39ef313f90532fc8b55c3bf04a61e65198cb9242fcf2aab9a24b",
+      "zip_sha256": "f8c1e0482faa355bd0d02022a5d201b4cf0190eac0722164d4c80e4b6f1d76c8"
+    }
+  ]
 }
