@@ -194,11 +194,13 @@ export interface MockOptions {
   identity?: Identity;
   silent?: boolean;
   stages?: BootStage[];
+  loadedModules?: readonly string[];
 }
 
 export class MockWorker implements WorkerLike {
   readonly posted: { message: ToWorker; transfer: Transferable[] }[] = [];
   readonly received: RequestEnvelope[] = [];
+  readonly probed: string[][] = [];
   terminated = false;
   silent: boolean;
   private readonly listeners = new Map<string, ((event: Event) => void)[]>();
@@ -235,6 +237,19 @@ export class MockWorker implements WorkerLike {
         this.send({ kind: "boot", stage });
       }
       this.send({ kind: "identity", identity: this.identity });
+      return;
+    }
+    if (message.kind === "modules") {
+      this.probed.push(message.names);
+      if (!this.silent) {
+        const present = new Set(this.options.loadedModules ?? []);
+        const loaded = message.names.filter((name) => present.has(name));
+        queueMicrotask(() => {
+          if (!this.terminated) {
+            this.send({ kind: "modules", loaded });
+          }
+        });
+      }
       return;
     }
     this.received.push(message.request);

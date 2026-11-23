@@ -359,13 +359,19 @@ class TestInputsAndOutputs:
         for image, entry in zip(results.images, documents, strict=True):
             view = results_view(image)
             assert set(view) == {"sentences", "tables", "plot_data"}
-            assert set(view["plot_data"]) == {"shape", "chains", "register"}
+            assert set(view["plot_data"]) == {
+                "shape",
+                "shape_rectangular_band",
+                "chains",
+                "register",
+            }
             assert view == results_view(entry)
             json.dumps(view, allow_nan=False)
 
     def test_plot_data_holds_raw_numbers(self) -> None:
         plot = results_report(analyze_file(GUI))["images"][0]["plot_data"]
         assert plot["shape"][0]["shape_index"] == pytest.approx(1.0538166876780954)
+        assert plot["shape_rectangular_band"] == [0.95, 1.05]
         assert plot["chains"][0]["headings_deg"] == [0.0] * 5
         assert plot["register"][0]["correlation_lags"] == [1, 2]
         assert plot["register"][0]["phases_deg"][0] == pytest.approx(88.0)
@@ -387,3 +393,49 @@ class TestInputsAndOutputs:
             [sys.executable, "-c", code], capture_output=True, text=True, check=True
         )
         assert json.loads(result.stdout.strip().splitlines()[-1]) == []
+
+
+class TestShapePanelData:
+    """What the web app's Results tab reads: stability share, band, sentence order, notes."""
+
+    def _view(self, sigma: float | None) -> dict[str, Any]:
+        from sarcostat.engine.annotate import AnnotationSession
+
+        doc = json.loads(GUI.read_text(encoding="utf-8"))
+        image = next(
+            entry
+            for entry in doc["images"]
+            if any(
+                item["type"] == "shape" and item["image_id"] == entry["image_id"]
+                for item in doc["items"]
+            )
+        )
+        doc["images"] = [image]
+        doc["items"] = [item for item in doc["items"] if item["image_id"] == image["image_id"]]
+        session = AnnotationSession()
+        session.doc_load_v1(json.dumps(doc))
+        session.doc_set_click_error(sigma)
+        analysis = session.analysis()
+        assert analysis is not None
+        return results_view(analysis)
+
+    def test_stability_share_is_the_raw_class_stability(self) -> None:
+        with_sigma = self._view(2.0)
+        table = with_sigma["tables"]["sarcomeres"]
+        measured = [row for row in table["rows"] if row[-1] == "measured"]
+        shares = with_sigma["plot_data"]["shape"]
+        assert len(shares) == len(measured) > 0
+        for point, row in zip(shares, measured, strict=True):
+            assert isinstance(point["stability"], float)
+            assert row[5] == format_number(point["stability"], "percent")
+        assert all(p["stability"] is None for p in self._view(None)["plot_data"]["shape"])
+
+    def test_first_sentences_are_the_scale_and_the_click_error(self) -> None:
+        view = self._view(None)
+        assert view["sentences"][0].startswith(("Scale:", "No scale is set"))
+        assert view["sentences"][1].startswith("No click error is set")
+        assert self._view(2.0)["sentences"][1].startswith("Click error: σ = ")
+
+    def test_sarcomere_notes_are_si_then_asr_and_cur_then_stability(self) -> None:
+        assert self._view(2.0)["tables"]["sarcomeres"]["notes"] == list(reports.SHAPE_NOTES)
+        assert self._view(None)["tables"]["sarcomeres"]["notes"] == list(reports.SHAPE_NOTES[:2])

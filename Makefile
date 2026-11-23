@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 .PHONY: help install lint lint-fix format format-check typecheck check pre-commit \
-        test clean build-check publish publish-test smoke site
+        test clean build-check publish publish-test smoke site web-serve
 
 # Colours
 BOLD  := \033[1m
@@ -11,6 +11,7 @@ CYAN  := \033[36m
 SRC   := src/sarcostat
 TESTS := tests
 PYTHON ?= python
+WEB_PORT ?= 8765
 
 help:  ## Show this help message
 	@printf "$(BOLD)SarcoStat - available targets$(RESET)\n\n"
@@ -86,3 +87,11 @@ site:  ## Build the web version folder OUT/v<version> from a fresh wheel (OUT=we
 	commit=""; \
 	rev="$$(git rev-parse HEAD 2>/dev/null)" && test -z "$$(git status --porcelain 2>/dev/null)" && commit="--commit $$rev" || true; \
 	SOURCE_DATE_EPOCH="$$epoch" PYTHON="$(PYTHON)" node web/scripts/build_site.mjs --out "$(OUT)" --wheel "$$1" $$commit
+
+web-serve:  ## Build the web app from this tree and serve it on http://127.0.0.1:$(WEB_PORT)/ (default 8765; Ctrl+C stops it)
+	@test -x web/.cache/toolchain/node/bin/node || { echo "make web-serve: first run bash web/scripts/fetch_node.sh, then npm ci in web/"; exit 2; }
+	@test -d web/node_modules || { echo "make web-serve: first run npm ci in web/ with web/.cache/toolchain/node/bin on PATH"; exit 2; }
+	@export PATH="$(CURDIR)/web/.cache/toolchain/node/bin:$$PATH"; \
+	$(MAKE) --no-print-directory site OUT=web/dist/local/site PYTHON="$(PYTHON)" && \
+	echo "make web-serve: open http://127.0.0.1:$(WEB_PORT)/$$(cd web/dist/local/site && ls -d v*/ | head -1)" && \
+	node web/scripts/serve.mjs --root web/dist/local/site --port $(WEB_PORT)

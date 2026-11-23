@@ -12,12 +12,19 @@ It returns a JSON-safe dictionary with exactly three keys:
   each present only when the image has such results; every cell is a string
   (``""`` when a value does not apply), numbers already formatted with their units;
   ``notes`` are the plain-language lines of the table's metrics;
-- ``plot_data``: raw numbers (``null`` when not finite), always with the three names
-  ``shape`` (list of ``{"sarcomere_id", "shape_index", "u_shape_index", "shape_class"}``),
-  ``chains`` (list of ``{"chain", "headings_deg": [..], "turning_deg": [..],
+- ``plot_data``: raw numbers (``null`` when not finite), always with the four names
+  ``shape`` (list of ``{"sarcomere_id", "shape_index", "u_shape_index", "shape_class",
+  "stability"}``, ``stability`` the share of simulated re-annotations that keep the
+  class, ``null`` without a click error), ``shape_rectangular_band`` (``[low, high]``:
+  an SI inside this closed interval is rectangular or square, below it barrel, above
+  it hourglass), ``chains`` (list of ``{"chain", "headings_deg": [..], "turning_deg": [..],
   "mean_heading_deg", "mean_vector_length", "reference_direction_deg"}``) and
   ``register`` (list of ``{"pair", "phases_deg": [..], "correlation_lags": [..],
   "correlation_values": [..]}``).
+
+The first sentence is always the scale; when the image has sarcomeres, the
+second is the click error. Notes of the ``sarcomeres`` table: SI, then AsR and
+Cur, then (with a click error) the stability of the class.
 
 Every number SarcoStat shows to a person, in the web app or on the command
 line, is formatted here, by :func:`format_number`, from the results of
@@ -382,6 +389,7 @@ def _shape_lines(image: Mapping[str, Any]) -> tuple[list[str], list[list[str]], 
                 "shape_index": g["shape_index"],
                 "u_shape_index": u.get("u_shape_index"),
                 "shape_class": shape_class,
+                "stability": None if st is None else _finite(st["stability"]),
             }
         )
     return sentences, rows, points
@@ -639,6 +647,13 @@ def _register_lines(image: Mapping[str, Any]) -> tuple[list[str], list[list[str]
     return sentences, rows, points
 
 
+def _rectangular_band() -> list[float]:
+    """The SI interval of the rectangular (and square) class: ``[1 - tol, 1 + tol]``."""
+    from sarcostat.analysis import SHAPE_TOLERANCE
+
+    return [1.0 - SHAPE_TOLERANCE, 1.0 + SHAPE_TOLERANCE]
+
+
 def _table(
     title: str, columns: Sequence[str], rows: list[list[str]], notes: Sequence[str]
 ) -> dict[str, Any]:
@@ -669,7 +684,12 @@ def results_view(image: Any) -> dict[str, Any]:
     unit = str(settings["unit"])
     sentences = [_scale_sentence(settings)]
     tables: dict[str, Any] = {}
-    plot_data: dict[str, Any] = {"shape": [], "chains": [], "register": []}
+    plot_data: dict[str, Any] = {
+        "shape": [],
+        "shape_rectangular_band": _rectangular_band(),
+        "chains": [],
+        "register": [],
+    }
     if image["sarcomeres"]:
         sentences.append(_click_sentence(settings))
     if image["chains"]:

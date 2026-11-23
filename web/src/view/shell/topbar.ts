@@ -10,6 +10,7 @@ import { MODE_ICONS } from "./rail.ts";
 export interface TopbarHandlers {
   open(): void;
   keys(): void;
+  scale(): void;
 }
 
 export interface Topbar {
@@ -31,7 +32,15 @@ export function createTopbar(doc: Document, menu: ExportMenu, handlers: TopbarHa
   const mode = el(doc, "div", { class: "topbar__mode" }, modeIcon, el(doc, "div", { class: "topbar__heading" }, title, desc));
   const fileName = el(doc, "span", { class: "topbar__name" });
   const fileMeta = el(doc, "span", { class: "topbar__file-meta t-num" });
-  const scale = el(doc, "span", { class: "topbar__scale", attrs: { title: en.topbar.scaleLabel } });
+  const scale = button(doc, "topbar__scale t-num");
+  scale.title = en.topbar.scaleLabel;
+  scale.setAttribute("aria-label", en.topbar.scaleLabel);
+  scale.dataset.action = "scale";
+  scale.addEventListener("click", () => {
+    if (scale.getAttribute("aria-disabled") !== "true") {
+      handlers.scale();
+    }
+  });
   const file = el(doc, "div", { class: "topbar__file", data: { part: "file" } }, icon(doc, "i-image", "ic ic--md"), fileName, fileMeta, scale);
   const unsavedText = el(doc, "span");
   const unsaved = el(doc, "span", { class: "unsaved", attrs: { role: "status" }, data: { part: "unsaved" } }, el(doc, "span", { class: "unsaved__dot", attrs: { "aria-hidden": "true" } }), unsavedText);
@@ -72,6 +81,7 @@ export function createTopbar(doc: Document, menu: ExportMenu, handlers: TopbarHa
         fileMeta.textContent = fill(en.topbar.size, { width: image.width_px, height: image.height_px });
         const settings = state.session?.settings;
         scale.textContent = settings === undefined ? "" : formatScale(settings.pixel_size, settings.unit);
+        scale.setAttribute("aria-label", `${en.topbar.scaleLabel}: ${scale.textContent}`);
       }
       const label = annotating ? notExportedLabel(state) : null;
       unsaved.hidden = label === null;
@@ -86,6 +96,7 @@ export function createTopbar(doc: Document, menu: ExportMenu, handlers: TopbarHa
       setDisabled(open, !ready);
       open.title = ready ? `${en.topbar.openLabel} (O)` : en.topbar.engineStarting;
       setDisabled(menu.trigger, !ready);
+      setDisabled(scale, !ready);
       if (!menu.isOpen) {
         menu.render(exportEntries(state));
       }

@@ -70,6 +70,10 @@ export const SHEET: readonly SheetGroup[] = [
       { keys: ["S"], text: r.studySkip },
       { keys: ["P"], text: r.studyPause },
       { keys: [k.enter], text: r.studyNext },
+      { keys: ["N"], text: r.studyNextMyofibril },
+      { keys: ["+", "−"], text: r.studyZoom },
+      { keys: ["F"], text: r.studyFit },
+      { keys: [k.space], text: r.studyPan },
     ],
   },
 ];

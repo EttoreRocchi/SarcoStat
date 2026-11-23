@@ -5,7 +5,7 @@ export interface Keyboard {
   readonly captured: boolean;
 }
 
-export function installKeyboard(doc: Document, base: KeyHandler, blocked: () => boolean = () => false): Keyboard {
+export function installKeyboard(doc: Document, base: KeyHandler, blocked: () => boolean = () => false, baseUp: KeyHandler | null = null): Keyboard {
   const layers: KeyHandler[] = [];
   doc.addEventListener("keydown", (event) => {
     if (blocked()) {
@@ -14,6 +14,9 @@ export function installKeyboard(doc: Document, base: KeyHandler, blocked: () => 
     const top = layers[layers.length - 1];
     (top ?? base)(event);
   });
+  if (baseUp !== null) {
+    doc.addEventListener("keyup", (event) => baseUp(event));
+  }
   return {
     push(handler) {
       layers.push(handler);

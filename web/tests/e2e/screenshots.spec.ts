@@ -1,77 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { WEB_DIR } from "../../scripts/lane.mjs";
 import { BRIDGE_VERSION } from "../../src/worker/protocol.ts";
 import { comparePngBuffers } from "../screenshots/png.mjs";
 import { shotsSettings } from "../screenshots/shots.mjs";
-import { expect, test, type Engine, type Recorder } from "./fixtures.ts";
-import { clickPixel, openImage, pendingDots, READY } from "./workspace_view.ts";
+import { expect, test } from "./fixtures.ts";
+import { attempt, BOOT_TIMEOUT_MS, GUARD_CLICKS, inShape, openApp, shown, type ShotState } from "./shots_common.ts";
+import { SHAPE_STATES } from "./shots_shape.ts";
+import { STUDY_STATES } from "./shots_study.ts";
+import { clickPixel, pendingDots } from "./workspace_view.ts";
 
 const SETTINGS = shotsSettings();
 const VIEWPORT = { width: 1440, height: 900 };
 const MAX_DIFF_PIXELS = 0;
 const MASK_COLOR = "#FF00FF";
-const BUILD_IDENTITY = ['.statusline [data-item="version"]', ".statusline .statusline__hash"];
-const REACH_TIMEOUT_MS = 5_000;
-const BOOT_TIMEOUT_MS = 30_000;
-const IMAGE = "grey_64x48.png";
-const GUARD_CLICKS: readonly (readonly [number, number])[] = [
-  [10, 5],
-  [10, 40],
-];
+const BUILD_IDENTITY = ['.statusline [data-item="version"]', ".statusline .statusline__hash", "[data-part='id-build']"];
 
-interface Reach {
-  page: Page;
-  engine: Engine;
-  recorder: Recorder;
-}
-
-interface ShotState {
-  name: string;
-  title: string;
-  story: string;
-  reach(context: Reach): Promise<string | null>;
-}
-
-async function shown(locator: Locator, timeout = REACH_TIMEOUT_MS): Promise<boolean> {
-  try {
-    await locator.first().waitFor({ state: "visible", timeout });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function attempt(what: string, step: () => Promise<unknown>): Promise<string | null> {
-  try {
-    await step();
-    return null;
-  } catch (error) {
-    return `${what}: ${(error instanceof Error ? error.message : String(error)).split("\n")[0]}`;
-  }
-}
-
-async function openApp(context: Reach, hash: string): Promise<string | null> {
-  await context.page.goto(`./${hash}`);
-  await context.engine.ready();
-  return (await shown(context.page.locator(READY), BOOT_TIMEOUT_MS)) ? null : "the status line never reached data-state=ready";
-}
-
-async function inShape(context: Reach, withImage: boolean): Promise<string | null> {
-  const missing = await openApp(context, "#/shape");
-  if (missing !== null) {
-    return missing;
-  }
-  if (!(await shown(context.page.locator('.shell[data-mode="shape"] [data-part="empty"]')))) {
-    return "#/shape shows no shape-mode shell with its empty stage ([data-part=empty])";
-  }
-  return withImage ? attempt(`opening ${IMAGE} with O and the file chooser`, () => openImage(context.page, IMAGE)) : null;
-}
-
-const STATES: ShotState[] = [
+const BASE_STATES: ShotState[] = [
   {
     name: "home",
     title: "Home",
@@ -190,6 +138,8 @@ const STATES: ShotState[] = [
     },
   },
 ];
+
+const STATES: ShotState[] = [...BASE_STATES, ...SHAPE_STATES, ...STUDY_STATES];
 
 async function settle(page: Page): Promise<{ fonts: string[]; reducedMotion: boolean; dpr: number; width: number; height: number }> {
   return page.evaluate(async () => {

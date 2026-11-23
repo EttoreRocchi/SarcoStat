@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -190,4 +191,108 @@ export function readback(page: Page, selector: string, width: number, height: nu
     },
     { width, height, expected, tolerance },
   );
+}
+
+export const REPO_DIR = path.resolve(WEB_DIR, "..");
+export const GOLDEN_DIR = path.join(REPO_DIR, "tests", "golden", "web");
+export const EXAMPLES_DIR = path.join(REPO_DIR, "examples");
+export const RESULTS_PANEL = "[data-part='panel-results']";
+export const ITEMS_PANEL = "[data-part='panel-items']";
+export const PLOTS_PANEL = "[data-part='panel-plots']";
+
+export interface FilePayload {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+export function pythonExecutable(): string {
+  const python = process.env.SARCOSTAT_PYTHON;
+  if (python === undefined || python === "") {
+    throw new Error("SARCOSTAT_PYTHON must name a Python with sarcostat installed (the CPython side of the shape parity checks)");
+  }
+  return python;
+}
+
+export function cpython(script: string, args: readonly string[] = [], input?: string): string {
+  return execFileSync(pythonExecutable(), ["-c", script, ...args], { encoding: "utf8", input, env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" }, cwd: REPO_DIR, maxBuffer: 64 * 1024 * 1024 });
+}
+
+const SYNTHETIC_PNG = ["import sys", "sys.path.insert(0, 'tools')", "from make_golden import synthetic_png", "w, h = int(sys.argv[1]), int(sys.argv[2])", "sys.stdout.buffer.write(b''.join(synthetic_png(w, h)))"].join("\n");
+
+export function goldenImage(fileName: string): FilePayload {
+  const synthetic = /^synthetic_(\d+)x(\d+)\.png$/.exec(fileName);
+  if (synthetic !== null) {
+    const buffer = execFileSync(pythonExecutable(), ["-c", SYNTHETIC_PNG, synthetic[1] as string, synthetic[2] as string], { cwd: REPO_DIR, maxBuffer: 64 * 1024 * 1024 });
+    return { name: fileName, mimeType: "image/png", buffer };
+  }
+  return { name: fileName, mimeType: fileName.endsWith(".png") ? "image/png" : "image/jpeg", buffer: fs.readFileSync(path.join(EXAMPLES_DIR, fileName)) };
+}
+
+export function goldenText(name: string): string {
+  return fs.readFileSync(path.join(GOLDEN_DIR, `${name}.json`), "utf8");
+}
+
+export function jsonPayload(name: string, text: string): FilePayload {
+  return { name, mimeType: "application/json", buffer: Buffer.from(text, "utf8") };
+}
+
+export async function openPayload(page: Page, payload: FilePayload | string): Promise<void> {
+  const chooser = page.waitForEvent("filechooser");
+  await page.keyboard.press("o");
+  await (await chooser).setFiles(payload);
+}
+
+export async function openGoldenImage(page: Page, fileName: string): Promise<void> {
+  await openPayload(page, goldenImage(fileName));
+  await expect(page.locator(".topbar__name")).toHaveText(fileName);
+  await expect(page.locator(WORKSPACE)).toHaveAttribute("data-state", "drawn", { timeout: 20_000 });
+}
+
+export async function placeSarcomere(page: Page, points: readonly (readonly [number, number])[], confirm = true): Promise<void> {
+  for (const [x, y] of points) {
+    const before = await pendingDots(page).count();
+    await clickPixel(page, x, y);
+    await expect(pendingDots(page)).toHaveCount(before + 1);
+  }
+  if (confirm) {
+    const items = await page.locator(`${ITEMS_PANEL} .items__row`).count();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(`${ITEMS_PANEL} .items__row`)).toHaveCount(items + 1);
+    await expect(pendingDots(page)).toHaveCount(0);
+  }
+}
+
+export async function selectTab(page: Page, name: "results" | "plots" | "items"): Promise<void> {
+  await page.locator(`.tabs__tab[data-tab='${name}']`).click();
+  await expect(page.locator(`.tabs__tab[data-tab='${name}']`)).toHaveAttribute("aria-selected", "true");
+}
+
+export async function waitToastGone(page: Page): Promise<void> {
+  await expect(page.locator(".toast")).toBeHidden({ timeout: 10_000 });
+}
+
+export interface RefText {
+  ref: string;
+  text: string;
+}
+
+export function refTexts(page: Page, selector: string): Promise<RefText[]> {
+  return page.locator(`${selector} [data-ref]`).evaluateAll((nodes) =>
+    nodes.flatMap((node) => {
+      const ref = (node as HTMLElement).dataset.ref ?? "";
+      return ref === "" ? [] : [{ ref, text: node.textContent ?? "" }];
+    }),
+  );
+}
+
+export function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalJson).join(",")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
 }

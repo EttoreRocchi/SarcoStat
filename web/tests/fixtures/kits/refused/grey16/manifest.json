@@ -1,0 +1,64 @@
+{
+  "annotator_id": "A1",
+  "format": "sarcostat-session-manifest",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem_1",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "scale bar"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2200
+    },
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem_3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "scale bar"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "display_transform": "identity",
+      "image_id": "tem_3",
+      "item_id": "R-grey16",
+      "kit_crop_offset": [
+        200,
+        200
+      ],
+      "kit_crop_size": [
+        64,
+        48
+      ],
+      "kit_file": "items/001.png",
+      "kit_sha256": "df6037f25704d74ac028eab20fa73ff93a8a1b0b34184fe55c606f6cf9c83cbd",
+      "roi": [
+        210,
+        210,
+        250,
+        240
+      ],
+      "target_id": "R",
+      "type": "shape"
+    }
+  ],
+  "session_id": "S1",
+  "study_id": "refused"
+}

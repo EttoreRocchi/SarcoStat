@@ -4,7 +4,7 @@ import type { AppState, ModeState, OpenedImage } from "../../state/store.ts";
 import { en } from "../../strings/en.ts";
 import { fill } from "../../strings/format.ts";
 import { button, el, kbd } from "../dom.ts";
-import { targetKind } from "../shell/shortcuts.ts";
+import type { ViewKeyAction } from "../shell/shortcuts.ts";
 import { createImageCanvas } from "./canvas.ts";
 import { createLoupe } from "./loupe.ts";
 import { createOverlay } from "./overlays.ts";
@@ -47,6 +47,7 @@ export interface Workspace {
   readonly element: HTMLElement;
   readonly status: WorkspaceStatus;
   render(state: AppState): void;
+  view(action: ViewKeyAction): void;
 }
 
 interface Press {
@@ -245,7 +246,22 @@ export function createWorkspace(doc: Document, host: HTMLElement, context: Works
       redraw();
       return;
     }
+    const show = (decoded: DecodedImage): void => {
+      image = decoded;
+      fitted = true;
+      if (decoded.sixteenBit) {
+        notice.textContent = t.sixteenBit;
+        notice.hidden = false;
+      }
+      canvas.element.setAttribute("aria-label", fill(t.canvasLabel, { file: source.fileName, width: decoded.width, height: decoded.height }));
+      redraw();
+    };
     setStatus("decoding");
+    if (source.decoded !== undefined) {
+      redraw();
+      show(source.decoded);
+      return;
+    }
     redraw();
     decodeImage(source.bytes, source.kind, source.width, source.height).then(
       (decoded) => {
@@ -253,14 +269,7 @@ export function createWorkspace(doc: Document, host: HTMLElement, context: Works
           decoded.bitmap.close();
           return;
         }
-        image = decoded;
-        fitted = true;
-        if (decoded.sixteenBit) {
-          notice.textContent = t.sixteenBit;
-          notice.hidden = false;
-        }
-        canvas.element.setAttribute("aria-label", fill(t.canvasLabel, { file: source.fileName, width: decoded.width, height: decoded.height }));
-        redraw();
+        show(decoded);
       },
       () => {
         if (mine !== token) {
@@ -403,81 +412,43 @@ export function createWorkspace(doc: Document, host: HTMLElement, context: Works
   fitButton.addEventListener("click", () => fit());
   layersButton.addEventListener("click", () => toggleLayers());
 
-  const keysLive = (event: KeyboardEvent): boolean =>
-    image !== null &&
-    view !== null &&
-    host.isConnected &&
-    host.closest("[inert]") === null &&
-    !event.defaultPrevented &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.isComposing &&
-    targetKind(event.target) !== "text";
-
-  doc.addEventListener("keydown", (event) => {
-    if (!keysLive(event)) {
-      return;
-    }
-    if (event.key === " ") {
-      if (targetKind(event.target) !== "other") {
-        return;
-      }
-      event.preventDefault();
-      if (!spaceHeld) {
-        spaceHeld = true;
-        refreshTools();
-        updateLoupe();
-      }
-      return;
-    }
-    const once = !event.repeat;
-    switch (event.key) {
-      case "+":
-      case "=":
-        zoomStep(1);
-        break;
-      case "-":
-      case "_":
-      case "−":
-        zoomStep(-1);
-        break;
-      case "f":
-      case "F":
-        if (once) {
-          fit();
-        }
-        break;
-      case "l":
-      case "L":
-        if (once) {
-          toggleLayers();
-        }
-        break;
-      case "a":
-      case "A":
-        if (once) {
-          setTool("annotate");
-        }
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
-  });
-  const dropSpace = (): void => {
-    if (spaceHeld) {
-      spaceHeld = false;
+  const setSpace = (held: boolean): void => {
+    if (spaceHeld !== held) {
+      spaceHeld = held;
       refreshTools();
       updateLoupe();
     }
   };
-  doc.addEventListener("keyup", (event) => {
-    if (event.key === " ") {
-      dropSpace();
+
+  const onView = (action: ViewKeyAction): void => {
+    if (action === "pan-end") {
+      setSpace(false);
+      return;
     }
-  });
-  win.addEventListener("blur", dropSpace);
+    if (image === null || view === null || !host.isConnected) {
+      return;
+    }
+    switch (action) {
+      case "zoom-in":
+        zoomStep(1);
+        return;
+      case "zoom-out":
+        zoomStep(-1);
+        return;
+      case "fit":
+        fit();
+        return;
+      case "layers":
+        toggleLayers();
+        return;
+      case "annotate":
+        setTool("annotate");
+        return;
+      case "pan-start":
+        setSpace(true);
+        return;
+    }
+  };
 
   setStatus("empty");
   redraw();
@@ -487,6 +458,7 @@ export function createWorkspace(doc: Document, host: HTMLElement, context: Works
     get status() {
       return status;
     },
+    view: (action) => onView(action),
     render(state) {
       if (state.session !== session) {
         session = state.session;

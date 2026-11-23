@@ -1,6 +1,7 @@
 import {
   BRIDGE_VERSION,
   COMMAND_TIMEOUT_MS,
+  SCIPY_TIMEOUT_MS,
   HANDSHAKE_COMMAND,
   decodeBuffers,
   encodeBuffers,
@@ -43,6 +44,8 @@ export class EngineError extends Error {
   }
 }
 
+export const STUDY_FAMILY = "study.";
+
 interface Pending {
   cmd: string;
   resolve(value: unknown): void;
@@ -75,6 +78,7 @@ export class EngineClient {
   private readonly listener: ClientListener;
   private readonly timeoutMs: number;
   private readonly pending = new Map<RequestId, Pending>();
+  private readonly probes: { resolve(loaded: string[]): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> }[] = [];
   private nextId = 1;
   private current: ClientState = "idle";
 
@@ -110,7 +114,40 @@ export class EngineClient {
     if (this.current !== "ready") {
       return Promise.reject(new EngineError("refused", `the engine is ${this.current === "failed" ? "stopped" : "not ready"}`));
     }
+    if (cmd.startsWith(STUDY_FAMILY) && [...this.pending.values()].some((pending) => pending.cmd.startsWith(STUDY_FAMILY))) {
+      return Promise.reject(new EngineError("refused", `${cmd}: another study command is still in the engine; study commands run one at a time`));
+    }
     return this.send(cmd, args) as Promise<CommandResult<C>>;
+  }
+
+  close(): void {
+    if (this.current === "failed") {
+      return;
+    }
+    this.current = "failed";
+    for (const pending of this.pending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(new EngineError("refused", "the engine was closed"));
+    }
+    this.pending.clear();
+    for (const probe of this.probes.splice(0)) {
+      clearTimeout(probe.timer);
+      probe.reject(new EngineError("refused", "the engine was closed"));
+    }
+    this.worker.terminate();
+  }
+
+  modules(names: readonly string[]): Promise<string[]> {
+    if (this.current !== "ready") {
+      return Promise.reject(new EngineError("refused", `the engine is ${this.current === "failed" ? "stopped" : "not ready"}`));
+    }
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.fail("timeout", `the module probe got no answer within ${Math.round(this.timeoutMs / 1000)} s`);
+      }, this.timeoutMs);
+      this.probes.push({ resolve, reject, timer });
+      this.worker.postMessage({ kind: "modules", names: [...names] }, []);
+    });
   }
 
   private send(cmd: string, args: unknown): Promise<unknown> {
@@ -118,9 +155,10 @@ export class EngineClient {
     const encoded = encodeBuffers(args);
     const buffers = encoded.buffers.map(ownBuffer);
     return new Promise((resolve, reject) => {
+      const limit = cmd === "sys.load_scipy" ? Math.max(this.timeoutMs, SCIPY_TIMEOUT_MS) : this.timeoutMs;
       const timer = setTimeout(() => {
-        this.fail("timeout", `${cmd} got no answer within ${Math.round(this.timeoutMs / 1000)} s`);
-      }, this.timeoutMs);
+        this.fail("timeout", `${cmd} got no answer within ${Math.round(limit / 1000)} s`);
+      }, limit);
       this.pending.set(id, { cmd, resolve, reject, timer });
       try {
         this.worker.postMessage(
@@ -160,6 +198,14 @@ export class EngineClient {
       case "response":
         this.onResponse(message);
         return;
+      case "modules": {
+        const probe = this.probes.shift();
+        if (probe !== undefined) {
+          clearTimeout(probe.timer);
+          probe.resolve(message.loaded);
+        }
+        return;
+      }
     }
   }
 
@@ -231,6 +277,10 @@ export class EngineClient {
       pending.reject(new EngineError("refused", `the engine stopped: ${message}`));
     }
     this.pending.clear();
+    for (const probe of this.probes.splice(0)) {
+      clearTimeout(probe.timer);
+      probe.reject(new EngineError("refused", `the engine stopped: ${message}`));
+    }
     this.worker.terminate();
     this.listener.fatal(code, message);
   }

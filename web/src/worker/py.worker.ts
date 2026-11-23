@@ -47,6 +47,7 @@ let failed = false;
 let engine: { py: PyodideInterface; call: PyCall } | null = null;
 let queue: Promise<void> = Promise.resolve();
 const pendingBeforeReady: { request: RequestEnvelope; buffers: Uint8Array[] }[] = [];
+const probesBeforeReady: string[][] = [];
 const runtimeErrors: string[] = [];
 
 function post(message: FromWorker, transfer: Transferable[] = []): void {
@@ -160,6 +161,41 @@ async function boot(build: BuildInfo, base: string): Promise<void> {
   for (const pending of pendingBeforeReady.splice(0)) {
     enqueue(pending.request, pending.buffers);
   }
+  for (const names of probesBeforeReady.splice(0)) {
+    enqueueProbe(names);
+  }
+}
+
+interface PyModules {
+  has(name: string): boolean;
+  destroy(): void;
+}
+
+function loadedModules(names: readonly string[]): string[] {
+  if (engine === null) {
+    throw new Error("the engine is not loaded");
+  }
+  const sys = engine.py.pyimport("sys") as { modules: PyModules; destroy(): void };
+  const modules = sys.modules;
+  try {
+    return names.filter((name) => modules.has(name));
+  } finally {
+    modules.destroy();
+    sys.destroy();
+  }
+}
+
+function enqueueProbe(names: string[]): void {
+  queue = queue.then(() => {
+    if (failed || engine === null) {
+      return;
+    }
+    try {
+      post({ kind: "modules", loaded: loadedModules(names) });
+    } catch (error) {
+      fail("worker_died", `module probe: ${errorText(error)}`);
+    }
+  });
 }
 
 function dispatch(request: RequestEnvelope, buffers: Uint8Array[]): { response: ResponseEnvelope; buffers: Uint8Array[] } {
@@ -212,6 +248,17 @@ function onMessage(message: ToWorker): void {
       const detail = runtimeErrors.length > 0 ? ` (${runtimeErrors.slice(-3).join(" | ")})` : "";
       fail("boot_failed", `${errorText(error)}${detail}`);
     });
+    return;
+  }
+  if (message.kind === "modules") {
+    if (failed) {
+      return;
+    }
+    if (engine === null) {
+      probesBeforeReady.push(message.names);
+    } else {
+      enqueueProbe(message.names);
+    }
     return;
   }
   if (failed) {

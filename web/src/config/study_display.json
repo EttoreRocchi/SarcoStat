@@ -1,0 +1,15 @@
+{
+  "display_window": false,
+  "format": "sarcostat-study-display",
+  "format_version": 1,
+  "loupe": {
+    "factor": 3
+  },
+  "smoothing": false,
+  "zoom": {
+    "factor": 1.25,
+    "from": "fit",
+    "max_css_px_per_image_px": 8
+  },
+  "zoom_percentage": false
+}

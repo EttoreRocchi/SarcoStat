@@ -1,7 +1,8 @@
+import markUrl from "../../assets/logo/sarcostat-mark-m-dark.svg?url";
 import { isAbsent, keyOf, type RailRoute } from "../../router.ts";
 import { en } from "../../strings/en.ts";
 import { fill } from "../../strings/format.ts";
-import type { AppState } from "../../state/store.ts";
+import { absentLine, type AppState } from "../../state/store.ts";
 import { button, el, kbd, setDisabled } from "../dom.ts";
 import { icon } from "../icons.ts";
 import { MODE_ICONS, panelId, tabId } from "../shell/rail.ts";
@@ -63,6 +64,9 @@ export function createHome(doc: Document, absentFamilies: readonly string[], han
       handlers.open();
     }
   });
+  const absentText = el(doc, "span");
+  const absent = el(doc, "p", { class: "note home__absent", attrs: { role: "note" }, data: { part: "absent-modes" } }, icon(doc, "i-warn", "note__icon"), absentText);
+  absent.hidden = true;
   const current = el(
     doc,
     "section",
@@ -70,6 +74,7 @@ export function createHome(doc: Document, absentFamilies: readonly string[], han
     el(doc, "h2", { class: "t-eyebrow", text: en.home.current, attrs: { id: "home-current-title" } }),
     currentName,
     currentMeta,
+    absent,
     el(doc, "div", { class: "home__current-actions" }, open),
   );
   const hero = el(
@@ -80,7 +85,7 @@ export function createHome(doc: Document, absentFamilies: readonly string[], han
       doc,
       "div",
       { class: "home__brand" },
-      icon(doc, "mark", "home__mark"),
+      el(doc, "img", { class: "home__mark", attrs: { src: markUrl, alt: "", "aria-hidden": "true" } }),
       el(
         doc,
         "div",
@@ -126,6 +131,9 @@ export function createHome(doc: Document, absentFamilies: readonly string[], han
       currentName.textContent = image === null ? en.home.noImage : image.file_name;
       currentMeta.textContent = image === null ? en.home.noImageHint : fill(en.topbar.size, { width: image.width_px, height: image.height_px });
       openLabel.textContent = image === null ? en.home.openImage : en.home.openAnother;
+      const line = absentLine(state.session);
+      absent.hidden = line === null;
+      absentText.textContent = line ?? "";
       const ready = state.engine === "ready";
       setDisabled(open, !ready);
       open.title = ready ? `${openLabel.textContent} (O)` : en.topbar.engineStarting;

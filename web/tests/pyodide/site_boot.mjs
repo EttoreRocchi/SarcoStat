@@ -43,7 +43,9 @@ async function main() {
   const wheelBytes = fs.readFileSync(path.join(siteDir, build.wheel.file));
   const problems = [];
   if (sha256(wheelBytes) !== build.wheel.sha256) {
-    problems.push(`${build.wheel.file}: SHA-256 differs from BUILD.json`);
+    console.error(`site_boot: FAIL ${build.wheel.file}: SHA-256 differs from BUILD.json; the wheel is not installed (the worker's build_damaged state)`);
+    console.log("RESULT: FAIL (1 problem(s))");
+    return 1;
   }
   if (values.offline) {
     installOfflineGuard();

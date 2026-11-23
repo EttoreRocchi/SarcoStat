@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  absentLine,
+  absentRoutes,
   decideSwitch,
   exportEntries,
+  hasPendingClick,
+  needsScipy,
+  sourceMatches,
   INITIAL_STATE,
   leaveModel,
   mLineSkipped,
@@ -148,20 +153,68 @@ describe("not exported", () => {
 });
 
 describe("export menu entries", () => {
-  it("enable the annotation file once an image is open and say why the others wait", () => {
+  it("enable the annotation file and the results once an item exists, and say why the others wait", () => {
     const none = exportEntries(appState(null));
     expect(none.map((entry) => entry.enabled)).toEqual([false, false, false, false, false]);
-    expect(none.every((entry) => entry.reason === en.exportMenu.needImage)).toBe(true);
-    const open = exportEntries(appState(modeState()));
+    expect(none.slice(0, 3).every((entry) => entry.reason === en.exportMenu.needImage)).toBe(true);
+    const empty = exportEntries(appState(modeState()));
+    expect(empty.map((entry) => entry.enabled)).toEqual([false, false, false, false, false]);
+    expect(empty.slice(0, 3).every((entry) => entry.reason === en.exportMenu.needItems)).toBe(true);
+    const open = exportEntries(appState(modeState({ items: 1 })));
     expect(open.map((entry) => [entry.id, entry.enabled])).toEqual([
       ["v1", true],
-      ["results_csv", false],
-      ["results_json", false],
+      ["results_csv", true],
+      ["results_json", true],
       ["plots_svg", false],
       ["plots_png", false],
     ]);
-    expect(open[0]?.reason).toBeNull();
-    expect(open.slice(1).every((entry) => entry.reason !== null && !entry.reason.includes("\n"))).toBe(true);
+    expect(open.slice(0, 3).every((entry) => entry.reason === null)).toBe(true);
+    expect(open.slice(3).every((entry) => entry.reason === en.exportMenu.plotsAbsent)).toBe(true);
+  });
+});
+
+function withKept(state: ModeState, types: readonly ("chain" | "pair")[]): ModeState {
+  return { ...state, items: [...state.items, ...types.map((type, i) => ({ item_id: `${type}-${i + 1}`, type, sarcomere_id: null, marks: [], strokes: [] }))] };
+}
+
+describe("absent modes and the Backspace rule", () => {
+  it("name Straightness and Register in one line when the file holds chain and pair items", () => {
+    expect(absentLine(modeState({ items: 2 }))).toBeNull();
+    expect(absentRoutes(withKept(modeState({ items: 1 }), ["chain", "pair"]))).toEqual(["straightness", "register"]);
+    const both = absentLine(withKept(modeState({ items: 1 }), ["chain", "pair"])) ?? "";
+    expect(both).toBe(
+      "Straightness and Register are not in this build of SarcoStat: the chain and pair items of this file are kept unchanged and written back when you export the annotation file.",
+    );
+    expect(both).not.toMatch(/\n/);
+    expect(absentLine(withKept(modeState(), ["chain", "chain"]))).toBe(
+      "Straightness is not in this build of SarcoStat: the chain items of this file are kept unchanged and written back when you export the annotation file.",
+    );
+  });
+
+  it("load scipy only for documents with chain or pair items", () => {
+    expect(needsScipy(null)).toBe(false);
+    expect(needsScipy(modeState({ items: 3 }))).toBe(false);
+    expect(needsScipy(withKept(modeState(), ["pair"]))).toBe(true);
+  });
+
+  it("undo only pending clicks or an M-line skip", () => {
+    expect(hasPendingClick(appState(modeState({ items: 3 })))).toBe(false);
+    expect(hasPendingClick(appState(modeState({ items: 3, placed: ["A"] })))).toBe(true);
+    expect(hasPendingClick(appState(modeState({ skipped: true })))).toBe(true);
+  });
+
+  it("attach the pixels of an image only when no pixels are open and the SHA-256 and size match the session's image", () => {
+    const loaded = appState(modeState({ items: 1 }));
+    expect(sourceMatches(loaded, "a".repeat(64), 64, 48)).toBe(true);
+    expect(sourceMatches(loaded, "b".repeat(64), 64, 48)).toBe(false);
+    expect(sourceMatches(loaded, "a".repeat(64), 64, 49)).toBe(false);
+    expect(sourceMatches(appState(null), "a".repeat(64), 64, 48)).toBe(false);
+  });
+
+  it("add the unchecked-image sentence to the load notice", () => {
+    const params = { shape_items: 2, chain_items: 1, pair_items: 0, incomplete_items: 0, image_checked: false, missing_modes: "straightness" };
+    expect(noticeText({ code: "document_loaded", params })).toBe(`Loaded 2 sarcomere items, 1 chain items and 0 pair items. ${en.open.unchecked}`);
+    expect(noticeText({ code: "document_loaded", params: { ...params, image_checked: true } })).toBe("Loaded 2 sarcomere items, 1 chain items and 0 pair items.");
   });
 });
 
@@ -194,11 +247,25 @@ class FakeEngine {
   readonly calls: [string, unknown][] = [];
   state: ModeState = modeState({ image: false });
   refuse: string | null = null;
+  confirmFirst = false;
 
   async call(cmd: string, args: unknown): Promise<unknown> {
     this.calls.push([cmd, args]);
     if (this.refuse !== null) {
       throw new Error(this.refuse);
+    }
+    if (cmd === "results.get") {
+      return { sentences: ["No scale is set: lengths are in pixels."], tables: {}, plot_data: { shape: [], shape_rectangular_band: [0.95, 1.05], chains: [], register: [] } };
+    }
+    if (cmd === "sys.load_scipy") {
+      return { scipy_version: "1.18.0" };
+    }
+    if (cmd === "doc.load_v1") {
+      if (this.confirmFirst && !(args as { confirm: boolean }).confirm) {
+        throw Object.assign(new Error("cell.png is not the image these annotations were made on (its SHA-256 differs). Load the annotations anyway?"), { code: "needs_confirmation" });
+      }
+      this.state = withKept(modeState({ items: 1 }), ["chain"]);
+      return this.state;
     }
     if (cmd === "doc.new") {
       this.state = modeState();
@@ -206,7 +273,8 @@ class FakeEngine {
       const placed = this.state.pending.marks.map((mark) => mark.role as Role);
       this.state = modeState({ placed: placed.slice(0, -1) });
     } else if (cmd === "doc.export") {
-      return { file_name: "cell_annotations.json", text: "{}" };
+      const what = (args as { what: string }).what;
+      return { file_name: what === "v1" ? "cell_annotations.json" : `cell_${what}`, text: "{}" };
     }
     return this.state;
   }
@@ -227,9 +295,43 @@ describe("Session (engine actions behind the store)", () => {
     const engine = new FakeEngine();
     const { store, session } = sessionWith(engine);
     expect(await session.openImage(opened)).toBe(true);
-    expect(engine.calls).toEqual([["doc.new", { image: IMAGE }]]);
+    expect(engine.calls).toEqual([
+      ["doc.new", { image: IMAGE }],
+      ["results.get", {}],
+    ]);
     expect(store.get().session?.image).toEqual(IMAGE);
     expect(store.get().source?.fileName).toBe("cell.png");
+    expect(store.get().results?.sentences).toEqual(["No scale is set: lengths are in pixels."]);
+  });
+
+  it("asks before loading a file made on another image, then loads it with confirm and fetches results after scipy", async () => {
+    const engine = new FakeEngine();
+    engine.confirmFirst = true;
+    const { store, session } = sessionWith(engine);
+    const first = await session.loadV1("{}", opened, false);
+    expect(first.kind).toBe("confirm");
+    expect(engine.calls.map(([cmd]) => cmd)).toEqual(["doc.load_v1"]);
+    expect(store.get().notice).toBeNull();
+    const second = await session.loadV1("{}", opened, true);
+    expect(second.kind).toBe("loaded");
+    expect(engine.calls.map(([cmd]) => cmd)).toEqual(["doc.load_v1", "doc.load_v1", "sys.load_scipy", "results.get"]);
+    expect(store.get().source?.fileName).toBe("cell.png");
+    await session.exportResults("results_json");
+    expect(engine.calls.slice(4)).toEqual([
+      ["doc.export", { what: "results_json" }],
+      ["doc.export", { what: "provenance" }],
+    ]);
+  });
+
+  it("never loads scipy for a shape-only session and returns each results export with its sidecar", async () => {
+    const engine = new FakeEngine();
+    const { store, session } = sessionWith(engine);
+    await session.openImage(opened);
+    store.applyModeState(modeState({ items: 2 }));
+    const files = await session.exportResults("results_csv");
+    expect(files?.map((file) => file.file_name)).toEqual(["cell_results_csv", "cell_provenance"]);
+    await session.confirm();
+    expect(engine.calls.map(([cmd]) => cmd)).not.toContain("sys.load_scipy");
   });
 
   it("discards the pending clicks with one undo per pending step and never more", async () => {
@@ -277,6 +379,6 @@ describe("Session (engine actions behind the store)", () => {
     const engine = new FakeEngine();
     const { session } = sessionWith(engine);
     await Promise.all([session.openImage(opened), session.click(1, 2), session.confirm(), session.undo()]);
-    expect(engine.calls.map(([cmd]) => cmd)).toEqual(["doc.new", "shape.click", "shape.confirm", "shape.undo"]);
+    expect(engine.calls.map(([cmd]) => cmd)).toEqual(["doc.new", "results.get", "shape.click", "shape.confirm", "results.get", "shape.undo"]);
   });
 });

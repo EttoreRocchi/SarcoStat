@@ -1,9 +1,12 @@
-import type { Route } from "../router.ts";
+import type { DecodedImage } from "../io/image/decode.ts";
+import { isAbsent, type Route } from "../router.ts";
 import { en } from "../strings/en.ts";
 import { fill, plural, type Params } from "../strings/format.ts";
-import type { CommandResult, Identity } from "../worker/protocol.ts";
+import { ABSENT_FAMILIES, type CommandResult, type Identity } from "../worker/protocol.ts";
 
 export type ModeState = CommandResult<"doc.new">;
+export type ResultsView = CommandResult<"results.get">;
+export type ModeItem = ModeState["items"][number];
 export type CodeObject = NonNullable<ModeState["step"]>;
 export type EngineStatus = "booting" | "ready" | "stopped";
 export type AnnotationRoute = "shape" | "straightness" | "register";
@@ -44,6 +47,7 @@ export interface OpenedImage {
   readonly sha256: string;
   readonly width: number;
   readonly height: number;
+  readonly decoded?: DecodedImage;
 }
 
 export interface AppState {
@@ -52,6 +56,7 @@ export interface AppState {
   readonly identity: Identity | null;
   readonly session: ModeState | null;
   readonly source: OpenedImage | null;
+  readonly results: ResultsView | null;
   readonly notExported: boolean;
   readonly unfinished: { readonly shape: UnfinishedItem | null };
   readonly notice: string | null;
@@ -69,7 +74,7 @@ export interface LeaveModel {
 }
 
 export interface ExportEntry {
-  readonly id: "v1" | "results_csv" | "results_json" | "plots_svg" | "plots_png";
+  readonly id: ExportKind;
   readonly group: "annotations" | "results" | "plots";
   readonly title: string;
   readonly hint: string;
@@ -77,6 +82,10 @@ export interface ExportEntry {
   readonly reason: string | null;
   readonly key: string | null;
 }
+
+export type ExportKind = "v1" | "results_csv" | "results_json" | "plots_svg" | "plots_png";
+
+const ITEM_ROUTES: Readonly<Record<string, Route>> = { chain: "straightness", pair: "register" };
 
 const LINE_OF: Readonly<Record<Landmark, "z" | "m">> = { A: "z", B: "z", C: "m", D: "m", E: "z", F: "z" };
 
@@ -86,6 +95,7 @@ export const INITIAL_STATE: AppState = {
   identity: null,
   session: null,
   source: null,
+  results: null,
   notExported: false,
   unfinished: { shape: null },
   notice: null,
@@ -225,14 +235,57 @@ export function unloadGuardActive(state: AppState): boolean {
 
 export function exportEntries(state: AppState): ExportEntry[] {
   const hasImage = state.session?.image != null;
+  const hasItems = hasImage && (state.session?.items.length ?? 0) > 0;
   const m = en.exportMenu;
+  const reason = hasImage ? (hasItems ? null : m.needItems) : m.needImage;
   return [
-    { id: "v1", group: "annotations", title: m.annotationFile, hint: m.annotationHint, enabled: hasImage, reason: hasImage ? null : m.needImage, key: "E" },
-    { id: "results_csv", group: "results", title: m.resultsTable, hint: m.resultsTableHint, enabled: false, reason: hasImage ? m.needResults : m.needImage, key: null },
-    { id: "results_json", group: "results", title: m.resultsJson, hint: m.resultsJsonHint, enabled: false, reason: hasImage ? m.needResults : m.needImage, key: null },
-    { id: "plots_svg", group: "plots", title: m.plotsSvg, hint: m.plotsSvgHint, enabled: false, reason: hasImage ? m.needPlots : m.needImage, key: null },
-    { id: "plots_png", group: "plots", title: m.plotsPng, hint: m.plotsPngHint, enabled: false, reason: hasImage ? m.needPlots : m.needImage, key: null },
+    { id: "v1", group: "annotations", title: m.annotationFile, hint: m.annotationHint, enabled: hasItems, reason, key: "E" },
+    { id: "results_csv", group: "results", title: m.resultsTable, hint: m.resultsTableHint, enabled: hasItems, reason, key: null },
+    { id: "results_json", group: "results", title: m.resultsJson, hint: m.resultsJsonHint, enabled: hasItems, reason, key: null },
+    { id: "plots_svg", group: "plots", title: m.plotsSvg, hint: m.plotsSvgHint, enabled: false, reason: m.plotsAbsent, key: null },
+    { id: "plots_png", group: "plots", title: m.plotsPng, hint: m.plotsPngHint, enabled: false, reason: m.plotsAbsent, key: null },
   ];
+}
+
+export function hasPendingClick(state: AppState): boolean {
+  return pendingActions(state.session) > 0;
+}
+
+export function absentRoutes(state: ModeState | null): Route[] {
+  const routes: Route[] = [];
+  for (const kind of ["chain", "pair"] as const) {
+    const route = ITEM_ROUTES[kind] as Route;
+    if (state !== null && state.items.some((item) => item.type === kind) && isAbsent(route, ABSENT_FAMILIES)) {
+      routes.push(route);
+    }
+  }
+  return routes;
+}
+
+export function absentLine(state: ModeState | null): string | null {
+  const routes = absentRoutes(state);
+  const first = routes[0];
+  const second = routes[1];
+  if (first === undefined) {
+    return null;
+  }
+  const kindOf = (route: Route): string => (route === "straightness" ? en.absent.kinds.chain : en.absent.kinds.pair);
+  if (second === undefined) {
+    return fill(en.absent.itemsOne, { mode: en.modes[first].short, kind: kindOf(first) });
+  }
+  return fill(en.absent.itemsOther, {
+    modes: fill(en.absent.pair, { first: en.modes[first].short, second: en.modes[second].short }),
+    kinds: fill(en.absent.pair, { first: kindOf(first), second: kindOf(second) }),
+  });
+}
+
+export function needsScipy(state: ModeState | null): boolean {
+  return state !== null && state.items.some((item) => item.type === "chain" || item.type === "pair");
+}
+
+export function sourceMatches(state: AppState, sha256: string, width: number, height: number): boolean {
+  const image = state.session?.image ?? null;
+  return state.source === null && image !== null && image.sha256 === sha256 && image.width_px === width && image.height_px === height;
 }
 
 export function noticeText(code: CodeObject): string {
@@ -240,6 +293,9 @@ export function noticeText(code: CodeObject): string {
   const template = table[code.code];
   if (template === undefined || code.code === "unknown") {
     return fill(en.notices.unknown, { code: code.code });
+  }
+  if (code.code === "document_loaded" && code.params.image_checked === false) {
+    return `${fill(template, code.params as Params)} ${en.open.unchecked}`;
   }
   const params: Record<string, string | number | boolean> = { ...code.params };
   const line = code.params.line;
@@ -288,17 +344,26 @@ export class Store {
     this.set({ ...this.state, engine, identity });
   }
 
-  applyModeState(session: ModeState, source: OpenedImage | null = this.state.source): void {
+  applyModeState(session: ModeState, source: OpenedImage | null = this.state.source, results: ResultsView | null = session.image === null ? null : this.state.results): void {
     const notice = session.notice === null ? null : noticeText(session.notice);
     this.set({
       ...this.state,
       session,
       source,
+      results,
       notExported: session.not_exported,
       unfinished: { shape: shapeUnfinished(session) },
       notice,
       noticeSeq: notice === null ? this.state.noticeSeq : this.state.noticeSeq + 1,
     });
+  }
+
+  setResults(results: ResultsView | null): void {
+    this.set({ ...this.state, results });
+  }
+
+  setSource(source: OpenedImage | null): void {
+    this.set({ ...this.state, source });
   }
 
   markExported(): void {

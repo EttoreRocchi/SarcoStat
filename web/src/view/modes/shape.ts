@@ -1,17 +1,26 @@
 import { en } from "../../strings/en.ts";
 import { fill } from "../../strings/format.ts";
 import type { Session } from "../../state/session.ts";
-import { shapeGuidance, shapeItemCount, type AppState, type Guidance, type Store } from "../../state/store.ts";
+import { absentLine, shapeGuidance, shapeItemCount, type AppState, type Guidance, type ModeItem, type Store } from "../../state/store.ts";
 import { button, el, kbd, richText } from "../dom.ts";
 import { icon } from "../icons.ts";
+import { shapeSiPlot } from "../plots/shape_si.ts";
+import { renderItems } from "../results/items_tab.ts";
+import { pickSarcomere, sarcomereIds, shapeResults, type ShapeResults } from "../results/model.ts";
+import { renderResults } from "../results/results_tab.ts";
 import { chipList } from "../shell/guard.ts";
 import { panelId, tabId } from "../shell/rail.ts";
+import type { ViewKeyAction } from "../shell/shortcuts.ts";
 import { createWorkspace } from "../workspace/workspace.ts";
 
 export interface ShapeContext {
   readonly store: Store;
   readonly session: Session;
   open(): void;
+  editScale(): void;
+  setClickError(): void;
+  estimateClickError(): void;
+  remove(item: ModeItem): void;
 }
 
 export interface ShapeView {
@@ -19,14 +28,12 @@ export interface ShapeView {
   readonly panel: HTMLElement;
   readonly workspace: HTMLElement;
   render(state: AppState): void;
+  view(action: ViewKeyAction): void;
+  step(step: -1 | 1): void;
 }
 
-const RESULT_TABS = ["results", "plots", "items"] as const;
-type ResultTab = (typeof RESULT_TABS)[number];
-
-function emptyNote(doc: Document): HTMLParagraphElement {
-  return el(doc, "p", { class: "empty__text" });
-}
+export const RESULT_TABS = ["results", "plots", "items"] as const;
+export type ResultTab = (typeof RESULT_TABS)[number];
 
 function createHud(doc: Document): { element: HTMLElement; render(guidance: Guidance): void } {
   const count = el(doc, "span", { class: "hud__count" });
@@ -34,6 +41,7 @@ function createHud(doc: Document): { element: HTMLElement; render(guidance: Guid
   const whatText = el(doc, "span");
   const what = el(doc, "span", { class: "hud__what" }, swatch, whatText);
   const chips = el(doc, "span", { class: "hud__chips" });
+  const hint = el(doc, "p", { class: "hud__hint", data: { part: "hud-hint" } });
   const discardText = el(doc, "span");
   const keys = el(
     doc,
@@ -53,6 +61,7 @@ function createHud(doc: Document): { element: HTMLElement; render(guidance: Guid
     "div",
     { class: "hud", attrs: { role: "status", "aria-live": "polite", "aria-label": en.hud.label }, data: { part: "hud" } },
     el(doc, "div", { class: "hud__row" }, count, what, chips),
+    hint,
     keys,
   );
   element.hidden = true;
@@ -64,38 +73,41 @@ function createHud(doc: Document): { element: HTMLElement; render(guidance: Guid
         whatText.textContent = en.hud.readyWhat;
         swatch.className = "lm-swatch";
         swatch.hidden = true;
+        hint.textContent = en.hud.hint.ready;
       } else {
         count.replaceChildren(...richText(doc, en.hud.count, { sarcomere: guidance.sarcomere, number: guidance.number, of: guidance.of }, ["number"]));
         const landmark = guidance.landmark;
         whatText.textContent = landmark === null ? "" : en.landmarks[landmark];
         swatch.hidden = landmark === null;
         swatch.className = landmark === "C" || landmark === "D" ? "lm-swatch lm-swatch--m" : "lm-swatch";
+        hint.textContent = landmark === null ? "" : en.hud.hint[landmark];
       }
+      hint.hidden = hint.textContent === "";
       chips.replaceChildren(chipList(doc, guidance.chips, true));
       discardText.textContent = fill(en.hud.discard, { n: guidance.sarcomere });
     },
   };
 }
 
-export function createShapeMode(doc: Document, context: ShapeContext): ShapeView {
-  const workspace = el(doc, "div", { class: "stage__layer", data: { part: "workspace" } });
-  const openButton = button(doc, "btn btn--primary btn--large", icon(doc, "i-folder", "btn__icon"), el(doc, "span", { text: en.workspace.open }), kbd(doc, "O"));
-  openButton.dataset.action = "open";
-  openButton.setAttribute("aria-keyshortcuts", "O");
-  openButton.addEventListener("click", () => {
-    if (openButton.getAttribute("aria-disabled") !== "true") {
-      context.open();
+function openButton(doc: Document, label: HTMLElement, onClick: () => void): HTMLButtonElement {
+  const target = button(doc, "btn btn--primary btn--large", icon(doc, "i-folder", "btn__icon"), label, kbd(doc, "O"));
+  target.dataset.action = "open";
+  target.setAttribute("aria-keyshortcuts", "O");
+  target.addEventListener("click", () => {
+    if (target.getAttribute("aria-disabled") !== "true") {
+      onClick();
     }
   });
-  const empty = el(
-    doc,
-    "div",
-    { class: "stage__empty", data: { part: "empty" } },
-    icon(doc, "i-image", "ic ic--lg"),
-    el(doc, "h2", { class: "stage__title", text: en.workspace.emptyTitle }),
-    el(doc, "p", { class: "stage__text", text: en.workspace.emptyText }),
-    openButton,
-  );
+  return target;
+}
+
+export function createShapeMode(doc: Document, context: ShapeContext): ShapeView {
+  const workspace = el(doc, "div", { class: "stage__layer", data: { part: "workspace" } });
+  const emptyTitle = el(doc, "h2", { class: "stage__title", text: en.workspace.emptyTitle });
+  const emptyText = el(doc, "p", { class: "stage__text", text: en.workspace.emptyText });
+  const openLabel = el(doc, "span", { text: en.workspace.open });
+  const open = openButton(doc, openLabel, () => context.open());
+  const empty = el(doc, "div", { class: "stage__empty", data: { part: "empty" } }, icon(doc, "i-image", "ic ic--lg"), emptyTitle, emptyText, open);
   const caption = el(doc, "p", { class: "stage__caption t-num", data: { part: "image-caption" } });
   let imageOpen = false;
   const imageWorkspace = createWorkspace(doc, workspace, {
@@ -119,10 +131,12 @@ export function createShapeMode(doc: Document, context: ShapeContext): ShapeView
   const count = el(doc, "span", { class: "count", text: "0" });
   const tabs = new Map<ResultTab, HTMLButtonElement>();
   const panels = new Map<ResultTab, HTMLElement>();
-  const notes = new Map<ResultTab, HTMLParagraphElement>();
-  const itemList = el(doc, "ul", { class: "items", attrs: { role: "list" } });
   const tablist = el(doc, "div", { class: "tabs", attrs: { role: "tablist", "aria-label": en.panel.tabsLabel } });
-  const body = el(doc, "div", { class: "panel__body" });
+  const absent = el(doc, "p", { class: "note results__absent", attrs: { role: "note" }, data: { part: "absent-modes" } }, icon(doc, "i-warn", "note__icon"));
+  const absentText = el(doc, "span");
+  absent.append(absentText);
+  absent.hidden = true;
+  const body = el(doc, "div", { class: "panel__body" }, absent);
   const select = (name: ResultTab, focus: boolean): void => {
     for (const tabName of RESULT_TABS) {
       const selected = tabName === name;
@@ -144,15 +158,11 @@ export function createShapeMode(doc: Document, context: ShapeContext): ShapeView
     tab.id = `result-tab-${name}`;
     tab.setAttribute("role", "tab");
     tab.setAttribute("aria-controls", `result-panel-${name}`);
+    tab.dataset.tab = name;
     tab.addEventListener("click", () => select(name, false));
     tabs.set(name, tab);
     tablist.append(tab);
-    const note = emptyNote(doc);
-    notes.set(name, note);
-    const panel = el(doc, "div", { class: "tabs__panel", attrs: { id: `result-panel-${name}`, role: "tabpanel", "aria-labelledby": tab.id, tabindex: "0" } }, el(doc, "div", { class: "empty" }, note));
-    if (name === "items") {
-      panel.append(itemList);
-    }
+    const panel = el(doc, "div", { class: "tabs__panel", attrs: { id: `result-panel-${name}`, role: "tabpanel", "aria-labelledby": tab.id, tabindex: "0" }, data: { part: `panel-${name}` } });
     panels.set(name, panel);
     body.append(panel);
   }
@@ -180,43 +190,111 @@ export function createShapeMode(doc: Document, context: ShapeContext): ShapeView
   select("results", false);
   const panel = el(doc, "aside", { class: "panel", attrs: { "aria-label": en.panel.label }, data: { mode: "shape" } }, tablist, body);
 
+  let last: AppState | null = null;
+  let results: ShapeResults | null = null;
+  let shownResults: unknown = undefined;
+  let selected: number | null = null;
+  let knownIds: number[] = [];
+  let painted = "";
+
+  const paintPanel = (state: AppState): void => {
+    const session = state.session;
+    const hasImage = session?.image != null;
+    const ids = sarcomereIds(session);
+    const key = JSON.stringify([selected, hasImage, state.engine, session?.items.map((item) => [item.item_id, item.sarcomere_id]) ?? null, session?.controls.can_delete ?? false]);
+    if (state.results === shownResults && key === painted) {
+      return;
+    }
+    shownResults = state.results;
+    painted = key;
+    results = shapeResults(state.results);
+    const ready = state.engine === "ready";
+    renderResults(doc, panels.get("results") as HTMLElement, { results, selected, count: ids.length, hasImage, ready }, {
+      select: (step) => moveSelection(step),
+      editScale: () => context.editScale(),
+      setClickError: () => context.setClickError(),
+      estimateClickError: () => context.estimateClickError(),
+    });
+    const plots = panels.get("plots") as HTMLElement;
+    if (results !== null && results.points.length > 0) {
+      plots.replaceChildren(shapeSiPlot(doc, results.points, results.band, selected));
+    } else {
+      plots.replaceChildren(el(doc, "div", { class: "empty" }, el(doc, "p", { class: "empty__text", text: hasImage ? en.panel.noPlots : en.panel.noImage })));
+    }
+    renderItems(doc, panels.get("items") as HTMLElement, { items: session?.items ?? [], results, selected, hasImage, canDelete: ready }, {
+      show: (id) => {
+        selected = id;
+        select("results", false);
+        repaint();
+      },
+      remove: (item) => context.remove(item),
+    });
+  };
+
+  const repaint = (): void => {
+    if (last !== null) {
+      painted = "";
+      paintPanel(last);
+    }
+  };
+
+  const moveSelection = (step: -1 | 1): void => {
+    const next = pickSarcomere(knownIds, selected, step);
+    if (next !== selected) {
+      selected = next;
+      repaint();
+    }
+  };
+
   return {
     stage,
     panel,
     workspace,
+    view(action) {
+      imageWorkspace.view(action);
+    },
+    step(direction) {
+      moveSelection(direction);
+    },
     render(state) {
+      last = state;
       const session = state.session;
       const image = session?.image ?? null;
-      empty.hidden = image !== null;
-      setOpenEnabled(openButton, state.engine === "ready");
+      const pixels = state.source !== null;
+      empty.hidden = image !== null && pixels;
+      if (image !== null && !pixels) {
+        emptyTitle.textContent = fill(en.workspace.pixelsTitle, { file: image.file_name });
+        emptyText.textContent = fill(en.workspace.pixelsText, { file: image.file_name });
+        openLabel.textContent = fill(en.workspace.pixelsOpen, { file: image.file_name });
+      } else {
+        emptyTitle.textContent = en.workspace.emptyTitle;
+        emptyText.textContent = en.workspace.emptyText;
+        openLabel.textContent = en.workspace.open;
+      }
+      setOpenEnabled(open, state.engine === "ready");
       imageWorkspace.render(state);
-      imageOpen = image !== null;
+      imageOpen = image !== null && pixels;
       caption.hidden = !imageOpen || imageWorkspace.status === "drawn";
       caption.textContent = image === null ? "" : fill(en.workspace.caption, { file: image.file_name, size: fill(en.topbar.size, { width: image.width_px, height: image.height_px }) });
-      const guidance = shapeGuidance(session);
+      const guidance = pixels ? shapeGuidance(session) : null;
       hud.element.hidden = guidance === null;
-      const key = JSON.stringify(guidance);
-      if (guidance !== null && key !== shownGuidance) {
+      const guidanceKey = JSON.stringify(guidance);
+      if (guidance !== null && guidanceKey !== shownGuidance) {
         hud.render(guidance);
       }
-      shownGuidance = key;
-      const n = shapeItemCount(session);
-      count.textContent = String(n);
-      (notes.get("results") as HTMLParagraphElement).textContent = image === null ? en.panel.noImage : en.panel.noResults;
-      (notes.get("plots") as HTMLParagraphElement).textContent = image === null ? en.panel.noImage : en.panel.noPlots;
-      (notes.get("items") as HTMLParagraphElement).textContent = image === null ? en.panel.noImage : en.panel.noItems;
-      const items = session?.items ?? [];
-      (notes.get("items") as HTMLParagraphElement).hidden = items.length > 0;
-      itemList.replaceChildren(
-        ...items.map((item) => {
-          const skipped = item.type === "shape" && item.marks.length === 4;
-          const text =
-            item.type === "shape" && item.sarcomere_id !== null
-              ? fill(skipped ? en.panel.itemSkipped : en.panel.item, { n: item.sarcomere_id })
-              : fill(en.panel.itemOther, { type: item.type, id: item.item_id });
-          return el(doc, "li", { class: "items__row", text, data: { item: item.item_id } });
-        }),
-      );
+      shownGuidance = guidanceKey;
+      count.textContent = String(shapeItemCount(session));
+      const line = absentLine(session);
+      absent.hidden = line === null;
+      absentText.textContent = line ?? "";
+      const ids = sarcomereIds(session);
+      if (ids.length > knownIds.length && ids.length > 0) {
+        selected = ids[ids.length - 1] ?? null;
+      } else if (selected === null || !ids.includes(selected)) {
+        selected = pickSarcomere(ids, selected, 0);
+      }
+      knownIds = ids;
+      paintPanel(state);
     },
   };
 }

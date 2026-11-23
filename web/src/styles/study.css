@@ -1,0 +1,468 @@
+.shell--study .study__stage {
+  position: relative;
+}
+
+.study__stage--item {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.study__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.study__head .study__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.study-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--stage);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.study-stage__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.study-stage--pan .study-stage__canvas {
+  cursor: grab;
+}
+
+.study-stage--panning .study-stage__canvas {
+  cursor: grabbing;
+}
+
+.study-stage .loupe__label {
+  display: none;
+}
+
+.study-target {
+  fill: none;
+  stroke: var(--lm-target);
+  stroke-width: 1.5px;
+  stroke-dasharray: 6 4;
+}
+
+.study-target--halo {
+  stroke: var(--halo);
+  stroke-width: 3.5px;
+  stroke-dasharray: none;
+}
+
+.study-progress {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+  font-size: var(--fs-md);
+  color: var(--tx-2);
+}
+
+.study-ticks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  max-width: 60%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.study-ticks__tick {
+  width: 9px;
+  height: 14px;
+  background: var(--bg-4);
+  border-radius: 2px;
+  transition: background-color var(--dur-2) var(--ease);
+}
+
+.study-ticks__tick--done {
+  background: var(--m-study);
+}
+
+.study-ticks__tick--skipped {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--m-study);
+}
+
+.study-ticks__tick--current {
+  background: var(--tx-1);
+  box-shadow: 0 0 0 2px var(--line-2);
+}
+
+.study-progress__count {
+  font-family: var(--f-num);
+  white-space: nowrap;
+}
+
+.study-autosave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--tx-2);
+}
+
+.study-autosave__icon {
+  width: 14px;
+  height: 14px;
+  color: var(--ok);
+}
+
+.study-autosave[data-state="saving"] .study-autosave__icon {
+  visibility: hidden;
+}
+
+.study-autosave[data-state="failed"] {
+  color: var(--danger);
+}
+
+.study-autosave[data-state="failed"] .study-autosave__icon {
+  visibility: hidden;
+}
+
+.study__dock {
+  background: var(--bg-1);
+}
+
+.study-dock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 14px 20px 8px;
+}
+
+.study-dock[hidden] {
+  display: none;
+}
+
+.study-guide {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.study-guide__count {
+  font-family: var(--f-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--tx-2);
+  white-space: nowrap;
+}
+
+.study-guide__swatch {
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lm-z);
+}
+
+.study-guide__swatch--m {
+  background: var(--lm-m);
+}
+
+.study-guide__swatch--chain {
+  background: var(--lm-chain);
+}
+
+.study-guide__swatch--f2 {
+  background: var(--lm-f2);
+}
+
+.study-guide__what {
+  font-family: var(--f-display);
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  color: var(--tx-1);
+}
+
+.study-guide__chips {
+  margin: 0;
+}
+
+.study-dock__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.study-dock__branch[aria-pressed="true"] {
+  color: var(--tx-1);
+  background: var(--bg-3);
+  border-color: var(--lm-chain);
+}
+
+.study-dock__lines {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  min-height: 18px;
+  font-size: var(--fs-sm);
+}
+
+.study-dock__hint {
+  color: var(--tx-2);
+}
+
+.study-dock__notice {
+  color: var(--unsaved);
+}
+
+.study-dock__saving {
+  color: var(--unsaved);
+  font-weight: 600;
+}
+
+.study-start {
+  width: min(680px, 100%);
+}
+
+.study-start__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.study-start__busy {
+  font-size: var(--fs-sm);
+  color: var(--tx-2);
+}
+
+.study-ready {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.study-ready__title {
+  font-size: var(--fs-md);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--tx-2);
+}
+
+.study-ready__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.study-ready__item {
+  display: grid;
+  grid-template-columns: 92px 170px minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: 6px 10px;
+  font-size: var(--fs-sm);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+
+.study-ready__state {
+  font-family: var(--f-display);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--tx-2);
+}
+
+.study-ready__item[data-state="pass"] .study-ready__state {
+  color: var(--ok);
+}
+
+.study-ready__item[data-state="fail"] .study-ready__state {
+  color: var(--danger);
+}
+
+.study-ready__item[data-state="warn"] .study-ready__state {
+  color: var(--unsaved);
+}
+
+.study-ready__label {
+  color: var(--tx-1);
+}
+
+.study-ready__text {
+  color: var(--tx-2);
+}
+
+.study-refused {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: var(--sp-3) 14px;
+  background: var(--note-bg);
+  border: 1px solid var(--note-line);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r-2);
+}
+
+.study-refused[hidden] {
+  display: none;
+}
+
+.study-refused__title {
+  font-size: var(--fs-md);
+  color: var(--danger);
+}
+
+.study-refused__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: var(--fs-sm);
+  color: var(--tx-1);
+}
+
+.study-refused__again {
+  font-size: var(--fs-sm);
+  color: var(--tx-2);
+}
+
+.study-identity__ids {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px var(--sp-4);
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.study-identity__label {
+  color: var(--tx-2);
+}
+
+.study-identity__value {
+  margin: 0;
+  color: var(--tx-1);
+}
+
+.study-identity__question {
+  color: var(--tx-1);
+  font-size: var(--fs-lg);
+}
+
+.study-identity__declined {
+  color: var(--unsaved);
+}
+
+.study-banner {
+  position: absolute;
+  top: var(--sp-3);
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(720px, calc(100% - 48px));
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--tx-1);
+  background: var(--bg-3);
+  border: 1px solid var(--note-line);
+  border-top: 3px solid var(--danger);
+  border-radius: var(--r-3);
+  box-shadow: var(--e-3);
+  transform: translateX(-50%);
+}
+
+.study-banner__icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--danger);
+}
+
+.study-banner__text {
+  font-size: var(--fs-md);
+  line-height: 1.45;
+}
+
+.study-skip {
+  width: min(560px, calc(100vw - 48px));
+}
+
+.study-reasons {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.study-reasons__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.study-reasons__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: var(--fs-md);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  cursor: pointer;
+}
+
+.study-reasons__option:has(input:checked) {
+  background: var(--bg-3);
+  border-color: var(--m-study);
+}
+
+.study-reasons__option input[type="radio"] {
+  accent-color: var(--m-study);
+}
+
+.study-reasons__other {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  font: inherit;
+  color: var(--tx-1);
+  background: var(--bg-0);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-1);
+}
+
+.study-reasons__hint {
+  font-size: var(--fs-sm);
+  color: var(--tx-2);
+}
+
+.study-reasons__error {
+  font-size: var(--fs-sm);
+  color: var(--danger);
+}

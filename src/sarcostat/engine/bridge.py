@@ -330,9 +330,11 @@ def _plot_data() -> dict[str, Any]:
                         "shape_index": _nullable("number"),
                         "u_shape_index": _nullable("number"),
                         "shape_class": _STRING,
+                        "stability": _nullable("number"),
                     }
                 )
             ),
+            "shape_rectangular_band": _array(_NUMBER),
             "chains": _array(
                 _object(
                     {

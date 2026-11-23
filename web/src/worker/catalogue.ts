@@ -209,8 +209,10 @@ function plotData() {
         shape_index: nullable("number"),
         u_shape_index: nullable("number"),
         shape_class: STRING,
+        stability: nullable("number"),
       }),
     ),
+    shape_rectangular_band: array(NUMBER),
     chains: array(
       object({
         chain: integer(1),

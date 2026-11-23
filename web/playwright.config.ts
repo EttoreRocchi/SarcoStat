@@ -6,6 +6,7 @@ import { WEB_DIR, laneName } from "./scripts/lane.mjs";
 
 export const HOST_RESOLVER_RULES = "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1";
 export const CROSS_BROWSER_SPECS = /(pixel_centre|persistence)\.spec\.ts$/;
+export const SHOTS_RASTER_ARGS = ["--disable-gpu", "--num-raster-threads=1", "--disable-partial-raster"];
 
 type Env = Record<string, string | undefined>;
 
@@ -25,7 +26,7 @@ export function makeConfig(env: Env): PlaywrightTestConfig {
     {
       name: "shots",
       testMatch: /screenshots\.spec\.ts$/,
-      use: { browserName: "chromium" },
+      use: { browserName: "chromium", launchOptions: { args: [HOST_RESOLVER_RULES, ...SHOTS_RASTER_ARGS] } },
     },
   ];
   if (env.CI) {

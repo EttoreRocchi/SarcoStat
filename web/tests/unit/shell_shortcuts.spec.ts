@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { guardChoiceForKey, leaveChoiceForKey } from "../../src/view/shell/guard.ts";
 import { SHEET, sheetKeys } from "../../src/view/shell/sheet.ts";
-import { resolveKey, targetKind, type KeyContext, type KeyInput } from "../../src/view/shell/shortcuts.ts";
+import { resolveKey, resolveKeyUp, targetKind, type KeyContext, type KeyInput, type ShortcutAction } from "../../src/view/shell/shortcuts.ts";
 import { en } from "../../src/strings/en.ts";
 
 function key(name: string, extra: Partial<KeyInput> = {}): KeyInput {
@@ -11,12 +11,13 @@ function key(name: string, extra: Partial<KeyInput> = {}): KeyInput {
 
 const SHAPE: KeyContext = { route: "shape", imageOpen: true };
 const HOME: KeyContext = { route: "home", imageOpen: false };
+const STUDY: KeyContext = { route: "study", imageOpen: false };
 
 const DESIGN_KEYS = {
   global: ["0", "1", "2", "3", "4", "O", "E", "?"],
   view: ["+", "−", "F", "Space", "W", "L", "A"],
   annotate: ["Click", "Backspace", "Esc", "Enter", "N", "[", "]", "V"],
-  study: ["Backspace", "M", "S", "P", "Enter"],
+  study: ["Backspace", "M", "S", "P", "Enter", "N", "+", "−", "F", "Space"],
 };
 
 describe("global shortcuts", () => {
@@ -60,7 +61,7 @@ describe("global shortcuts", () => {
       expect(resolveKey(key(name, { repeat: true }), SHAPE), name).toBeNull();
       expect(resolveKey(key(name, { isComposing: true }), SHAPE), name).toBeNull();
     }
-    for (const name of ["0", "1", "o", "e", "Backspace", "Escape", "Enter"]) {
+    for (const name of ["0", "1", "4", "o", "e", "Escape", "l", "a", "[", "]", "v", "w"]) {
       expect(resolveKey(key(name), { route: "study", imageOpen: true }), name).toBeNull();
     }
     expect(resolveKey(key("1"), { route: null, imageOpen: false })).toBeNull();
@@ -126,5 +127,141 @@ describe("shortcut sheet", () => {
         expect(row.text, row.keys.join(" ")).not.toMatch(/[\r\n]/);
       }
     }
+  });
+});
+
+const VIEW_KEYS: [string, ShortcutAction][] = [
+  ["+", { kind: "view", action: "zoom-in" }],
+  ["=", { kind: "view", action: "zoom-in" }],
+  ["-", { kind: "view", action: "zoom-out" }],
+  ["_", { kind: "view", action: "zoom-out" }],
+  ["\u2212", { kind: "view", action: "zoom-out" }],
+  ["f", { kind: "view", action: "fit" }],
+  ["F", { kind: "view", action: "fit" }],
+  ["l", { kind: "view", action: "layers" }],
+  ["L", { kind: "view", action: "layers" }],
+  ["a", { kind: "view", action: "annotate" }],
+  ["A", { kind: "view", action: "annotate" }],
+  [" ", { kind: "view", action: "pan-start" }],
+];
+
+const STUDY_KEYS: [string, ShortcutAction][] = [
+  ["Backspace", { kind: "study", action: "undo" }],
+  ["m", { kind: "study", action: "m-line" }],
+  ["M", { kind: "study", action: "m-line" }],
+  ["s", { kind: "study", action: "skip" }],
+  ["S", { kind: "study", action: "skip" }],
+  ["p", { kind: "study", action: "pause" }],
+  ["P", { kind: "study", action: "pause" }],
+  ["Enter", { kind: "study", action: "next" }],
+  ["n", { kind: "study", action: "next-myofibril" }],
+  ["N", { kind: "study", action: "next-myofibril" }],
+  ["+", { kind: "study", action: "zoom-in" }],
+  ["=", { kind: "study", action: "zoom-in" }],
+  ["-", { kind: "study", action: "zoom-out" }],
+  ["_", { kind: "study", action: "zoom-out" }],
+  ["\u2212", { kind: "study", action: "zoom-out" }],
+  ["f", { kind: "study", action: "fit" }],
+  ["F", { kind: "study", action: "fit" }],
+  [" ", { kind: "study", action: "pan-start" }],
+];
+
+describe("one key table (contract 3.1)", () => {
+  it("maps the view keys of an open image to view actions, and Space up to the end of panning", () => {
+    for (const [name, action] of VIEW_KEYS) {
+      expect(resolveKey(key(name), SHAPE), JSON.stringify(name)).toEqual(action);
+      expect(resolveKey(key(name), { route: "shape", imageOpen: false }), JSON.stringify(name)).toBeNull();
+      expect(resolveKey(key(name), HOME), JSON.stringify(name)).toBeNull();
+    }
+    expect(resolveKeyUp(key(" "), SHAPE)).toEqual({ kind: "view", action: "pan-end" });
+    expect(resolveKeyUp(key("f"), SHAPE)).toBeNull();
+    expect(resolveKeyUp(key(" "), HOME)).toBeNull();
+  });
+
+  it("repeats zoom and Space while held, never the one-shot keys", () => {
+    for (const name of ["+", "-", " "]) {
+      expect(resolveKey(key(name, { repeat: true }), SHAPE), name).not.toBeNull();
+      expect(resolveKey(key(name, { repeat: true }), STUDY), name).not.toBeNull();
+    }
+    for (const name of ["f", "l", "a", "Backspace", "Escape", "Enter", "[", "1", "o", "e", "?"]) {
+      expect(resolveKey(key(name, { repeat: true }), SHAPE), name).toBeNull();
+    }
+    for (const name of ["Backspace", "m", "s", "p", "Enter", "n", "f"]) {
+      expect(resolveKey(key(name, { repeat: true }), STUDY), name).toBeNull();
+    }
+  });
+
+  it("leaves Space and Enter to a focused control", () => {
+    expect(resolveKey(key(" ", { target: "control" }), SHAPE)).toBeNull();
+    expect(resolveKey(key(" ", { target: "control" }), STUDY)).toBeNull();
+    expect(resolveKey(key("Enter", { target: "control" }), STUDY)).toBeNull();
+  });
+
+  it("has the study rows: Backspace, M, S, P, Enter, N, + and −, F, Space, and nothing else but ?", () => {
+    for (const [name, action] of STUDY_KEYS) {
+      expect(resolveKey(key(name), STUDY), JSON.stringify(name)).toEqual(action);
+    }
+    expect(resolveKeyUp(key(" "), STUDY)).toEqual({ kind: "study", action: "pan-end" });
+    expect(resolveKey(key("?"), STUDY)).toEqual({ kind: "sheet" });
+    const known = new Set([...STUDY_KEYS.map(([name]) => name), "?"]);
+    for (const name of candidateKeys()) {
+      if (!known.has(name)) {
+        expect(resolveKey(key(name), STUDY), JSON.stringify(name)).toBeNull();
+      }
+    }
+  });
+
+  it("steps through the sarcomeres with [ and ]", () => {
+    expect(resolveKey(key("["), SHAPE)).toEqual({ kind: "item", step: -1 });
+    expect(resolveKey(key("]"), SHAPE)).toEqual({ kind: "item", step: 1 });
+    expect(resolveKey(key("["), { route: "shape", imageOpen: false })).toBeNull();
+  });
+});
+
+function candidateKeys(): string[] {
+  const printable = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
+  return [...printable, "\u2212", "Backspace", "Enter", "Escape", "Tab", "Delete", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "F1", "F5"];
+}
+
+const SHEET_LABEL: Readonly<Record<string, string>> = { " ": "Space", "=": "+", "-": "−", _: "−", "\u2212": "−", Escape: "Esc", "[": "[", "]": "]" };
+
+function sheetLabel(name: string): string {
+  return SHEET_LABEL[name] ?? (name.length === 1 ? name.toUpperCase() : name);
+}
+
+function groupOf(action: ShortcutAction): string {
+  switch (action.kind) {
+    case "mode":
+    case "open":
+    case "export":
+    case "sheet":
+      return "global";
+    case "view":
+      return "view";
+    case "study":
+      return "study";
+    default:
+      return "annotate";
+  }
+}
+
+describe("shortcut sheet covers the key table", () => {
+  it("lists, in the right group, every key that resolveKey can return in any route", () => {
+    const contexts: KeyContext[] = [HOME, SHAPE, STUDY, { route: "shape", imageOpen: false }, { route: "planner", imageOpen: false }];
+    const byGroup = new Map(SHEET.map((group) => [group.id as string, new Set(group.rows.flatMap((row) => row.keys))]));
+    const seen: string[] = [];
+    for (const context of contexts) {
+      for (const name of candidateKeys()) {
+        const action = resolveKey(key(name), context);
+        if (action === null) {
+          continue;
+        }
+        const group = groupOf(action);
+        const label = sheetLabel(name);
+        expect(byGroup.get(group)?.has(label), `${JSON.stringify(name)} (${action.kind}) in ${context.route}: ${label} in the ${group} group`).toBe(true);
+        seen.push(`${context.route}:${name}`);
+      }
+    }
+    expect(seen.length).toBeGreaterThan(40);
   });
 });

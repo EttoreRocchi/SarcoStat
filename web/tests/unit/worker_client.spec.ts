@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EngineClient, EngineError, identityProblems, type ClientListener } from "../../src/worker/client.ts";
-import { BRIDGE_VERSION, COMMAND_TIMEOUT_MS, parseBuildInfo, type FatalCode } from "../../src/worker/protocol.ts";
+import { BRIDGE_VERSION, COMMAND_TIMEOUT_MS, parseBuildInfo, SCIPY_TIMEOUT_MS, type FatalCode } from "../../src/worker/protocol.ts";
 import { identityOf, MockWorker, pythonCatalogue, TEST_BUILD } from "./worker_mock.ts";
 
 const catalogue = pythonCatalogue();
@@ -149,6 +149,20 @@ describe("engine client", () => {
     const before = worker.posted.length;
     await expect(client.call("sys.identity", {})).rejects.toThrow("stopped");
     expect(worker.posted).toHaveLength(before);
+  });
+
+  it("gives sys.load_scipy, which downloads about 14 MB, two minutes before the timeout", async () => {
+    const { worker, client, seen } = setup();
+    client.start();
+    await vi.runAllTimersAsync();
+    worker.silent = true;
+    const pending = client.call("sys.load_scipy", {});
+    pending.catch(() => {});
+    await vi.advanceTimersByTimeAsync(SCIPY_TIMEOUT_MS - 1);
+    expect(seen.fatal).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(seen.fatal).toEqual([{ code: "timeout", message: "sys.load_scipy got no answer within 120 s" }]);
+    await expect(pending).rejects.toBeInstanceOf(EngineError);
   });
 
   it("times out a handshake that never comes back", async () => {

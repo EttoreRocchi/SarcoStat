@@ -1,0 +1,133 @@
+{
+  "annotator_id": "A1",
+  "format": "sarcostat-session-manifest",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "human_skeletal_muscle_tem_1.jpg",
+      "height_px": 1611,
+      "image_id": "tem_1",
+      "scale": {
+        "nm_per_px": 6.62,
+        "source": "scale bar"
+      },
+      "sha256": "7e6a438d733372f95167affc47c56aea4e5461fbcace222e279b4c6468aa6bf6",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2200
+    },
+    {
+      "file_name": "human_skeletal_muscle_tem_3.jpg",
+      "height_px": 1745,
+      "image_id": "tem_3",
+      "scale": {
+        "nm_per_px": 4.39,
+        "source": "scale bar"
+      },
+      "sha256": "59f203e46946df8e46ca143b62c0e5ab1638092583a71cce270a42ea7b8a1068",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 2400
+    }
+  ],
+  "items": [
+    {
+      "display_transform": "rot90",
+      "image_id": "tem_3",
+      "item_id": "S1-001",
+      "kit_crop_offset": [
+        860,
+        600
+      ],
+      "kit_crop_size": [
+        441,
+        401
+      ],
+      "kit_file": "items/001.png",
+      "kit_sha256": "da0b0eafadfb5f9d67d85aba59ff661fdfe61846ae7cfb8472e66a02982c4597",
+      "roi": [
+        900,
+        640,
+        1260,
+        960
+      ],
+      "target_id": "T01",
+      "type": "shape"
+    },
+    {
+      "display_transform": "flip_v",
+      "image_id": "tem_1",
+      "item_id": "S1-002",
+      "kit_crop_offset": [
+        1260,
+        80
+      ],
+      "kit_crop_size": [
+        481,
+        441
+      ],
+      "kit_file": "items/002.png",
+      "kit_sha256": "6f4251a2d94fa05f07b71b3fd2fddbeeeb6897194d063592a2e4c3567c54a849",
+      "roi": [
+        1300,
+        120,
+        1700,
+        480
+      ],
+      "target_id": "T04",
+      "type": "chain"
+    },
+    {
+      "display_transform": "transpose",
+      "image_id": "tem_1",
+      "item_id": "S1-003",
+      "kit_crop_offset": [
+        1560,
+        600
+      ],
+      "kit_crop_size": [
+        441,
+        441
+      ],
+      "kit_file": "items/003.png",
+      "kit_sha256": "722a8cbb0ef4f2e2b7a3afb2bd52937eb5d015d10beaf167699ebfc9303f769f",
+      "roi": [
+        1600,
+        640,
+        1960,
+        1000
+      ],
+      "target_id": "T05",
+      "type": "pair"
+    },
+    {
+      "display_transform": "anti_transpose",
+      "image_id": "tem_3",
+      "item_id": "S1-004",
+      "kit_crop_offset": [
+        860,
+        600
+      ],
+      "kit_crop_size": [
+        441,
+        401
+      ],
+      "kit_file": "items/004.png",
+      "kit_sha256": "787f39ccf94680874d79d3c44b70868bae73673a0eebb86a36136ef2d6960c2e",
+      "roi": [
+        900,
+        640,
+        1260,
+        960
+      ],
+      "target_id": "T01",
+      "type": "shape"
+    }
+  ],
+  "session_id": "S1",
+  "study_id": "fixture"
+}

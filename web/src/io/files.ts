@@ -7,6 +7,20 @@ export interface ImageHeader {
 }
 
 export const IMAGE_ACCEPT = "image/png,image/jpeg,.png,.jpg,.jpeg";
+export const OPEN_ACCEPT = `${IMAGE_ACCEPT},application/json,.json`;
+
+export function looksLikeJson(name: string, bytes: Uint8Array): boolean {
+  if (/\.json$/i.test(name)) {
+    return true;
+  }
+  for (const byte of bytes.subarray(0, 64)) {
+    if (byte === 0x20 || byte === 0x09 || byte === 0x0a || byte === 0x0d || byte === 0xef || byte === 0xbb || byte === 0xbf) {
+      continue;
+    }
+    return byte === 0x7b;
+  }
+  return false;
+}
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const JPEG_SOF = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);

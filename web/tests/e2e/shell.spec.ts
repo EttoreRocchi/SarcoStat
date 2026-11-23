@@ -120,14 +120,14 @@ test.describe("app shell", () => {
     const items = menu.getByRole("menuitem");
     await expect(items).toHaveCount(5);
     await expect(items.first()).toBeFocused();
-    await expect(items.first()).not.toHaveAttribute("aria-disabled", /.*/);
     await expect(items.first().locator("kbd")).toHaveText("E");
-    for (const index of [1, 2]) {
+    for (const index of [0, 1, 2]) {
       await expect(items.nth(index)).toHaveAttribute("aria-disabled", "true");
-      await expect(items.nth(index).locator(".menu__reason")).toHaveText(en.exportMenu.needResults);
+      await expect(items.nth(index).locator(".menu__reason")).toHaveText(en.exportMenu.needItems);
     }
     for (const index of [3, 4]) {
-      await expect(items.nth(index).locator(".menu__reason")).toHaveText(en.exportMenu.needPlots);
+      await expect(items.nth(index)).toHaveAttribute("aria-disabled", "true");
+      await expect(items.nth(index).locator(".menu__reason")).toHaveText(en.exportMenu.plotsAbsent);
     }
     await page.keyboard.press("ArrowDown");
     await expect(items.nth(1)).toBeFocused();

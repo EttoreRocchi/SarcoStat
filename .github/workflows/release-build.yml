@@ -1,0 +1,129 @@
+name: Release build
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: tag is v + __version__
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.info.outputs.version }}
+      prerelease: ${{ steps.info.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+
+      - name: Refuse a tag that differs from v + __version__
+        id: info
+        run: |
+          set -euo pipefail
+          node web/scripts/assemble_pages.mjs release-info --tag "$GITHUB_REF_NAME" --init src/sarcostat/__init__.py | tee -a "$GITHUB_OUTPUT"
+
+  ci:
+    name: build and test
+    needs: tag
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: draft release (published only by the maintainer in the GitHub UI)
+    needs: [tag, ci]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.tag.outputs.version }}
+      PRERELEASE: ${{ needs.tag.outputs.prerelease }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+
+      - name: Check the four assets against the tag and each other
+        run: |
+          set -euo pipefail
+          for file in "dist/sarcostat-$VERSION-py3-none-any.whl" "dist/sarcostat-$VERSION.tar.gz" "site/sarcostat-web-$VERSION.zip" site/BUILD.json; do
+            test -f "$file" || { echo "::error::missing $file"; exit 1; }
+          done
+          node web/scripts/assemble_pages.mjs verify-zip --zip "site/sarcostat-web-$VERSION.zip" --build site/BUILD.json
+          wheel_sha="$(sha256sum "dist/sarcostat-$VERSION-py3-none-any.whl" | cut -d' ' -f1)"
+          node -e '
+            const build = JSON.parse(require("node:fs").readFileSync("site/BUILD.json", "utf8"));
+            const problems = [];
+            if (build.version !== process.env.VERSION) problems.push(`BUILD.json version ${build.version}, tag version ${process.env.VERSION}`);
+            if (build.commit !== process.env.GITHUB_SHA) problems.push(`BUILD.json commit ${build.commit}, tagged commit ${process.env.GITHUB_SHA}`);
+            if (build.wheel.sha256 !== process.argv[1]) problems.push(`BUILD.json wheel ${build.wheel.sha256}, built wheel ${process.argv[1]}`);
+            problems.forEach((line) => console.error(`::error::${line}`));
+            process.exit(problems.length === 0 ? 0 : 1);
+          ' "$wheel_sha"
+          sha256sum dist/* site/*
+
+      - name: Refuse to touch an existing release of this tag
+        run: |
+          set -euo pipefail
+          existing="$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")"
+          if [ -n "$existing" ]; then
+            echo "::error::a release of $GITHUB_REF_NAME already exists (draft or published); delete a stale draft in the GitHub UI, then re-run all jobs"
+            exit 1
+          fi
+
+      - name: Create the draft release with the wheel, the sdist, the site zip and BUILD.json
+        run: |
+          set -euo pipefail
+          build_sha="$(sha256sum site/BUILD.json | cut -d' ' -f1)"
+          zip_sha="$(sha256sum "site/sarcostat-web-$VERSION.zip" | cut -d' ' -f1)"
+          digest="$(node -p 'JSON.parse(require("node:fs").readFileSync("site/BUILD.json", "utf8")).source_digest')"
+          {
+            echo "SarcoStat $VERSION, built and tested by the release-build workflow from commit $GITHUB_SHA."
+            echo ""
+            echo "- sarcostat-web-$VERSION.zip: the web app folder v$VERSION/ as GitHub Pages serves it (zip SHA-256 $zip_sha)."
+            echo "- BUILD.json: the build record of that folder (SHA-256 $build_sha, source_digest $digest)."
+            echo "- The wheel and the sdist of the Python package."
+            echo ""
+            echo "This is a draft. Publishing it in the GitHub UI starts pages.yml, which deploys every published version under its own folder."
+          } > notes.md
+          flags=(--draft --verify-tag --title "SarcoStat $VERSION" --notes-file notes.md)
+          if [ "$PRERELEASE" = "true" ]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" "${flags[@]}" \
+            "dist/sarcostat-$VERSION-py3-none-any.whl" \
+            "dist/sarcostat-$VERSION.tar.gz" \
+            "site/sarcostat-web-$VERSION.zip" \
+            site/BUILD.json
+          {
+            echo "### Draft release $GITHUB_REF_NAME"
+            echo ""
+            echo "Pre-release: $PRERELEASE (from the version string). BUILD.json SHA-256 \`$build_sha\`, zip SHA-256 \`$zip_sha\`."
+            echo ""
+            echo "Next step for the maintainer: check the draft, then publish it in the GitHub UI."
+          } >> "$GITHUB_STEP_SUMMARY"

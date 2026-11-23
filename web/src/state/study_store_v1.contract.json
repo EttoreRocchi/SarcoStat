@@ -1,0 +1,23 @@
+{
+  "contract": "sarcostat-study-store",
+  "contract_version": 1,
+  "database": "sarcostat-study-v1",
+  "database_version": 1,
+  "durability": "strict",
+  "lock_prefix": "sarcostat-study-v1:",
+  "record": {
+    "builds_seen_fields": ["build_json_sha256", "source_digest", "version"],
+    "counts_fields": ["pauses", "resumes", "worker_restarts"],
+    "key_fields": ["study_id", "annotator_id", "session_id", "manifest_sha256"],
+    "status_values": ["finished", "open"],
+    "value_fields": ["autosave_bytes", "build_json_sha256", "build_version", "builds_seen", "counts", "finished_bytes", "finished_sha256", "seq", "source_digest", "status", "updated"]
+  },
+  "stores": [
+    {
+      "auto_increment": false,
+      "indexes": [],
+      "key_path": ["study_id", "annotator_id", "session_id", "manifest_sha256"],
+      "name": "sessions"
+    }
+  ]
+}

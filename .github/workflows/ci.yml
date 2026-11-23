@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_call:
 
 permissions:
   contents: read
@@ -97,20 +98,32 @@ jobs:
         run: ruff format --check .
 
   build:
-    runs-on: ubuntu-latest
+    name: build (wheel, sdist and site)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.dist.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10.12"
 
       - name: Build sdist and wheel
+        id: dist
         run: |
-          python -m pip install --upgrade pip build twine
-          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python -m build
+          set -euo pipefail
+          python -m pip install --upgrade pip "build==1.5.0" twine
+          chmod -R go-w .
+          umask 022
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" python -m build --outdir dist .
           twine check --strict dist/*
           sha256sum dist/*
+          wheel="$(basename dist/sarcostat-*-py3-none-any.whl)"
+          version="${wheel#sarcostat-}"
+          version="${version%-py3-none-any.whl}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Check distribution contents
         run: |
@@ -133,6 +146,49 @@ jobs:
         with:
           name: dist
           path: dist/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install the web toolchain
+        working-directory: web
+        run: npm ci
+
+      - name: Restore the Pyodide site subset
+        uses: actions/cache@v4
+        with:
+          path: web/.cache/pyodide-site
+          key: pyodide-site-${{ hashFiles('web/pyodide-files.sha256') }}
+
+      - name: Build the site from the wheel and check it (V-SITE)
+        env:
+          VERSION: ${{ steps.dist.outputs.version }}
+          LANE: ci
+        run: |
+          set -euo pipefail
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" PYTHON="$(command -v python)" \
+            node web/scripts/build_site.mjs --out web/dist/ci/site --wheel "dist/sarcostat-$VERSION-py3-none-any.whl" --commit "$(git rev-parse HEAD)"
+          node web/scripts/check_site.mjs "web/dist/ci/site/v$VERSION"
+          mkdir -p site
+          node web/scripts/assemble_pages.mjs zip --site "web/dist/ci/site/v$VERSION" --out "site/sarcostat-web-$VERSION.zip"
+          cp "web/dist/ci/site/v$VERSION/BUILD.json" site/BUILD.json
+          sha256sum site/*
+          {
+            echo "### Build $VERSION"
+            echo ""
+            echo "| File | SHA-256 |"
+            echo "|---|---|"
+            sha256sum dist/* site/* | while read -r sum file; do echo "| $(basename "$file") | \`$sum\` |"; done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/
+          retention-days: 30
 
   install:
     name: install (Python ${{ matrix.python }})
@@ -159,3 +215,267 @@ jobs:
           PYTHON: python
           SMOKE_CONFIG: examples/configs/config_sarc_minimal.yaml
         run: bash tools/check_install.sh dist/*.whl "$RUNNER_TEMP/check_install"
+
+  pyodide:
+    name: pyodide (tests and parity on the CI wheel, offline)
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install the web toolchain
+        working-directory: web
+        run: npm ci
+
+      - name: Restore the Pyodide test subset
+        uses: actions/cache@v4
+        with:
+          path: web/.cache/pyodide-test
+          key: pyodide-test-${{ hashFiles('web/pyodide-test-files.sha256') }}
+
+      - name: Verify every file of the test subset by SHA-256, downloading only what the cache lacks
+        working-directory: web
+        run: npm run pyodide:test-subset
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+
+      - name: Unpack the site
+        run: |
+          set -euo pipefail
+          mkdir -p web/dist/ci/site pyodide-results
+          unzip -q "site/sarcostat-web-$VERSION.zip" -d web/dist/ci/site
+          cmp site/BUILD.json "web/dist/ci/site/v$VERSION/BUILD.json"
+
+      - name: V-PYODIDE (tests/core, tests/io, tests/engine)
+        working-directory: web
+        run: |
+          set -euo pipefail
+          node tests/pyodide/run_pytest.mjs --wheel "../dist/sarcostat-$VERSION-py3-none-any.whl" --tests core,io,engine --offline \
+            --junit ../pyodide-results/junit.xml 2>&1 | tee ../pyodide-results/run_pytest.txt
+
+      - name: V-PARITY through sarcostat.analysis
+        working-directory: web
+        run: |
+          set -euo pipefail
+          node tests/pyodide/parity.mjs --wheel "../dist/sarcostat-$VERSION-py3-none-any.whl" --golden ../tests/golden/web \
+            --rule ../tests/golden/web/tolerance.json --offline --via analysis --out ../pyodide-results/parity-analysis 2>&1 | tee ../pyodide-results/parity-analysis.txt
+
+      - name: V-PARITY through the bridge
+        working-directory: web
+        run: |
+          set -euo pipefail
+          node tests/pyodide/parity.mjs --wheel "../dist/sarcostat-$VERSION-py3-none-any.whl" --golden ../tests/golden/web \
+            --rule ../tests/golden/web/tolerance.json --offline --via bridge --out ../pyodide-results/parity-bridge 2>&1 | tee ../pyodide-results/parity-bridge.txt
+
+      - name: Boot the site's own Pyodide files offline
+        working-directory: web
+        run: |
+          set -euo pipefail
+          node tests/pyodide/site_boot.mjs --site "dist/ci/site/v$VERSION" --offline 2>&1 | tee ../pyodide-results/site_boot.txt
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: pyodide-results
+          path: pyodide-results/
+
+  web:
+    name: web (typecheck and unit tests)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      LANE: ci
+      PYTHON: python
+      SARCOSTAT_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10.12"
+
+      - name: CPython with sarcostat for the catalogue, results and fixture tests
+        run: |
+          python -m pip install -e . Pillow
+          python -c "import sarcostat, numpy, scipy, PIL; print('sarcostat', sarcostat.__version__)"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install the web toolchain
+        working-directory: web
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: web
+        run: npm run typecheck
+
+      - name: Unit tests
+        working-directory: web
+        run: npm run test:unit
+
+  e2e:
+    name: web (end to end and screenshots, headless Chromium)
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      CI: "true"
+      LANE: ci
+      PORT: "0"
+      PLAYWRIGHT_HTML_OPEN: never
+      SITE_DIR: ${{ github.workspace }}/web/dist/ci/site
+      SARCOSTAT_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install the web toolchain
+        working-directory: web
+        run: npm ci
+
+      - name: Install headless Chromium
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+
+      - name: Unpack the site and install the CI wheel with the CLI for the CPython side of the e2e checks
+        run: |
+          set -euo pipefail
+          mkdir -p web/dist/ci/site
+          unzip -q "site/sarcostat-web-$VERSION.zip" -d web/dist/ci/site
+          cmp site/BUILD.json "web/dist/ci/site/v$VERSION/BUILD.json"
+          python -m pip install "sarcostat[cli] @ file://$PWD/dist/sarcostat-$VERSION-py3-none-any.whl"
+          python -c "import sarcostat, numpy, scipy, typer; print('sarcostat', sarcostat.__version__, 'numpy', numpy.__version__, 'scipy', scipy.__version__)"
+
+      - name: V-E2E
+        working-directory: web
+        env:
+          PW_OUT: test-results/ci-e2e
+        run: npm run test:e2e
+
+      - name: V-SHOTS captures, kept without comparing because CI is set
+        if: ${{ !cancelled() }}
+        working-directory: web
+        env:
+          PW_OUT: test-results/ci-shots
+        run: npm run test:shots
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-logs
+          path: |
+            web/test-results/ci-e2e/artifacts/**/*.json
+            web/test-results/ci-e2e/artifacts/**/*.txt
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: screenshots
+          path: web/test-results/ci-shots/artifacts/**/*.png
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: e2e-report
+          path: |
+            web/test-results/ci-e2e/
+            web/test-results/ci-shots/
+
+  cross-browser:
+    name: web (pixel-centre and persistence, headless Firefox and WebKit)
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      CI: "true"
+      LANE: ci
+      PORT: "0"
+      PLAYWRIGHT_HTML_OPEN: never
+      PW_OUT: test-results/ci-cross
+      SITE_DIR: ${{ github.workspace }}/web/dist/ci/site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install the web toolchain
+        working-directory: web
+        run: npm ci
+
+      - name: Install headless Firefox and WebKit
+        working-directory: web
+        run: npx playwright install --with-deps firefox webkit
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+
+      - name: Unpack the site
+        run: |
+          set -euo pipefail
+          mkdir -p web/dist/ci/site
+          unzip -q "site/sarcostat-web-$VERSION.zip" -d web/dist/ci/site
+          cmp site/BUILD.json "web/dist/ci/site/v$VERSION/BUILD.json"
+
+      - name: Pixel-centre and persistence specs in Firefox and WebKit
+        working-directory: web
+        run: env -u DISPLAY -u WAYLAND_DISPLAY npx playwright test --config playwright.config.ts --project=firefox --project=webkit --pass-with-no-tests
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: cross-browser-logs
+          path: web/test-results/ci-cross/artifacts/**/*.json
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: cross-browser-report
+          path: web/test-results/ci-cross/

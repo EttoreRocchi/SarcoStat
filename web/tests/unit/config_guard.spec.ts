@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { CROSS_BROWSER_SPECS, HOST_RESOLVER_RULES, makeConfig, outputRoot } from "../../playwright.config.ts";
+import { CROSS_BROWSER_SPECS, HOST_RESOLVER_RULES, makeConfig, outputRoot, SHOTS_RASTER_ARGS } from "../../playwright.config.ts";
 import { WEB_DIR, laneCacheDir, laneName } from "../../scripts/lane.mjs";
 import { HOST, startServer } from "../../scripts/serve.mjs";
 
@@ -48,6 +48,12 @@ describe("Playwright configuration", () => {
   it("maps every host except 127.0.0.1 to nothing", () => {
     expect(HOST_RESOLVER_RULES).toBe("--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1");
     expect(local.use?.launchOptions?.args).toContain(HOST_RESOLVER_RULES);
+  });
+
+  it("captures screenshots with single-threaded software rasterisation and the same host rule", () => {
+    const shots = (local.projects ?? []).find((p) => p.name === "shots");
+    expect(shots?.use?.launchOptions?.args).toEqual([HOST_RESOLVER_RULES, ...SHOTS_RASTER_ARGS]);
+    expect(SHOTS_RASTER_ARGS).toEqual(["--disable-gpu", "--num-raster-threads=1", "--disable-partial-raster"]);
   });
 
   it("has Chromium projects only, unless CI is set", () => {

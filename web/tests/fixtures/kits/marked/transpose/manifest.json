@@ -1,0 +1,49 @@
+{
+  "annotator_id": "A1",
+  "format": "sarcostat-session-manifest",
+  "format_version": "1.0",
+  "images": [
+    {
+      "file_name": "marked_original.png",
+      "height_px": 480,
+      "image_id": "marked",
+      "scale": {
+        "nm_per_px": null,
+        "source": null
+      },
+      "sha256": "81c6195a8b8079ad3059f62ad53f72912537d18e9e2abd892b264a847bd0080b",
+      "study": {
+        "animal": null,
+        "group": null
+      },
+      "width_px": 640
+    }
+  ],
+  "items": [
+    {
+      "display_transform": "transpose",
+      "image_id": "marked",
+      "item_id": "M-transpose",
+      "kit_crop_offset": [
+        37,
+        29
+      ],
+      "kit_crop_size": [
+        403,
+        331
+      ],
+      "kit_file": "items/marked.png",
+      "kit_sha256": "0fc633b0441cb222ee0ac9a0fe8ea33be6f71156dfb8cb205a2a81f36e170b87",
+      "roi": [
+        187,
+        149,
+        267,
+        209
+      ],
+      "target_id": "marked",
+      "type": "shape"
+    }
+  ],
+  "session_id": "M7",
+  "study_id": "marked"
+}

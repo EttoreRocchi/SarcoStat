@@ -6,6 +6,7 @@ export const ABSENT_FAMILIES = ["chain", "register", "planner"] as const;
 export const FATAL_CODES = ["build_damaged", "bridge_mismatch", "boot_failed", "worker_died", "timeout"] as const;
 export const BOOT_STAGES = ["runtime", "numpy", "wheel", "engine"] as const;
 export const COMMAND_TIMEOUT_MS = 10_000;
+export const SCIPY_TIMEOUT_MS = 120_000;
 export const HANDSHAKE_COMMAND = "sys.identity";
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -89,13 +90,15 @@ export interface Identity {
 
 export type ToWorker =
   | { kind: "start"; base: string; build: BuildInfo }
-  | { kind: "request"; request: RequestEnvelope; buffers: Uint8Array[] };
+  | { kind: "request"; request: RequestEnvelope; buffers: Uint8Array[] }
+  | { kind: "modules"; names: string[] };
 
 export type FromWorker =
   | { kind: "boot"; stage: BootStage }
   | { kind: "identity"; identity: Identity }
   | { kind: "fatal"; code: FatalCode; message: string }
-  | { kind: "response"; response: ResponseEnvelope; buffers: Uint8Array[] };
+  | { kind: "response"; response: ResponseEnvelope; buffers: Uint8Array[] }
+  | { kind: "modules"; loaded: string[] };
 
 const HEX64 = /^[0-9a-f]{64}$/;
 
@@ -206,6 +209,10 @@ function isBufferList(value: unknown): value is Uint8Array[] {
   return Array.isArray(value) && value.every((element) => element instanceof Uint8Array);
 }
 
+function isStringList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((element) => typeof element === "string");
+}
+
 function isRequestId(value: unknown): value is RequestId {
   return typeof value === "string" || (typeof value === "number" && Number.isInteger(value));
 }
@@ -253,6 +260,8 @@ export function isFromWorker(value: unknown): value is FromWorker {
       return (FATAL_CODES as readonly unknown[]).includes(value.code) && typeof value.message === "string";
     case "response":
       return isResponse(value.response) && isBufferList(value.buffers);
+    case "modules":
+      return isStringList(value.loaded);
     default:
       return false;
   }
@@ -264,6 +273,9 @@ export function isToWorker(value: unknown): value is ToWorker {
   }
   if (value.kind === "start") {
     return typeof value.base === "string" && isRecord(value.build);
+  }
+  if (value.kind === "modules") {
+    return isStringList(value.names);
   }
   if (value.kind === "request") {
     const request = value.request;

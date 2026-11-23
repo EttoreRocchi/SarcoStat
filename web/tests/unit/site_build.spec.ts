@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { BuildRefused, buildSite, checkOut, parseEpoch, wheelVersion } from "../../scripts/build_site.mjs";
+import { BuildRefused, RESUME_FILE, buildSite, checkOut, parseEpoch, readResumeFile, resumeDigests, wheelVersion } from "../../scripts/build_site.mjs";
 import { canonicalJson, checkSite, hashTree } from "../../scripts/check_site.mjs";
 import { WEB_DIR } from "../../scripts/lane.mjs";
 import { SITE_LIST, readList } from "../../scripts/pyodide_subset.mjs";
@@ -119,6 +119,39 @@ describe("build_site.mjs inputs", () => {
   });
 });
 
+describe("resume digests (hotfix builds, plan §3.5 and §3.10 step 8)", () => {
+  const a = "a".repeat(64);
+  const b = "b".repeat(64);
+
+  it("are sorted and unique, and empty by default", () => {
+    expect(resumeDigests(undefined)).toEqual([]);
+    expect(resumeDigests([b, a, b])).toEqual([a, b]);
+  });
+
+  it("refuse anything but 64 lowercase hex and the build's own digest", () => {
+    expect(() => resumeDigests(["A".repeat(64)])).toThrow(BuildRefused);
+    expect(() => resumeDigests(["a".repeat(63)])).toThrow(/64 lowercase hex/);
+    expect(() => resumeDigests([a], a)).toThrow(/own source_digest/);
+  });
+
+  it("are read from web/resume-digests.txt lines \"<digest>  <label>\", which the tree lacks unless it is a hotfix", () => {
+    const file = path.join(scratch, "resume-digests.txt");
+    fs.writeFileSync(file, `${b}  v0.2.0rc1\n\n${a}\n`);
+    expect(readResumeFile(file)).toEqual([b, a]);
+    expect(readResumeFile(path.join(scratch, "absent.txt"))).toEqual([]);
+    fs.writeFileSync(file, "v0.2.0rc1\n");
+    expect(() => readResumeFile(file)).toThrow(/resume-digests\.txt:1: expected/);
+    expect(RESUME_FILE).toBe(path.join(WEB_DIR, "resume-digests.txt"));
+    expect(fs.existsSync(RESUME_FILE)).toBe(false);
+  });
+
+  it("are refused before anything is written", async () => {
+    const out = path.join(scratch, "bad-resume");
+    await expect(buildSite({ out, wheel: path.join(scratch, "sarcostat-0.2.0-py3-none-any.whl"), resume: ["xyz"], sourceDateEpoch: EPOCH, log: () => {} })).rejects.toThrow(/resume-digest/);
+    expect(fs.existsSync(out)).toBe(false);
+  });
+});
+
 describe("a site built twice from the same inputs", () => {
   it("has the same BUILD.json and the same file hashes, and CPython's source_digest of the wheel", async () => {
     const wheel = python(MAKE_WHEEL, [PACKAGE_DIR, scratch]);
@@ -149,5 +182,13 @@ describe("a site built twice from the same inputs", () => {
     const check = checkSite(first.versionDir, { pyodideList: list });
     expect(check.problems).toEqual([]);
     expect(check.ok).toBe(true);
-  }, 180_000);
+
+    const earlier = "c".repeat(64);
+    const listed = "d".repeat(64);
+    const resumeFile = path.join(scratch, "hotfix-resume-digests.txt");
+    fs.writeFileSync(resumeFile, `${listed}  v0.2.0rc1\n${earlier}  v0.2.0b1\n`);
+    const hotfix = await buildSite({ ...options, out: path.join(scratch, "hotfix"), resume: [earlier, earlier], resumeFile });
+    expect(hotfix.record.resume_digests).toEqual([earlier, listed]);
+    expect(checkSite(hotfix.versionDir, { pyodideList: list }).ok).toBe(true);
+  }, 240_000);
 });
