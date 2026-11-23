@@ -2,9 +2,9 @@
   <symbol id="mark" viewBox="0 0 24 24" fill="none">
     <path d="M15.16 3.31A9.25 9.25 0 1 0 16.62 20.01" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
     <path d="M16.62 20.01A9.25 9.25 0 0 0 20.69 8.84" stroke="#5DB4EA" stroke-width="2" stroke-linecap="round"/>
-    <path d="M6.5 8H11" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
-    <path d="M5.5 12H9.25" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
-    <path d="M6.5 16H11" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M6.5 8H10.5" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M5.5 12H8.6" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M6.5 16H10.5" stroke="#DCE8F1" stroke-width="2" stroke-linecap="round"/>
     <path d="M12 12L15.49 8.51" stroke="#5DB4EA" stroke-width="1.75" stroke-linecap="round"/>
     <path d="M18.54 5.46L13.59 7.01L16.99 10.41Z" fill="#5DB4EA" stroke="#5DB4EA" stroke-width="0.35" stroke-linejoin="round"/>
     <circle cx="12" cy="12" r="1.9" fill="#5DB4EA"/>
