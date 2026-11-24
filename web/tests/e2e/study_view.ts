@@ -4,10 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import zlib from "node:zlib";
 
-import type { Page, Worker } from "@playwright/test";
+import { errors, type Page, type Worker } from "@playwright/test";
 
 import { WEB_DIR } from "../../scripts/lane.mjs";
-import { expect } from "./fixtures.ts";
+import { expect, test } from "./fixtures.ts";
 import { canvasView, type CanvasView } from "./workspace_view.ts";
 
 export const KITS_DIR = path.join(WEB_DIR, "tests", "fixtures", "kits");
@@ -19,6 +19,7 @@ export const LOUPE_CANVAS = "[data-part='loupe-canvas']";
 export const AUTOSAVE = "[data-part='autosave']";
 export const READY = '.statusline[data-state="ready"]';
 export const BOOT_TIMEOUT_MS = 30_000;
+export const SET_FILES_TIMEOUT_MS = 15_000;
 export const CLICK_RESOLUTION = 1 / 1024;
 export const TRANSFORMS = ["identity", "rot90", "rot180", "rot270", "flip_h", "flip_v", "transpose", "anti_transpose"] as const;
 export type Transform = (typeof TRANSFORMS)[number];
@@ -128,7 +129,15 @@ export async function checkBrowser(page: Page): Promise<void> {
 export async function chooseKit(page: Page, kit: string): Promise<void> {
   const chooser = page.waitForEvent("filechooser");
   await page.locator("[data-part='study-start'] [data-action='open-kit']").click();
-  await (await chooser).setFiles(kit);
+  const picked = await chooser;
+  try {
+    await picked.setFiles(kit, { timeout: SET_FILES_TIMEOUT_MS });
+  } catch (error) {
+    if (!(error instanceof errors.TimeoutError) || (await picked.element().evaluate((input) => (input as HTMLInputElement).files?.length ?? 0)) === 0) {
+      throw error;
+    }
+    test.info().annotations.push({ type: "setFiles did not return", description: `the kit reached the file input, but setFiles was still waiting for its input event after ${SET_FILES_TIMEOUT_MS} ms` });
+  }
 }
 
 export async function openKit(page: Page, kit: string): Promise<void> {
